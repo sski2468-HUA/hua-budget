@@ -1,0 +1,3553 @@
+<title>HUA生活收支安排</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --bg:#F3F5F7;
+    --surface:#FFFFFF;
+    --surface-2:#EAEEF2;
+    --ink:#16212B;
+    --muted:#5B6B7A;
+    --line:#DDE3E9;
+    --brand:#2C4A6E;
+    --brand-ink:#FFFFFF;
+    --income:#25835E;      --income-bg:#E4F3EC;
+    --fixed:#B23F49;       --fixed-bg:#F8E9EA;
+    --savings:#2A6FA8;     --savings-bg:#E5EFF7;
+    --variable:#7A5AA6;    --variable-bg:#EEE8F5;
+    --salary:#8A5A2B;      --salary-bg:#F5EBDD;
+    --bonus:#B8860B;       --bonus-bg:#FBF1D6;
+    --utility:#1F8A8C;     --utility-bg:#E1F3F3;
+    --annual:#6A4C93;      --annual-bg:#EFE8F5;
+    --leave:#C2410C;       --leave-bg:#FBE9DF;
+    --claim:#0F766E;       --claim-bg:#DFF0EE;
+    --plan:#9333EA;        --plan-bg:#F2E4FB;
+    --hb:#C0202E;          --hb-bg:#FBE3E5;
+    --fever:#EA580C;       --fever-bg:#FDECDF;
+    --shadow: 0 1px 2px rgba(20,30,40,.06), 0 6px 20px rgba(20,30,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F161D; --surface:#182029; --surface-2:#1E2833;
+      --ink:#E8EDF1; --muted:#93A4B2; --line:#2A3A45;
+      --brand:#6E97C2; --brand-ink:#0F161D;
+      --income:#57C193; --income-bg:#123128;
+      --fixed:#E58089; --fixed-bg:#3A1E22;
+      --savings:#6FA9DE; --savings-bg:#152735;
+      --variable:#B79EDC; --variable-bg:#2A2138;
+      --salary:#D9A768; --salary-bg:#332412;
+      --bonus:#E0B84A; --bonus-bg:#332B12;
+      --utility:#4FC3C5; --utility-bg:#0F2B2C;
+      --annual:#B39DDB; --annual-bg:#241A33;
+      --leave:#E0895A; --leave-bg:#3A2214;
+      --claim:#4FBDB3; --claim-bg:#12312E;
+      --plan:#C08BF0; --plan-bg:#2B1D3B;
+      --hb:#E56B75; --hb-bg:#3A1519;
+      --fever:#F0895A; --fever-bg:#3A2114;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F161D; --surface:#182029; --surface-2:#1E2833;
+    --ink:#E8EDF1; --muted:#93A4B2; --line:#2A3A45;
+    --brand:#6E97C2; --brand-ink:#0F161D;
+    --income:#57C193; --income-bg:#123128;
+    --fixed:#E58089; --fixed-bg:#3A1E22;
+    --savings:#6FA9DE; --savings-bg:#152735;
+    --variable:#B79EDC; --variable-bg:#2A2138;
+    --salary:#D9A768; --salary-bg:#332412;
+    --bonus:#E0B84A; --bonus-bg:#332B12;
+    --utility:#4FC3C5; --utility-bg:#0F2B2C;
+    --annual:#B39DDB; --annual-bg:#241A33;
+    --leave:#E0895A; --leave-bg:#3A2214;
+    --claim:#4FBDB3; --claim-bg:#12312E;
+    --plan:#C08BF0; --plan-bg:#2B1D3B;
+    --hb:#E56B75; --hb-bg:#3A1519;
+    --fever:#F0895A; --fever-bg:#3A2114;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{ height:100%; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    padding-inline:16px;
+    padding-block:0 88px;
+  }
+  .num{ font-family:"IBM Plex Mono","Noto Sans TC",monospace; font-variant-numeric: tabular-nums; }
+  .wrap{ max-width:480px; margin:0 auto; }
+
+  header.top{
+    position:sticky; top:env(safe-area-inset-top, 0px);
+    background:var(--bg);
+    padding-block:14px 10px;
+    z-index:5;
+  }
+  header.top h1{ font-size:19px; font-weight:900; margin:0 0 2px; letter-spacing:.02em; }
+  header.top p{ margin:0; color:var(--muted); font-size:12.5px; }
+
+  .tabs, .subtabs{
+    display:flex; gap:6px; margin-top:12px; background:var(--surface-2);
+    border-radius:12px; padding:4px; border:1px solid var(--line);
+  }
+  .tabs button, .subtabs button{
+    flex:1; border:none; background:transparent; color:var(--muted);
+    font-family:inherit; font-size:13.5px; font-weight:700; padding:9px 0;
+    border-radius:9px; cursor:pointer;
+  }
+  .tabs button.active, .subtabs button.active{ background:var(--surface); color:var(--brand); box-shadow:var(--shadow); }
+  .tab-tag{ font-size:9.5px; font-weight:500; opacity:.7; margin-left:1px; }
+
+  [data-page]{ display:none; }
+  [data-page].active{ display:block; }
+  [data-osub-page]{ display:none; }
+  [data-osub-page].active{ display:block; }
+
+  .summary{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px; }
+  .summary .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:10px 8px; box-shadow:var(--shadow); text-align:center;
+  }
+  .summary .card .lbl{ font-size:11px; color:var(--muted); margin-bottom:4px; }
+  .summary .card .val{ font-size:15px; font-weight:600; }
+  .summary .card.income .val{ color:var(--income); }
+  .summary .card.expense .val{ color:var(--fixed); }
+  .summary .card.balance .val{ color:var(--brand); }
+
+  .breakdown-strip{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px; }
+  .breakdown-strip .chip{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:8px; text-align:center;
+  }
+  .breakdown-strip .chip .lbl{ font-size:10.5px; color:var(--muted); }
+  .breakdown-strip .chip .val{ font-size:13px; font-weight:700; margin-top:2px; }
+  .breakdown-strip .chip.fixed .val{ color:var(--fixed); }
+  .breakdown-strip .chip.savings .val{ color:var(--savings); }
+  .breakdown-strip .chip.variable .val{ color:var(--variable); }
+
+  .bar{ height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; display:flex; margin-top:10px; border:1px solid var(--line); }
+  .bar span{ height:100%; }
+
+  section.group{ margin-top:20px; }
+  section.group .ghead{ display:flex; align-items:center; justify-content:space-between; margin:0 2px 8px; }
+  section.group h2{ font-size:13px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px; margin:0; }
+  section.group h2 .dot{ width:8px; height:8px; border-radius:50%; }
+  section.group h2 .dot.income{ background:var(--income); }
+  section.group h2 .dot.fixed{ background:var(--fixed); }
+  section.group h2 .dot.savings{ background:var(--savings); }
+  section.group h2 .dot.variable{ background:var(--variable); }
+  section.group h2 .dot.salary{ background:var(--salary); }
+  section.group h2 .dot.bonus{ background:var(--bonus); }
+  section.group h2 .dot.utility{ background:var(--utility); }
+  section.group h2 .dot.annual{ background:var(--annual); }
+  section.group h2 .dot.leave{ background:var(--leave); }
+  section.group h2 .dot.claim{ background:var(--claim); }
+  section.group h2 .dot.plan{ background:var(--plan); }
+  section.group h2 .dot.fever{ background:var(--fever); }
+  section.group h2 .dot.hb{ background:var(--hb); }
+  section.group h2 .count{ color:var(--muted); font-weight:500; }
+  .addlink{ border:none; background:none; color:var(--brand); font-weight:700; font-size:13px; cursor:pointer; padding:4px 2px; font-family:inherit; }
+  .sort-btn{
+    border:1px solid var(--line); background:var(--surface); color:var(--muted);
+    border-radius:8px; padding:4px 9px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:inherit; display:inline-flex; align-items:center; gap:3px; margin-left:6px;
+  }
+  .sort-btn:active{ transform:scale(.97); }
+
+  .item{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px; margin-bottom:8px; box-shadow:var(--shadow);
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+  }
+  .item:active{ transform:scale(.99); }
+  .item .stripe{ width:4px; align-self:stretch; border-radius:99px; flex:0 0 4px; }
+  .item .stripe.income{ background:var(--income); }
+  .item .stripe.fixed{ background:var(--fixed); }
+  .item .stripe.savings{ background:var(--savings); }
+  .item .stripe.variable{ background:var(--variable); }
+  .item .stripe.bonus{ background:var(--bonus); }
+  .item .amt.bonus{ color:var(--bonus); }
+  .item .stripe.annual{ background:var(--annual); }
+  .item .amt.annual{ color:var(--annual); }
+  .item .body{ flex:1; min-width:0; }
+  .item .name{ font-weight:700; font-size:14.5px; }
+  .item .meta{ font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .amt{ font-weight:600; font-size:15px; white-space:nowrap; }
+  .item .amt.income{ color:var(--income); }
+  .item .amt.fixed{ color:var(--fixed); }
+  .item .amt.savings{ color:var(--savings); }
+  .item .amt.variable{ color:var(--variable); }
+
+  .salary-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--salary);
+  }
+  .salary-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
+  .salary-card .date{ font-weight:700; font-size:14.5px; }
+  .hist-badge{ display:inline-block; font-size:10px; background:var(--surface-2); color:var(--muted); border-radius:6px; padding:1px 6px; margin-left:6px; font-weight:500; vertical-align:middle; }
+  .salary-card .net{ font-weight:700; font-size:16px; color:var(--salary); }
+  .salary-card .breakdown{ font-size:12.5px; color:var(--muted); margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); }
+  .salary-card .breakdown .line{ display:flex; justify-content:space-between; padding:1px 0; }
+  .salary-card .breakdown b{ color:var(--ink); font-weight:600; }
+  .salary-card .remain{ font-weight:700; }
+  .salary-card .remain.pos{ color:var(--income); }
+  .salary-card .remain.neg{ color:var(--fixed); }
+  .salary-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; color:var(--ink); white-space:pre-wrap; }
+  .salary-card .note.empty{ color:var(--muted); }
+  .salary-card.bonus-card{ border-left-color:var(--bonus); }
+  .salary-card.bonus-card .net{ color:var(--bonus); }
+  .bonus-badge{ display:inline-flex; align-items:center; gap:3px; font-size:10px; background:var(--bonus-bg); color:var(--bonus); border-radius:6px; padding:1px 7px; margin-left:6px; font-weight:700; vertical-align:middle; }
+
+  .utility-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--utility);
+  }
+  .utility-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
+  .utility-card .date{ font-weight:700; font-size:14.5px; }
+  .utility-card .net{ font-weight:700; font-size:16px; color:var(--utility); }
+  .utility-card .breakdown{ font-size:12.5px; color:var(--muted); margin-top:8px; }
+  .utility-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; color:var(--ink); white-space:pre-wrap; }
+
+  .leave-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--leave);
+  }
+  .leave-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
+  .leave-card .date{ font-weight:700; font-size:14.5px; }
+  .leave-card .type-badge{ display:inline-block; font-size:11px; background:var(--leave-bg); color:var(--leave); border-radius:6px; padding:1px 7px; margin-left:6px; font-weight:700; vertical-align:middle; }
+  .leave-card .hours{ font-weight:700; font-size:16px; color:var(--leave); }
+  .leave-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; color:var(--ink); white-space:pre-wrap; }
+
+  .claim-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--claim);
+  }
+  .claim-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
+  .claim-card .date{ font-weight:700; font-size:14.5px; }
+  .claim-card .net{ font-weight:700; font-size:16px; color:var(--claim); }
+  .claim-card .breakdown{ font-size:12.5px; color:var(--muted); margin-top:8px; }
+  .claim-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; color:var(--ink); white-space:pre-wrap; }
+
+  .timeline-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--plan); display:flex; align-items:center; gap:10px;
+  }
+  .timeline-card .yr{ font-weight:900; font-size:15px; color:var(--plan); flex:0 0 auto; min-width:44px; }
+  .timeline-card .body{ flex:1; min-width:0; }
+  .timeline-card .meta{ font-size:11.5px; color:var(--muted); }
+  .timeline-card .note{ font-size:13px; margin-top:2px; white-space:pre-wrap; }
+  .timeline-card.is-current{ border-left-color:var(--income); background:var(--income-bg); }
+
+  .hb-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--hb); display:flex; align-items:center; gap:10px;
+  }
+  .hb-card .amt{ font-weight:700; font-size:15px; color:var(--hb); flex:0 0 auto; }
+  .hb-card .body{ flex:1; min-width:0; }
+  .hb-card .name{ font-weight:700; font-size:14px; }
+  .hb-card .meta{ font-size:11.5px; color:var(--muted); margin-top:1px; }
+  .hb-card .child-badge{ display:inline-block; font-size:10px; background:var(--hb-bg); color:var(--hb); border-radius:6px; padding:1px 6px; margin-left:5px; font-weight:700; vertical-align:middle; }
+
+  .fever-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:10px 14px; margin-bottom:6px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--fever); display:flex; align-items:center; gap:10px;
+  }
+  .fever-card .temp{ font-weight:900; font-size:16px; color:var(--fever); flex:0 0 auto; min-width:46px; }
+  .fever-card .temp.na{ color:var(--muted); font-size:12px; font-weight:600; }
+  .fever-card .body{ flex:1; min-width:0; }
+  .fever-card .meta{ font-size:11.5px; color:var(--muted); }
+  .fever-card .note{ font-size:13px; margin-top:1px; }
+  .fever-card .med-badge{ display:inline-block; font-size:10px; background:var(--fever-bg); color:var(--fever); border-radius:6px; padding:1px 6px; margin-left:5px; font-weight:700; vertical-align:middle; }
+  .fever-date-sep{ font-size:12px; font-weight:700; color:var(--muted); margin:14px 2px 6px; padding-top:8px; border-top:1px dashed var(--line); }
+  .fever-date-sep:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  .episode-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--fever);
+  }
+  .episode-card.selected{ background:var(--fever-bg); border-color:var(--fever); }
+  .episode-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
+  .episode-card .name{ font-weight:700; font-size:14.5px; }
+  .episode-card .range{ font-weight:700; font-size:14px; color:var(--fever); }
+  .episode-card .meta{ font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .episode-card .edit-icon{ flex:0 0 auto; color:var(--muted); font-size:13px; padding:2px 6px; }
+  .chart-box{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 6px 4px; box-shadow:var(--shadow); }
+  .chart-box svg{ display:block; width:100%; height:auto; }
+  .chart-empty{ text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+
+  .empty{ text-align:center; color:var(--muted); font-size:13px; padding:28px 12px; background:var(--surface); border:1px dashed var(--line); border-radius:14px; }
+
+  .fab{
+    position:fixed; right:20px; bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+    width:56px; height:56px; border-radius:50%;
+    background:var(--brand); color:var(--brand-ink);
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; font-weight:400; border:none; box-shadow:var(--shadow);
+    cursor:pointer; z-index:20; line-height:1;
+  }
+
+  .sheet-backdrop{ position:fixed; inset:0; background:rgba(10,15,20,.45); display:flex; align-items:flex-end; justify-content:center; z-index:30; }
+  .sheet{
+    width:100%; max-width:480px; background:var(--surface);
+    border-radius:20px 20px 0 0; padding:16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    max-height:88vh; overflow-y:auto; box-shadow:0 -8px 30px rgba(0,0,0,.2);
+  }
+  .sheet h3{ margin:2px 0 14px; font-size:16px; font-weight:900; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; font-weight:500; }
+  .field input, .field textarea, .field select{
+    width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
+    border-radius:10px; padding:10px 11px; font-size:15px; font-family:inherit;
+  }
+  .field textarea{ resize:vertical; min-height:56px; }
+  .seg4{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .seg4 button{
+    border:1px solid var(--line); background:var(--bg); color:var(--muted); padding:9px 0;
+    font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; border-radius:10px;
+  }
+  .seg4 button.active.income{ background:var(--income-bg); color:var(--income); border-color:var(--income); }
+  .seg4 button.active.fixed{ background:var(--fixed-bg); color:var(--fixed); border-color:var(--fixed); }
+  .seg4 button.active.savings{ background:var(--savings-bg); color:var(--savings); border-color:var(--savings); }
+  .seg4 button.active.variable{ background:var(--variable-bg); color:var(--variable); border-color:var(--variable); }
+  .seg4 button.active.salary{ background:var(--salary-bg); color:var(--salary); border-color:var(--salary); }
+  .seg4 button.active.bonus{ background:var(--bonus-bg); color:var(--bonus); border-color:var(--bonus); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  .calc-box{ background:var(--surface-2); border-radius:12px; padding:10px 12px; margin-bottom:12px; }
+  .calc-box .line{ display:flex; justify-content:space-between; font-size:13.5px; padding:3px 0; }
+  .calc-box .line.total{ border-top:1px dashed var(--line); margin-top:4px; padding-top:7px; font-weight:700; }
+  .calc-box .line .v{ font-weight:600; }
+  .calc-box .line .v.pos{ color:var(--income); }
+  .calc-box .line .v.neg{ color:var(--fixed); }
+
+  .section-label{ font-size:12px; font-weight:700; color:var(--brand); margin:16px 0 8px; padding-top:10px; border-top:1px solid var(--line); }
+  .section-label:first-of-type{ margin-top:2px; padding-top:0; border-top:none; }
+  .section-hint{ font-size:11px; color:var(--muted); margin:-4px 0 8px; }
+
+  .sheet-actions{ display:flex; gap:10px; margin-top:16px; }
+  .btn{ flex:1; border:none; border-radius:12px; padding:12px 0; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn.primary{ background:var(--brand); color:var(--brand-ink); }
+  .btn.ghost{ background:var(--surface-2); color:var(--ink); }
+  .btn.danger{ background:var(--fixed-bg); color:var(--fixed); }
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%);
+    background:var(--ink); color:var(--bg); padding:8px 16px; border-radius:99px; font-size:13px;
+    opacity:0; pointer-events:none; transition:opacity .2s; z-index:40;
+  }
+  .toast.show{ opacity:1; }
+  .status{ text-align:center; color:var(--muted); font-size:12px; margin-top:6px; }
+  [hidden]{ display:none !important; }
+</style>
+
+<div id="authGate" style="position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="width:100%; max-width:340px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px 20px; box-shadow:var(--shadow);">
+    <h2 style="margin:0 0 4px; font-size:17px;">HUA 生活收支安排</h2>
+    <p style="margin:0 0 16px; color:var(--muted); font-size:12.5px;">請登入以繼續</p>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label>密碼</label><input id="authPass" type="password" autocomplete="current-password"></div>
+    <div id="authError" style="color:var(--fixed); font-size:12.5px; margin-bottom:10px; display:none;"></div>
+    <button class="btn primary" id="authSubmitBtn" type="button" style="width:100%;">登入</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <h1>HUA 生活收支安排</h1>
+    <p>固定收入、支出、儲蓄總覽 · 資料自動同步</p>
+    <div class="tabs">
+      <button type="button" data-tab="budget" class="active">收支安排<span class="tab-tag">(家)</span></button>
+      <button type="button" data-tab="salary">薪水紀錄<span class="tab-tag">(家)</span></button>
+      <button type="button" data-tab="utility">水電瓦斯</button>
+      <button type="button" data-tab="annual">年度計畫<span class="tab-tag">(家)</span></button>
+      <button type="button" data-tab="leave">請假</button>
+      <button type="button" data-tab="other">其他</button>
+    </div>
+    <div class="subtabs" id="personFilterTabs" style="margin-top:8px;">
+      <button type="button" data-person="hua" class="active">HUA</button>
+      <button type="button" data-person="yupas">YUPAS</button>
+      <button type="button" data-person="combined">兩人合計</button>
+    </div>
+    <div class="status" id="statusLine">載入中…</div>
+  </header>
+
+  <div data-page="budget" class="active">
+    <div class="summary">
+      <div class="card income"><div class="lbl">月收入</div><div class="val num" id="sumIncome">$0</div></div>
+      <div class="card expense"><div class="lbl">支出總計</div><div class="val num" id="sumExpense">$0</div></div>
+      <div class="card balance"><div class="lbl">結餘</div><div class="val num" id="sumBalance">$0</div></div>
+    </div>
+    <div class="breakdown-strip">
+      <div class="chip fixed"><div class="lbl">固定支出</div><div class="val num" id="sumFixed">$0</div></div>
+      <div class="chip savings"><div class="lbl">儲蓄</div><div class="val num" id="sumSavings">$0</div></div>
+      <div class="chip variable"><div class="lbl">變動支出</div><div class="val num" id="sumVariable">$0</div></div>
+    </div>
+    <div class="bar" id="ratioBar"></div>
+
+    <div class="subtabs" id="budgetFilterTabs" style="margin-top:16px;">
+      <button type="button" data-mode="category" class="active">依類型</button>
+      <button type="button" data-mode="day">依轉帳日</button>
+      <button type="button" data-mode="bank">依銀行</button>
+    </div>
+    <div style="text-align:right; margin-top:8px;">
+      <span style="font-size:11px; color:var(--muted);">排序（依轉帳日）</span>
+      <button class="sort-btn" id="budgetSortBtn" type="button"></button>
+    </div>
+
+    <div id="categoryGroups">
+      <section class="group">
+        <h2><span class="dot income"></span>收入 <span class="count" id="incomeCount"></span></h2>
+        <div id="incomeList"></div>
+      </section>
+      <section class="group">
+        <h2><span class="dot fixed"></span>固定支出 <span class="count" id="fixedCount"></span></h2>
+        <div id="fixedList"></div>
+      </section>
+      <section class="group">
+        <h2><span class="dot savings"></span>儲蓄 <span class="count" id="savingsCount"></span></h2>
+        <div id="savingsList"></div>
+      </section>
+      <section class="group">
+        <h2><span class="dot variable"></span>變動支出 <span class="count" id="variableCount"></span></h2>
+        <div id="variableList"></div>
+      </section>
+    </div>
+
+    <div id="dynamicGroups" hidden></div>
+  </div>
+
+  <div data-page="salary">
+    <div class="breakdown-strip" style="grid-template-columns:1fr;">
+      <div class="chip"><div class="lbl">累計已記錄薪水筆數</div><div class="val num" id="salaryTotalCount">0</div></div>
+    </div>
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <label>依年份篩選</label>
+      <select id="salaryYearFilter"><option value="all">全部年份</option></select>
+    </div>
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <label>依類型篩選</label>
+      <div class="subtabs" id="salaryTypeFilterTabs">
+        <button type="button" data-rfilter="all" class="active">全部</button>
+        <button type="button" data-rfilter="salary">薪水</button>
+        <button type="button" data-rfilter="bonus">獎金</button>
+      </div>
+    </div>
+    <div class="field" id="bonusSubFilterField" style="margin-top:10px; margin-bottom:0;" hidden>
+      <label>獎金子分類</label>
+      <div class="subtabs" id="bonusSubFilterTabs" style="display:grid; grid-template-columns:repeat(5,1fr); padding:3px;">
+        <button type="button" data-bsub="all" class="active" style="padding:8px 0; font-size:12px;">全部</button>
+        <button type="button" data-bsub="年終" style="padding:8px 0; font-size:12px;">年終</button>
+        <button type="button" data-bsub="中秋" style="padding:8px 0; font-size:12px;">中秋</button>
+        <button type="button" data-bsub="端午" style="padding:8px 0; font-size:12px;">端午</button>
+        <button type="button" data-bsub="其他" style="padding:8px 0; font-size:12px;">其他</button>
+      </div>
+    </div>
+
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot salary"></span>薪水紀錄 <span class="count" id="salaryCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="meta num" id="salaryFilteredTotal">總額 $0</span>
+          <button class="sort-btn" id="salarySortBtn" type="button"></button>
+        </div>
+      </div>
+      <div id="salaryList"></div>
+    </section>
+  </div>
+
+  <div data-page="utility">
+    <div class="breakdown-strip" style="grid-template-columns:1fr;">
+      <div class="chip"><div class="lbl">累計已記錄筆數</div><div class="val num" id="utilityTotalCount">0</div></div>
+    </div>
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <label>依年份篩選</label>
+      <select id="utilityYearFilter"><option value="all">全部年份</option></select>
+    </div>
+    <div class="field" id="utilityCatFilterTabs" style="margin-top:12px; margin-bottom:0;">
+      <label>依項目篩選</label>
+      <div class="subtabs" style="display:grid; grid-template-columns:repeat(5,1fr); padding:3px;">
+        <button type="button" data-ucat="all" class="active" style="padding:8px 0; font-size:12px;">全部</button>
+        <button type="button" data-ucat="rent" style="padding:8px 0; font-size:12px;">房租</button>
+        <button type="button" data-ucat="water" style="padding:8px 0; font-size:12px;">水費</button>
+        <button type="button" data-ucat="electric" style="padding:8px 0; font-size:12px;">電費</button>
+        <button type="button" data-ucat="gas" style="padding:8px 0; font-size:12px;">天然氣</button>
+      </div>
+    </div>
+
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot utility"></span>水電瓦斯支出 <span class="count" id="utilityCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="meta num" id="utilityFilteredTotal">總額 $0</span>
+          <button class="sort-btn" id="utilitySortBtn" type="button"></button>
+        </div>
+      </div>
+      <div id="utilityList"></div>
+    </section>
+  </div>
+
+  <div data-page="annual">
+    <div class="breakdown-strip" style="grid-template-columns:1fr 1fr;">
+      <div class="chip"><div class="lbl">每年固定支出總額</div><div class="val num" id="annualFixedTotal">$0</div></div>
+      <div class="chip"><div class="lbl" id="annualBonusTotalLbl">年終分配(所選年)</div><div class="val num" id="annualBonusTotal">$0</div></div>
+    </div>
+
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead">
+        <h2><span class="dot annual"></span>每年固定支出 <span class="count" id="annualFixedCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="annualFixedSortBtn" type="button"></button>
+          <button class="addlink" id="addAnnualFixedBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div id="annualFixedList"></div>
+    </section>
+
+    <section class="group">
+      <div class="ghead">
+        <h2><span class="dot bonus"></span>年終獎金分配 <span class="count" id="annualBonusCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="annualBonusSortBtn" type="button"></button>
+          <button class="addlink" id="addAnnualBonusBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>依年份篩選</label>
+        <select id="annualBonusYearFilter"><option value="all">全部年份</option></select>
+      </div>
+      <div class="calc-box" id="annualBonusIncomeBox">
+        <div class="line"><span>薪水紀錄中的年終獎金收入</span><span class="v num" id="abIncomeVal">$0</span></div>
+        <div class="line"><span id="abAllocatedLbl">已分配總額</span><span class="v neg num" id="abAllocatedVal">-$0</span></div>
+        <div class="line total"><span>剩餘未分配</span><span class="v num" id="abRemainVal">$0</span></div>
+      </div>
+      <div class="section-hint" style="margin:-4px 0 10px;" id="abScopeHint"></div>
+      <div id="annualBonusList"></div>
+    </section>
+  </div>
+
+  <div data-page="leave">
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <div class="ghead" style="margin:0 0 5px;">
+        <label style="margin:0;">依週期篩選</label>
+        <button class="addlink" id="addPeriodBtn" type="button" style="padding:0; font-size:12px;">＋ 新增週期</button>
+      </div>
+      <div class="row2">
+        <select id="leavePeriodFilter" style="flex:1;"></select>
+        <button class="btn ghost" id="editPeriodBtn" type="button" style="flex:0 0 auto; padding:10px 14px;">✎ 設定總時數</button>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <label>依假別篩選</label>
+      <div class="subtabs" id="leaveTypeFilterTabs" style="display:grid; grid-template-columns:repeat(3,1fr); padding:3px; gap:6px;">
+        <button type="button" data-lfilter="all" class="active" style="padding:8px 0; font-size:12px;">全部</button>
+        <button type="button" data-lfilter="annual" style="padding:8px 0; font-size:12px;">特休</button>
+        <button type="button" data-lfilter="sick" style="padding:8px 0; font-size:12px;">病假</button>
+        <button type="button" data-lfilter="physio" style="padding:8px 0; font-size:12px;">生理假</button>
+        <button type="button" data-lfilter="family" style="padding:8px 0; font-size:12px;">家庭照顧假</button>
+        <button type="button" data-lfilter="swap" style="padding:8px 0; font-size:12px;">換休</button>
+      </div>
+    </div>
+
+    <div class="calc-box" style="margin-top:14px;">
+      <div class="line"><span>本週期總時數</span><span class="v num" id="leaveTotalHours">0 hr</span></div>
+      <div class="line"><span>特休已使用</span><span class="v num" id="leaveAnnualHours">0 hr</span></div>
+      <div class="line"><span>其他假別時數</span><span class="v num" id="leaveOtherHours">0 hr</span></div>
+      <div class="line total"><span>特休剩餘</span><span class="v num" id="leaveAnnualRemain">-</span></div>
+    </div>
+    <div class="section-hint" id="leaveRemainHint" style="margin:-8px 0 8px;"></div>
+
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot leave"></span>請假紀錄 <span class="count" id="leaveCount"></span></h2>
+        <button class="sort-btn" id="leaveSortBtn" type="button"></button>
+      </div>
+      <div id="leaveList"></div>
+    </section>
+  </div>
+
+  <div data-page="other">
+    <div class="subtabs" id="otherFilterTabs" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+      <button type="button" data-osub="claim" class="active">保險理賠</button>
+      <button type="button" data-osub="timeline">年資規劃</button>
+      <button type="button" data-osub="redout">紅包紀錄</button>
+      <button type="button" data-osub="redin">收到紅包</button>
+      <button type="button" data-osub="fever">發燒歷程</button>
+    </div>
+
+    <div data-osub-page="claim" class="active">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot claim"></span>保險理賠 <span class="count" id="claimCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="claimSortBtn" type="button"></button>
+            <button class="addlink" id="addClaimBtn" type="button">＋ 新增</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>依年份篩選</label>
+          <select id="claimYearFilter"><option value="all">全部年份</option></select>
+        </div>
+        <div id="claimList"></div>
+      </section>
+    </div>
+
+    <div data-osub-page="timeline">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot plan"></span>年資規劃 <span class="count" id="timelineCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="timelineSortBtn" type="button"></button>
+            <button class="addlink" id="addTimelineBtn" type="button">＋ 新增年度</button>
+          </div>
+        </div>
+        <div class="calc-box" id="timelineNowBox">
+          <div class="line"><span>今年 (<span id="tNowYear"></span>)</span><span class="v num" id="tNowSummary">-</span></div>
+        </div>
+        <div id="timelineList"></div>
+      </section>
+    </div>
+
+    <div data-osub-page="redout">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot hb"></span>紅包紀錄 <span class="count" id="redOutCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="redOutSortBtn" type="button"></button>
+            <button class="addlink" id="addRedOutBtn" type="button">＋ 新增</button>
+          </div>
+        </div>
+        <div class="row2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;">
+            <label>依年份篩選</label>
+            <select id="redOutYearFilter"><option value="all">全部年份</option></select>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>依節日篩選</label>
+            <select id="redOutOccasionFilter">
+              <option value="all">全部</option>
+              <option value="過年">過年</option>
+              <option value="生日">生日</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="breakdown-strip" style="grid-template-columns:1fr;">
+          <div class="chip"><div class="lbl">篩選範圍總計</div><div class="val num" id="redOutTotal">$0</div></div>
+        </div>
+        <div id="redOutList" style="margin-top:10px;"></div>
+      </section>
+    </div>
+
+    <div data-osub-page="redin">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot hb"></span>收到紅包 <span class="count" id="redInCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="redInSortBtn" type="button"></button>
+            <button class="addlink" id="addRedInBtn" type="button">＋ 新增</button>
+          </div>
+        </div>
+        <div class="row2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;">
+            <label>依年份篩選</label>
+            <select id="redInYearFilter"><option value="all">全部年份</option></select>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>依孩子篩選</label>
+            <select id="redInChildFilter">
+              <option value="all">全部</option>
+              <option value="宸">宸</option>
+              <option value="杉">杉</option>
+              <option value="宸+杉">宸+杉(合)</option>
+            </select>
+          </div>
+        </div>
+        <div class="breakdown-strip" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="chip"><div class="lbl">宸 累計</div><div class="val num" id="redInSongTotal">$0</div></div>
+          <div class="chip"><div class="lbl">杉 累計</div><div class="val num" id="redInShanTotal">$0</div></div>
+          <div class="chip"><div class="lbl">宸+杉合計</div><div class="val num" id="redInBothTotal">$0</div></div>
+        </div>
+        <div id="redInList" style="margin-top:10px;"></div>
+      </section>
+    </div>
+
+    <div data-osub-page="fever">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot fever"></span>發燒次數 <span class="count" id="episodeCount"></span></h2>
+          <button class="addlink" id="addEpisodeBtn" type="button">＋ 新增一次</button>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>依姓名篩選</label>
+          <select id="feverPersonFilter"><option value="all">全部</option></select>
+        </div>
+        <div id="episodeList"></div>
+      </section>
+
+      <section class="group">
+        <div class="ghead">
+          <h2><span class="dot fever"></span>體溫量測 <span class="count" id="feverCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="feverSortBtn" type="button"></button>
+            <button class="addlink" id="addFeverBtn" type="button">＋ 新增量測</button>
+          </div>
+        </div>
+        <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
+        <div class="breakdown-strip">
+          <div class="chip"><div class="lbl">最新體溫</div><div class="val num" id="feverLatest">-</div></div>
+          <div class="chip"><div class="lbl">最高溫</div><div class="val num" id="feverMax">-</div></div>
+          <div class="chip"><div class="lbl">紀錄筆數</div><div class="val num" id="feverEntryCount">0</div></div>
+        </div>
+        <div class="chart-box" id="feverChartBox" style="margin-top:10px;"></div>
+        <div id="feverList" style="margin-top:10px;"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="新增">＋</button>
+
+<div class="sheet-backdrop" id="sheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="sheetTitle">新增項目</h3>
+    <div class="field">
+      <label>類型</label>
+      <div class="seg4" id="typeSeg">
+        <button type="button" data-type="income" class="active income">收入</button>
+        <button type="button" data-type="fixed">固定支出</button>
+        <button type="button" data-type="savings">儲蓄</button>
+        <button type="button" data-type="variable">變動支出</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>負責人</label>
+      <div class="subtabs" id="fPersonSeg" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button type="button" data-fperson="hua" class="active">HUA</button>
+        <button type="button" data-fperson="yupas">YUPAS</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>項目名稱</label>
+      <input id="fName" type="text" placeholder="例如：薪水、房租、存股">
+    </div>
+    <div class="row2">
+      <div class="field"><label>金額 (NT$)</label><input id="fAmount" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>每月轉帳日</label><input id="fDay" type="number" min="1" max="31" placeholder="例如：5"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>銀行 / 帳戶</label><input id="fAccount" type="text" placeholder="例如：元大-樺"></div>
+      <div class="field"><label>轉帳方式</label><input id="fMethod" type="text" placeholder="例如：自動轉帳"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="fNote" placeholder="其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="cancelBtn" type="button">取消</button>
+      <button class="btn danger" id="deleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="duplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="saveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="salarySheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="salarySheetTitle">新增薪水紀錄</h3>
+
+    <div class="field">
+      <label>類型</label>
+      <div class="seg4" id="recordTypeSeg" style="grid-template-columns:1fr 1fr;">
+        <button type="button" data-rtype="salary" class="active salary">薪水</button>
+        <button type="button" data-rtype="bonus">獎金</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>負責人</label>
+      <div class="subtabs" id="sPersonSeg" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button type="button" data-sperson="hua" class="active">HUA</button>
+        <button type="button" data-sperson="yupas">YUPAS</button>
+      </div>
+    </div>
+
+    <div class="section-label">基本資訊</div>
+    <div class="row2">
+      <div class="field"><label>發薪日期</label><input id="sDate" type="date"></div>
+      <div class="field" id="ratingField"><label>考績</label><input id="sRating" type="text" placeholder="例如：甲、乙"></div>
+    </div>
+    <div class="field" id="bonusNameField" hidden><label>獎金名稱</label><input id="sBonusName" type="text" placeholder="例如：端午獎金、中秋獎金、年終獎金、慰勉金"></div>
+
+    <div id="salaryOnlySections">
+      <div class="section-label">應發項目</div>
+      <div class="row2">
+        <div class="field"><label>底薪</label><input id="sBaseSalary" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>效率獎金</label><input id="sBonus" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="field"><label>應發金額</label><input id="sGrossAmount" type="number" inputmode="decimal" placeholder="0"></div>
+
+      <div class="section-label">缺勤 / 請假時數</div>
+      <div class="row2">
+        <div class="field"><label>缺勤時數</label><input id="sAbsenceHours" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>缺勤減發金額</label><input id="sAbsenceDeduction" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>生理假(hr)</label><input id="sLeavePhysio" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>病假(hr)</label><input id="sLeaveSick" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>事假(hr)</label><input id="sLeavePersonal" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+
+      <div class="section-label">扣款明細</div>
+      <div class="section-hint">扣減項目＝勞保＋健保＋福利金＋暫支薪資＋其他＋停車費（獎金通常沒有這些扣款）</div>
+      <div class="row3">
+        <div class="field"><label>勞保</label><input id="sLaborIns" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>健保</label><input id="sHealthIns" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>福利金</label><input id="sWelfare" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>暫支薪資</label><input id="sAdvance" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>其他</label><input id="sOther" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>停車費</label><input id="sParking" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+    </div>
+
+    <div class="section-label">實發金額</div>
+    <div class="row2">
+      <div class="field"><label>實發金額 (NT$)</label><input id="sAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="calc-box" id="grossCalcBox">
+      <div class="line"><span>應發金額</span><span class="v num" id="calcGross">$0</span></div>
+      <div class="line"><span>缺勤減發</span><span class="v neg num" id="calcAbsence">-$0</span></div>
+      <div class="line"><span>扣款合計（勞健保等6項）</span><span class="v neg num" id="calcDeduction">-$0</span></div>
+      <div class="line total"><span>建議實發金額</span><span class="v num" id="calcSuggested">$0</span></div>
+    </div>
+
+    <div class="field"><label>備註</label><textarea id="sGeneralNote" placeholder="例如：請假、調薪、獎金說明…"></textarea></div>
+
+    <div class="sheet-actions">
+      <button class="btn ghost" id="salaryCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="salaryDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="salaryDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="salarySaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="utilitySheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="utilitySheetTitle">新增水電瓦斯紀錄</h3>
+    <div class="row2">
+      <div class="field"><label>年</label><input id="uYear" type="number" inputmode="decimal" placeholder="例如：2026"></div>
+      <div class="field"><label>月</label><input id="uMonth" type="number" min="1" max="12" placeholder="例如：9"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>房租</label><input id="uRent" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>水費</label><input id="uWater" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>電費</label><input id="uElectric" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>天然氣</label><input id="uGas" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="calc-box">
+      <div class="line total"><span>總計</span><span class="v num" id="uCalcTotal">$0</span></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="uNote" placeholder="例如：繳費方式、截止日…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="utilityCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="utilityDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="utilityDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="utilitySaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="annualFixedSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="annualFixedSheetTitle">新增每年固定支出</h3>
+    <div class="field">
+      <label>負責人</label>
+      <div class="subtabs" id="afPersonSeg" style="grid-template-columns:1fr 1fr; display:grid;">
+        <button type="button" data-afperson="hua" class="active">HUA</button>
+        <button type="button" data-afperson="yupas">YUPAS</button>
+      </div>
+    </div>
+    <div class="field"><label>項目名稱</label><input id="afName" type="text" placeholder="例如：三商保費、遠雄保費、機車險"></div>
+    <div class="row2">
+      <div class="field"><label>年繳金額 (NT$)</label><input id="afAnnualAmount" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>約當月繳 (選填)</label><input id="afMonthlyAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="afNote" placeholder="例如：繳費月份、扣款方式…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="annualFixedCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="annualFixedDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="annualFixedDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="annualFixedSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="annualBonusSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="annualBonusSheetTitle">新增年終獎金分配</h3>
+    <div class="row2">
+      <div class="field"><label>年份</label><input id="abYear" type="number" inputmode="decimal" placeholder="例如：2026"></div>
+      <div class="field"><label>項目名稱</label><input id="abName" type="text" placeholder="例如：存股、還保單借款"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>HUA 金額</label><input id="abHuaAmount" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>YUPAS 金額</label><input id="abYupasAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="calc-box">
+      <div class="line total"><span>小計</span><span class="v num" id="abCalcTotal">$0</span></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="abNote" placeholder="其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="annualBonusCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="annualBonusDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="annualBonusDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="annualBonusSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="claimSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="claimSheetTitle">新增保險理賠</h3>
+    <div class="row2">
+      <div class="field"><label>保險公司</label><input id="clCompany" type="text" placeholder="例如：三商、遠雄、富邦、勞保"></div>
+      <div class="field"><label>診斷 / 事件</label><input id="clDiagnosis" type="text" placeholder="例如：骨盆腔發炎住院"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>事故日期</label><input id="clIncidentDate" type="date"></div>
+      <div class="field"><label>申請受理日</label><input id="clApplyDate" type="date"></div>
+      <div class="field"><label>理賠日期</label><input id="clPayDate" type="date"></div>
+    </div>
+    <div class="field"><label>給付金額 (NT$)</label><input id="clAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    <div class="field"><label>備註</label><textarea id="clNote" placeholder="病況說明、費用明細…"></textarea></div>
+    <div class="field"><label>申請進度備註</label><textarea id="clProcessNote" placeholder="例如：已寄送、已受理…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="claimCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="claimDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="claimDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="claimSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="timelineSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="timelineSheetTitle">新增年度紀錄</h3>
+    <div class="field"><label>年份</label><input id="tYear" type="number" inputmode="decimal" placeholder="例如：2027"></div>
+    <div class="calc-box">
+      <div class="line"><span>年資</span><span class="v num" id="tCalcTenure">-</span></div>
+      <div class="line total"><span>年齡</span><span class="v num" id="tCalcAge">-</span></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>宸 年級</label><input id="tSongGrade" type="text" placeholder="例如：小1"></div>
+      <div class="field"><label>杉 年級</label><input id="tShanGrade" type="text" placeholder="例如：托嬰"></div>
+    </div>
+    <div class="field"><label>備註 / 人生規劃</label><textarea id="tNote" placeholder="例如：考績、金幣、還款、退休目標…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="timelineCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="timelineDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="timelineDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="timelineSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="redOutSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="redOutSheetTitle">新增紅包紀錄</h3>
+    <div class="row2">
+      <div class="field"><label>年份</label><input id="roYear" type="number" inputmode="decimal" placeholder="例如：2026"></div>
+      <div class="field">
+        <label>節日</label>
+        <select id="roOccasion">
+          <option value="過年">過年</option>
+          <option value="生日">生日</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>包給誰</label><input id="roRecipient" type="text" placeholder="例如：爺爺奶奶、樺媽媽"></div>
+      <div class="field"><label>金額 (NT$)</label><input id="roAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="roNote" placeholder="其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="redOutCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="redOutDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="redOutDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="redOutSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="redInSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="redInSheetTitle">新增收到紅包紀錄</h3>
+    <div class="row2">
+      <div class="field"><label>年份</label><input id="riYear" type="number" inputmode="decimal" placeholder="例如：2026"></div>
+      <div class="field">
+        <label>節日</label>
+        <select id="riOccasion">
+          <option value="過年">過年</option>
+          <option value="生日">生日</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>孩子</label>
+      <div class="subtabs" id="riChildSeg" style="grid-template-columns:1fr 1fr 1fr; display:grid;">
+        <button type="button" data-richild="宸" class="active">宸</button>
+        <button type="button" data-richild="杉">杉</button>
+        <button type="button" data-richild="宸+杉">宸+杉(合)</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>誰給的</label><input id="riGiver" type="text" placeholder="例如：爺爺奶奶、外婆"></div>
+      <div class="field"><label>金額 (NT$)</label><input id="riAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="riNote" placeholder="其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="redInCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="redInDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="redInDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="redInSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="episodeSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="episodeSheetTitle">新增一次發燒</h3>
+    <div class="field"><label>姓名</label><input id="epPerson" type="text" placeholder="例如：杉、宸" list="feverPersonList"></div>
+    <datalist id="feverPersonList"></datalist>
+    <div class="row2">
+      <div class="field"><label>開始日期</label><input id="epStartDate" type="date"></div>
+      <div class="field"><label>結束日期（選填，燒退了再填）</label><input id="epEndDate" type="date"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="epNote" placeholder="例如：懷疑病因、看診紀錄…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="episodeCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="episodeDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="episodeDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="episodeSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="feverSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="feverSheetTitle">新增發燒紀錄</h3>
+    <div class="section-hint" id="fvEpisodeHint" style="margin:0 0 10px;"></div>
+    <div class="row3">
+      <div class="field"><label>日期</label><input id="fvDate" type="date"></div>
+      <div class="field"><label>時間</label><input id="fvTime" type="time"></div>
+      <div class="field"><label>體溫 (°C)</label><input id="fvTemp" type="number" inputmode="decimal" step="0.1" placeholder="例如：38.5"></div>
+    </div>
+    <div class="field"><label>用藥</label><input id="fvMed" type="text" placeholder="例如：依普芬、安佳熱"></div>
+    <div class="field"><label>備註</label><textarea id="fvNote" placeholder="症狀、看診、其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="feverCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="feverDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="feverDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="feverSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="leaveSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="leaveSheetTitle">新增請假紀錄</h3>
+    <div class="field">
+      <label>週期</label>
+      <select id="lPeriod"></select>
+    </div>
+    <div class="row2">
+      <div class="field"><label>請假日期</label><input id="lDate" type="date"></div>
+      <div class="field">
+        <label>假別</label>
+        <select id="lType">
+          <option value="特休">特休</option>
+          <option value="復職用特休">復職用特休</option>
+          <option value="未住院病假">未住院病假</option>
+          <option value="住院病假">住院病假</option>
+          <option value="生理假">生理假</option>
+          <option value="家庭照顧假">家庭照顧假</option>
+          <option value="換休">換休</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>時數</label><input id="lHours" type="number" inputmode="decimal" placeholder="例如：8"></div>
+    <div class="field"><label>備註</label><textarea id="lNote" placeholder="原因、地點等說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="leaveCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="leaveDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="leaveDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="leaveSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="periodSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="periodSheetTitle">新增請假週期</h3>
+    <div class="row2">
+      <div class="field"><label>起始日期</label><input id="pStartDate" type="date"></div>
+      <div class="field"><label>結束日期</label><input id="pEndDate" type="date"></div>
+    </div>
+    <div class="field"><label>特休總時數 (hr)</label><input id="pEntitlement" type="number" inputmode="decimal" placeholder="例如：120"></div>
+    <div class="field"><label>備註</label><textarea id="pNote" placeholder="例如：到職週年計算方式…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="periodCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="periodDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn primary" id="periodSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyC_A57re3zCzr7MW79U5E0lalyimh6vSpY",
+    authDomain: "huaapp-ed11a.firebaseapp.com",
+    projectId: "huaapp-ed11a",
+    storageBucket: "huaapp-ed11a.firebasestorage.app",
+    messagingSenderId: "463134141525",
+    appId: "1:463134141525:web:c61a193693ed4fa32578dc",
+    measurementId: "G-53BQM13VJP"
+  };
+  var app = initializeApp(firebaseConfig);
+  var auth = getAuth(app);
+  var firestore = getFirestore(app);
+
+  function makeDbShim(){
+    return {
+      collection: function(name){
+        var colRef = collection(firestore, name);
+        return {
+          doc: function(id){
+            var docRef = doc(firestore, name, id);
+            return {
+              set: function(data){ return setDoc(docRef, data); },
+              delete: function(){ return deleteDoc(docRef); }
+            };
+          },
+          add: function(data){
+            return addDoc(colRef, data).then(function(ref){ return { id: ref.id }; });
+          },
+          onSnapshot: function(cb, errCb){
+            return onSnapshot(colRef, function(snap){
+              var docs = [];
+              snap.forEach(function(d){ docs.push({ id: d.id, data: function(){ return d.data(); } }); });
+              cb({ docs: docs });
+            }, errCb);
+          }
+        };
+      }
+    };
+  }
+
+  var resolveDbReady;
+  window.__fbDbPromise = new Promise(function(resolve){ resolveDbReady = resolve; });
+
+  var gate = document.getElementById("authGate");
+  var emailInput = document.getElementById("authEmail");
+  var passInput = document.getElementById("authPass");
+  var errBox = document.getElementById("authError");
+  var submitBtn = document.getElementById("authSubmitBtn");
+
+  function showError(msg){ errBox.textContent = msg; errBox.style.display = "block"; }
+
+  function doLogin(){
+    errBox.style.display = "none";
+    var email = emailInput.value.trim();
+    var pass = passInput.value;
+    if (!email || !pass){ showError("請輸入 Email 和密碼"); return; }
+    submitBtn.disabled = true; submitBtn.textContent = "登入中…";
+    signInWithEmailAndPassword(auth, email, pass).catch(function(err){
+      showError("登入失敗：" + (err && err.code ? err.code : "請確認帳號密碼"));
+      submitBtn.disabled = false; submitBtn.textContent = "登入";
+    });
+  }
+  submitBtn.addEventListener("click", doLogin);
+  passInput.addEventListener("keydown", function(e){ if (e.key === "Enter") doLogin(); });
+  emailInput.addEventListener("keydown", function(e){ if (e.key === "Enter") doLogin(); });
+
+  onAuthStateChanged(auth, function(user){
+    if (user){
+      gate.style.display = "none";
+      resolveDbReady(makeDbShim());
+    }
+  });
+</script>
+
+<script>
+(function(){
+  var itemsById = {};
+  var salariesById = {};
+  var utilitiesById = {};
+  var annualFixedById = {};
+  var annualBonusById = {};
+  var leavesById = {};
+  var claimsById = {};
+  var timelineById = {};
+  var redOutById = {};
+  var redInById = {};
+  var feverById = {};
+  var episodesById = {};
+  var editingId = null;
+  var editingSalaryId = null;
+  var editingUtilityId = null;
+  var editingAnnualFixedId = null;
+  var editingAnnualBonusId = null;
+  var editingLeaveId = null;
+  var editingClaimId = null;
+  var editingTimelineId = null;
+  var editingRedOutId = null;
+  var editingRedInId = null;
+  var editingFeverId = null;
+  var editingEpisodeId = null;
+  var currentType = "income";
+  var currentTab = "budget";
+  var currentPerson = "hua";
+  var PERSON_LABEL = { hua:"HUA", yupas:"YUPAS", combined:"兩人合計" };
+  var dbReady = false;
+  var col = null;
+  var salaryCol = null;
+  var utilityCol = null;
+  var annualFixedCol = null;
+  var annualBonusCol = null;
+  var leaveCol = null;
+  var periodsById = {};
+  var periodsCol = null;
+  var editingPeriodId = null;
+  var claimCol = null;
+  var timelineCol = null;
+  var redOutCol = null;
+  var redInCol = null;
+  var feverCol = null;
+  var episodeCol = null;
+  var latestDeductTotal = 0;
+  var TENURE_BASE_YEAR = 2012;
+  var AGE_BASE_YEAR = 1988;
+
+  var LEAVE_ANNUAL_TYPES = { "特休":1, "復職用特休":1 };
+  var LEAVE_FILTER_GROUPS = {
+    all: null,
+    annual: ["特休","復職用特休"],
+    sick: ["未住院病假","住院病假"],
+    physio: ["生理假"],
+    family: ["家庭照顧假"],
+    swap: ["換休"]
+  };
+
+  function periodIdFromDates(start, end){ return start.replace(/-/g,"") + "-" + end.replace(/-/g,""); }
+  function isoFromCompact(c){ return c.slice(0,4) + "-" + c.slice(4,6) + "-" + c.slice(6,8); }
+  function periodLabel(startIso, endIso){ return startIso.replace(/-/g,"/") + "–" + endIso.replace(/-/g,"/"); }
+
+  // Combines saved period settings with any legacy period ids only referenced by historical leave records.
+  function getAllPeriods(){
+    var map = {};
+    Object.keys(periodsById).forEach(function(id){
+      var p = periodsById[id];
+      map[id] = { _id: id, startDate: p.startDate, endDate: p.endDate, entitlementHours: Number(p.entitlementHours)||0, note: p.note || "" };
+    });
+    Object.keys(leavesById).forEach(function(id){
+      var per = leavesById[id].period;
+      if (per && !map[per]){
+        map[per] = { _id: per, startDate: isoFromCompact(per.slice(0,8)), endDate: isoFromCompact(per.slice(9,17)), entitlementHours: 0, note: "", legacy: true };
+      }
+    });
+    return Object.keys(map).map(function(k){ return map[k]; })
+      .sort(function(a,b){ return (b.startDate||"").localeCompare(a.startDate||""); });
+  }
+  function defaultLeavePeriod(list){
+    var todayStr = new Date().toISOString().slice(0,10);
+    for (var i = 0; i < list.length; i++){
+      if (todayStr >= list[i].startDate && todayStr <= list[i].endDate) return list[i]._id;
+    }
+    return list.length ? list[0]._id : null;
+  }
+
+  var CATS = ["income","fixed","savings","variable"];
+  var CAT_LABEL = { income:"收入", fixed:"固定支出", savings:"儲蓄", variable:"變動支出" };
+
+  // desc = newest/largest first (default), asc = oldest/smallest first
+  var SORT_DIR = {
+    budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
+    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc"
+  };
+  function wireSortBtn(btnId, key, renderFn){
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.textContent = SORT_DIR[key] === "asc" ? "舊→新 ↑" : "新→舊 ↓";
+    btn.addEventListener("click", function(){
+      SORT_DIR[key] = SORT_DIR[key] === "asc" ? "desc" : "asc";
+      btn.textContent = SORT_DIR[key] === "asc" ? "舊→新 ↑" : "新→舊 ↓";
+      renderFn();
+    });
+  }
+
+  function fmt(n){ n = Math.round(Number(n) || 0); return "$" + n.toLocaleString("en-US"); }
+  function fmtSigned(n){ n = Math.round(Number(n) || 0); return (n < 0 ? "-$" : "$") + Math.abs(n).toLocaleString("en-US"); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; });
+  }
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  var PERSON_FILTERED_TABS = { budget:1, salary:1, annual:1 };
+  function switchTab(tab){
+    currentTab = tab;
+    document.querySelectorAll(".tabs button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-tab") === tab);
+    });
+    document.querySelectorAll("[data-page]").forEach(function(p){
+      p.classList.toggle("active", p.getAttribute("data-page") === tab);
+    });
+    document.getElementById("addBtn").hidden = (tab === "annual" || tab === "other");
+    document.getElementById("personFilterTabs").hidden = !PERSON_FILTERED_TABS[tab];
+  }
+  document.querySelectorAll(".tabs button").forEach(function(b){
+    b.addEventListener("click", function(){ switchTab(b.getAttribute("data-tab")); });
+  });
+
+  document.querySelectorAll("#personFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      currentPerson = b.getAttribute("data-person");
+      document.querySelectorAll("#personFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      render(); renderSalaries(); renderAnnualFixed(); renderAnnualBonus();
+    });
+  });
+
+  var budgetGroupMode = "category";
+  var CAT_ORDER = { income:0, fixed:1, savings:2, variable:3 };
+  document.querySelectorAll("#budgetFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      budgetGroupMode = b.getAttribute("data-mode");
+      document.querySelectorAll("#budgetFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      document.getElementById("categoryGroups").hidden = budgetGroupMode !== "category";
+      document.getElementById("dynamicGroups").hidden = budgetGroupMode === "category";
+      render();
+    });
+  });
+
+  document.querySelectorAll("#otherFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      var sub = b.getAttribute("data-osub");
+      document.querySelectorAll("#otherFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      document.querySelectorAll("[data-osub-page]").forEach(function(p){
+        p.classList.toggle("active", p.getAttribute("data-osub-page") === sub);
+      });
+    });
+  });
+
+  function renderDynamicGroups(all, mode){
+    var container = document.getElementById("dynamicGroups");
+    container.innerHTML = "";
+    var keyFn, sortFn, labelFn;
+    if (mode === "day"){
+      keyFn = function(d){ return d.transferDay ? String(d.transferDay) : "__none"; };
+      sortFn = function(a,b){
+        if (a === "__none") return 1;
+        if (b === "__none") return -1;
+        return Number(a) - Number(b);
+      };
+      labelFn = function(k){ return k === "__none" ? "未設定轉帳日" : "每月 " + k + " 日"; };
+    } else {
+      keyFn = function(d){ return d.account ? d.account : "__none"; };
+      sortFn = function(a,b){
+        if (a === "__none") return 1;
+        if (b === "__none") return -1;
+        return a.localeCompare(b, "zh-Hant");
+      };
+      labelFn = function(k){ return k === "__none" ? "未設定銀行" : k; };
+    }
+    var groups = {};
+    all.forEach(function(d){
+      var k = keyFn(d);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(d);
+    });
+    var keys = Object.keys(groups).sort(sortFn);
+    if (!keys.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "還沒有任何項目，先到「依類型」新增";
+      container.appendChild(e);
+      return;
+    }
+    keys.forEach(function(k){
+      var rows = groups[k].slice().sort(function(a,b){
+        return (CAT_ORDER[a.category]||9) - (CAT_ORDER[b.category]||9);
+      });
+      var incomeTotal = rows.filter(function(r){ return r.category === "income"; })
+        .reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0);
+      var expenseTotal = rows.filter(function(r){ return r.category !== "income"; })
+        .reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0);
+      var net = incomeTotal - expenseTotal;
+      var sec = document.createElement("section");
+      sec.className = "group";
+      var head = document.createElement("div");
+      head.className = "ghead";
+      head.innerHTML =
+        '<h2>' + escapeHtml(labelFn(k)) + ' <span class="count">(' + rows.length + ')</span></h2>' +
+        '<span class="meta num" style="text-align:right;">收入 ' + fmt(incomeTotal) +
+          ' · 支出 ' + fmt(expenseTotal) + ' · 淨額 ' + fmtSigned(net) + '</span>';
+      sec.appendChild(head);
+      var listDiv = document.createElement("div");
+      rows.forEach(function(d){ listDiv.appendChild(itemEl(d, d.category)); });
+      sec.appendChild(listDiv);
+      container.appendChild(sec);
+    });
+  }
+
+  function itemEl(d, kind){
+    var el = document.createElement("div");
+    el.className = "item";
+    var metaParts = [];
+    if (d.transferDay) metaParts.push("每月 " + d.transferDay + " 日");
+    if (d.account) metaParts.push(d.account);
+    if (d.method) metaParts.push(d.method);
+    var nameLabel = escapeHtml(d.name || "未命名") +
+      (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '');
+    el.innerHTML =
+      '<div class="stripe ' + kind + '"></div>' +
+      '<div class="body">' +
+        '<div class="name">' + nameLabel + '</div>' +
+        '<div class="meta">' + escapeHtml(metaParts.join(" · ") || (d.note || "")) + '</div>' +
+      '</div>' +
+      '<div class="amt ' + kind + ' num">' + fmt(d.amount) + '</div>';
+    el.addEventListener("click", function(){ openEdit(d); });
+    return el;
+  }
+
+  function render(){
+    var all = Object.keys(itemsById).map(function(id){
+      return Object.assign({}, itemsById[id], { _id: id });
+    });
+    if (currentPerson !== "combined"){
+      all = all.filter(function(d){ return (d.person || "hua") === currentPerson; });
+    }
+
+    var totals = { income:0, fixed:0, savings:0, variable:0 };
+    CATS.forEach(function(cat){
+      var list = document.getElementById(cat + "List");
+      list.innerHTML = "";
+      var rows = all.filter(function(d){ return d.category === cat; })
+        .sort(function(a,b){
+          var d = (a.transferDay||99) - (b.transferDay||99);
+          return SORT_DIR.budget === "asc" ? d : -d;
+        });
+      document.getElementById(cat + "Count").textContent = rows.length ? "(" + rows.length + ")" : "";
+      totals[cat] = rows.reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+      if (!rows.length){
+        var e = document.createElement("div");
+        e.className = "empty";
+        e.textContent = "還沒有" + CAT_LABEL[cat] + "項目，點右下角 ＋ 新增";
+        list.appendChild(e);
+      } else {
+        rows.forEach(function(d){ list.appendChild(itemEl(d, cat)); });
+      }
+    });
+
+    var totalExpense = totals.fixed + totals.savings + totals.variable;
+    latestDeductTotal = totals.fixed + totals.savings;
+
+    document.getElementById("sumIncome").textContent = fmt(totals.income);
+    document.getElementById("sumExpense").textContent = fmt(totalExpense);
+    document.getElementById("sumBalance").textContent = fmt(totals.income - totalExpense);
+    document.getElementById("sumFixed").textContent = fmt(totals.fixed);
+    document.getElementById("sumSavings").textContent = fmt(totals.savings);
+    document.getElementById("sumVariable").textContent = fmt(totals.variable);
+
+    var bar = document.getElementById("ratioBar");
+    var segs = [
+      { cat:"fixed", v: totals.fixed, color:"var(--fixed)" },
+      { cat:"savings", v: totals.savings, color:"var(--savings)" },
+      { cat:"variable", v: totals.variable, color:"var(--variable)" }
+    ];
+    var sum = segs.reduce(function(s,x){ return s + x.v; }, 0) || 1;
+    bar.innerHTML = segs.map(function(x){
+      return '<span style="width:' + (x.v/sum*100) + '%;background:' + x.color + '"></span>';
+    }).join("");
+
+    if (budgetGroupMode !== "category"){
+      renderDynamicGroups(all, budgetGroupMode);
+    }
+
+    updateSalaryCalcBox();
+  }
+
+  var salaryYearFilterValue = "all";
+  function updateSalaryYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered
+      .map(function(d){ return (d.payDate || "").slice(0,4); })
+      .filter(function(y){ return y.length === 4; })
+    )).sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("salaryYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      salaryYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("salaryYearFilter").addEventListener("change", function(){
+    salaryYearFilterValue = this.value;
+    renderSalaries();
+  });
+
+  var salaryTypeFilterValue = "all";
+  var bonusSubFilterValue = "all";
+  var BONUS_NAME_MAP = { "年終":"年終獎金", "中秋":"中秋獎金", "端午":"端午獎金" };
+  document.querySelectorAll("#salaryTypeFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      salaryTypeFilterValue = b.getAttribute("data-rfilter");
+      document.querySelectorAll("#salaryTypeFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      document.getElementById("bonusSubFilterField").hidden = salaryTypeFilterValue !== "bonus";
+      if (salaryTypeFilterValue !== "bonus"){
+        bonusSubFilterValue = "all";
+        document.querySelectorAll("#bonusSubFilterTabs button").forEach(function(x){
+          x.classList.toggle("active", x.getAttribute("data-bsub") === "all");
+        });
+      }
+      renderSalaries();
+    });
+  });
+  document.querySelectorAll("#bonusSubFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      bonusSubFilterValue = b.getAttribute("data-bsub");
+      document.querySelectorAll("#bonusSubFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      renderSalaries();
+    });
+  });
+
+  function renderSalaries(){
+    var list = document.getElementById("salaryList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(salariesById).map(function(id){
+      return Object.assign({}, salariesById[id], { _id: id });
+    }).filter(function(d){
+      return currentPerson === "combined" || (d.person || "hua") === currentPerson;
+    }).sort(function(a,b){
+      var d = (b.payDate || "").localeCompare(a.payDate || "");
+      return SORT_DIR.salary === "asc" ? -d : d;
+    });
+
+    updateSalaryYearOptions(allUnfiltered);
+    document.getElementById("salaryTotalCount").textContent = allUnfiltered.length;
+
+    var all = salaryYearFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
+      return (d.payDate || "").slice(0,4) === salaryYearFilterValue;
+    });
+    if (salaryTypeFilterValue !== "all"){
+      all = all.filter(function(d){
+        var isBonus = d.recordType === "bonus";
+        return salaryTypeFilterValue === "bonus" ? isBonus : !isBonus;
+      });
+    }
+    if (salaryTypeFilterValue === "bonus" && bonusSubFilterValue !== "all"){
+      all = all.filter(function(d){
+        if (bonusSubFilterValue === "其他"){
+          return !["年終獎金","中秋獎金","端午獎金"].includes(d.bonusName);
+        }
+        return d.bonusName === BONUS_NAME_MAP[bonusSubFilterValue];
+      });
+    }
+    document.getElementById("salaryCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var filteredTotal = all.reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    var totalLabel = (salaryYearFilterValue === "all" && salaryTypeFilterValue === "all") ? "總額" : "篩選總額";
+    document.getElementById("salaryFilteredTotal").textContent = totalLabel + " " + fmt(filteredTotal);
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length
+        ? (salaryYearFilterValue + " 年沒有薪水紀錄")
+        : "每月薪資單出來後，點右下角 ＋ 記一筆";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var isBonus = d.recordType === "bonus";
+      var el = document.createElement("div");
+      el.className = "salary-card" + (isBonus ? " bonus-card" : "");
+      var titleLabel = isBonus ? escapeHtml(d.bonusName || "獎金") : escapeHtml(d.payDate || "未填日期");
+      var dateLabel = titleLabel +
+        (isBonus ? '<span class="bonus-badge">🎁 獎金</span>' : '') +
+        (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '') +
+        (d.historical ? '<span class="hist-badge">歷史</span>' : '');
+      var html =
+        '<div class="row1"><span class="date">' + dateLabel + '</span>' +
+          '<span class="net num">' + fmt(d.amount) + '</span></div>';
+      if (isBonus && d.payDate){
+        html += '<div class="meta" style="margin-top:4px;">' + escapeHtml(d.payDate) + '</div>';
+      }
+
+      if (!isBonus){
+        var deductionTotal = (Number(d.laborIns)||0) + (Number(d.healthIns)||0) + (Number(d.welfare)||0) +
+          (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0);
+        var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
+        var metaParts = [];
+        if (d.grossAmount) metaParts.push("應發 " + fmt(d.grossAmount));
+        if (deductionTotal) metaParts.push("扣款 " + fmt(deductionTotal));
+        if (leaveHours) metaParts.push("請假 " + leaveHours + "hr");
+        if (d.rating) metaParts.push("考績 " + escapeHtml(d.rating));
+        if (metaParts.length){
+          html += '<div class="meta" style="margin-top:6px;">' + metaParts.join(" · ") + '</div>';
+        }
+      }
+
+      if (d.historical && d.historyNote){
+        html += '<div class="note">' + escapeHtml(d.historyNote) + '</div>';
+      }
+      if (d.generalNote){
+        html += '<div class="note">' + escapeHtml(d.generalNote) + '</div>';
+      }
+      el.innerHTML = html;
+      el.addEventListener("click", function(){ openEditSalary(d); });
+      list.appendChild(el);
+    });
+  }
+
+  var SALARY_NUM_FIELDS = ["sBaseSalary","sBonus","sGrossAmount","sAbsenceHours","sAbsenceDeduction",
+    "sLeavePhysio","sLeaveSick","sLeavePersonal","sLaborIns","sHealthIns","sWelfare","sAdvance","sOther","sParking"];
+  function numVal(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+  function updateSalaryCalcBox(){
+    var gross = numVal("sGrossAmount");
+    var absenceDeduction = numVal("sAbsenceDeduction");
+    var deductionTotal = numVal("sLaborIns") + numVal("sHealthIns") + numVal("sWelfare") +
+      numVal("sAdvance") + numVal("sOther") + numVal("sParking");
+    var suggested = gross - absenceDeduction - deductionTotal;
+    document.getElementById("calcGross").textContent = fmt(gross);
+    document.getElementById("calcAbsence").textContent = "-" + fmt(absenceDeduction);
+    document.getElementById("calcDeduction").textContent = "-" + fmt(deductionTotal);
+    document.getElementById("calcSuggested").textContent = fmt(suggested);
+  }
+
+  function setType(t){
+    currentType = t;
+    document.querySelectorAll("#typeSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-type") === t);
+    });
+  }
+  document.getElementById("typeSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setType(btn.getAttribute("data-type"));
+  });
+
+  var currentFormPerson = "hua";
+  function setFormPerson(p){
+    currentFormPerson = p;
+    document.querySelectorAll("#fPersonSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-fperson") === p);
+    });
+  }
+  document.getElementById("fPersonSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setFormPerson(btn.getAttribute("data-fperson"));
+  });
+
+  var currentRecordType = "salary";
+  function setRecordType(t){
+    currentRecordType = t;
+    document.querySelectorAll("#recordTypeSeg button").forEach(function(b){
+      var active = b.getAttribute("data-rtype") === t;
+      b.classList.toggle("active", active);
+      b.classList.toggle(t, active);
+    });
+    var isBonus = t === "bonus";
+    document.getElementById("salaryOnlySections").hidden = isBonus;
+    document.getElementById("grossCalcBox").hidden = isBonus;
+    document.getElementById("ratingField").hidden = isBonus;
+    document.getElementById("bonusNameField").hidden = !isBonus;
+  }
+  document.getElementById("recordTypeSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setRecordType(btn.getAttribute("data-rtype"));
+  });
+
+  var currentSalaryPerson = "hua";
+  function setSalaryPerson(p){
+    currentSalaryPerson = p;
+    document.querySelectorAll("#sPersonSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-sperson") === p);
+    });
+  }
+  document.getElementById("sPersonSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setSalaryPerson(btn.getAttribute("data-sperson"));
+  });
+
+  function openAdd(){
+    editingId = null;
+    document.getElementById("sheetTitle").textContent = "新增項目";
+    document.getElementById("deleteBtn").hidden = true;
+    document.getElementById("duplicateBtn").hidden = true;
+    setType("income");
+    setFormPerson(currentPerson === "yupas" ? "yupas" : "hua");
+    ["fName","fAmount","fDay","fAccount","fMethod","fNote"].forEach(function(id){ document.getElementById(id).value = ""; });
+    document.getElementById("sheetBackdrop").hidden = false;
+  }
+  function openEdit(d){
+    editingId = d._id;
+    document.getElementById("sheetTitle").textContent = "編輯項目";
+    document.getElementById("deleteBtn").hidden = false;
+    document.getElementById("duplicateBtn").hidden = false;
+    setType(d.category || "income");
+    setFormPerson(d.person || "hua");
+    document.getElementById("fName").value = d.name || "";
+    document.getElementById("fAmount").value = d.amount || "";
+    document.getElementById("fDay").value = d.transferDay || "";
+    document.getElementById("fAccount").value = d.account || "";
+    document.getElementById("fMethod").value = d.method || "";
+    document.getElementById("fNote").value = d.note || "";
+    document.getElementById("sheetBackdrop").hidden = false;
+  }
+  function closeSheet(){ document.getElementById("sheetBackdrop").hidden = true; }
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  var SALARY_PRESET = {
+    sBaseSalary: 50600, sBonus: 9775, sGrossAmount: 78481,
+    sLaborIns: 1145, sHealthIns: 990, sWelfare: 253,
+    sAdvance: 23620, sOther: 0, sParking: 3000
+  };
+  function openAddSalary(){
+    editingSalaryId = null;
+    document.getElementById("salarySheetTitle").textContent = "新增薪水紀錄";
+    document.getElementById("salaryDeleteBtn").hidden = true;
+    document.getElementById("salaryDuplicateBtn").hidden = true;
+    setRecordType("salary");
+    setSalaryPerson(currentPerson === "yupas" ? "yupas" : "hua");
+    document.getElementById("sDate").value = todayStr();
+    document.getElementById("sRating").value = "";
+    document.getElementById("sBonusName").value = "";
+    SALARY_NUM_FIELDS.forEach(function(id){
+      document.getElementById(id).value = (id in SALARY_PRESET) ? SALARY_PRESET[id] : "";
+    });
+    document.getElementById("sAmount").value = "";
+    document.getElementById("sGeneralNote").value = "";
+    updateSalaryCalcBox();
+    document.getElementById("salarySheetBackdrop").hidden = false;
+  }
+  function openEditSalary(d){
+    editingSalaryId = d._id;
+    document.getElementById("salarySheetTitle").textContent = "編輯薪水紀錄";
+    document.getElementById("salaryDeleteBtn").hidden = false;
+    document.getElementById("salaryDuplicateBtn").hidden = false;
+    setRecordType(d.recordType === "bonus" ? "bonus" : "salary");
+    setSalaryPerson(d.person || "hua");
+    document.getElementById("sDate").value = d.payDate || todayStr();
+    document.getElementById("sRating").value = d.rating || "";
+    document.getElementById("sBonusName").value = d.bonusName || "";
+    document.getElementById("sBaseSalary").value = d.baseSalary || "";
+    document.getElementById("sBonus").value = d.bonus || "";
+    document.getElementById("sGrossAmount").value = d.grossAmount || "";
+    document.getElementById("sAbsenceHours").value = d.absenceHours || "";
+    document.getElementById("sAbsenceDeduction").value = d.absenceDeduction || "";
+    document.getElementById("sLeavePhysio").value = d.leavePhysio || "";
+    document.getElementById("sLeaveSick").value = d.leaveSick || "";
+    document.getElementById("sLeavePersonal").value = d.leavePersonal || "";
+    document.getElementById("sLaborIns").value = d.laborIns || "";
+    document.getElementById("sHealthIns").value = d.healthIns || "";
+    document.getElementById("sWelfare").value = d.welfare || "";
+    document.getElementById("sAdvance").value = d.advance || "";
+    document.getElementById("sOther").value = d.other || "";
+    document.getElementById("sParking").value = d.parking || "";
+    document.getElementById("sAmount").value = d.amount || "";
+    document.getElementById("sGeneralNote").value = d.generalNote || "";
+    updateSalaryCalcBox();
+    document.getElementById("salarySheetBackdrop").hidden = false;
+  }
+  function closeSalarySheet(){ document.getElementById("salarySheetBackdrop").hidden = true; }
+
+  document.getElementById("addBtn").addEventListener("click", function(){
+    if (currentTab === "salary") openAddSalary();
+    else if (currentTab === "utility") openAddUtility();
+    else if (currentTab === "leave") openAddLeave();
+    else openAdd();
+  });
+  document.getElementById("cancelBtn").addEventListener("click", closeSheet);
+  document.getElementById("sheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeSheet(); });
+  document.getElementById("salaryCancelBtn").addEventListener("click", closeSalarySheet);
+  document.getElementById("salarySheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeSalarySheet(); });
+  document.getElementById("sAmount").addEventListener("input", updateSalaryCalcBox);
+  SALARY_NUM_FIELDS.forEach(function(id){
+    document.getElementById(id).addEventListener("input", updateSalaryCalcBox);
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", async function(){
+    var name = document.getElementById("fName").value.trim();
+    if (!name){ showToast("請輸入項目名稱"); return; }
+    var amount = parseFloat(document.getElementById("fAmount").value) || 0;
+    var day = parseInt(document.getElementById("fDay").value, 10);
+    var data = {
+      name: name, category: currentType, amount: amount, person: currentFormPerson,
+      transferDay: isNaN(day) ? null : day,
+      account: document.getElementById("fAccount").value.trim(),
+      method: document.getElementById("fMethod").value.trim(),
+      note: document.getElementById("fNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !col){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingId){
+        await col.doc(editingId).set(Object.assign({}, itemsById[editingId], data));
+      } else {
+        data.createdAt = Date.now();
+        await col.add(data);
+      }
+      closeSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+
+  document.getElementById("deleteBtn").addEventListener("click", async function(){
+    if (!editingId || !col) return;
+    try{ await col.doc(editingId).delete(); closeSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("duplicateBtn").addEventListener("click", function(){
+    editingId = null;
+    document.getElementById("sheetTitle").textContent = "新增項目";
+    document.getElementById("deleteBtn").hidden = true;
+    document.getElementById("duplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  document.getElementById("salarySaveBtn").addEventListener("click", async function(){
+    var payDate = document.getElementById("sDate").value;
+    var amount = parseFloat(document.getElementById("sAmount").value) || 0;
+    if (!payDate){ showToast("請選擇發薪日期"); return; }
+    if (!amount){ showToast("請輸入實發金額"); return; }
+    var isBonus = currentRecordType === "bonus";
+    var data = {
+      payDate: payDate, amount: amount,
+      recordType: currentRecordType, person: currentSalaryPerson,
+      bonusName: isBonus ? document.getElementById("sBonusName").value.trim() : "",
+      rating: isBonus ? "" : document.getElementById("sRating").value.trim(),
+      baseSalary: isBonus ? 0 : numVal("sBaseSalary"),
+      bonus: isBonus ? 0 : numVal("sBonus"),
+      grossAmount: isBonus ? 0 : numVal("sGrossAmount"),
+      absenceHours: isBonus ? 0 : numVal("sAbsenceHours"),
+      absenceDeduction: isBonus ? 0 : numVal("sAbsenceDeduction"),
+      leavePhysio: isBonus ? 0 : numVal("sLeavePhysio"),
+      leaveSick: isBonus ? 0 : numVal("sLeaveSick"),
+      leavePersonal: isBonus ? 0 : numVal("sLeavePersonal"),
+      laborIns: isBonus ? 0 : numVal("sLaborIns"),
+      healthIns: isBonus ? 0 : numVal("sHealthIns"),
+      welfare: isBonus ? 0 : numVal("sWelfare"),
+      advance: isBonus ? 0 : numVal("sAdvance"),
+      other: isBonus ? 0 : numVal("sOther"),
+      parking: isBonus ? 0 : numVal("sParking"),
+      generalNote: document.getElementById("sGeneralNote").value.trim(),
+      historical: false,
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingSalaryId){
+        await salaryCol.doc(editingSalaryId).set(Object.assign({}, salariesById[editingSalaryId], data));
+      } else {
+        data.createdAt = Date.now();
+        await salaryCol.add(data);
+      }
+      closeSalarySheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+
+  document.getElementById("salaryDeleteBtn").addEventListener("click", async function(){
+    if (!editingSalaryId || !salaryCol) return;
+    try{ await salaryCol.doc(editingSalaryId).delete(); closeSalarySheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("salaryDuplicateBtn").addEventListener("click", function(){
+    editingSalaryId = null;
+    document.getElementById("salarySheetTitle").textContent = "新增薪水紀錄";
+    document.getElementById("salaryDeleteBtn").hidden = true;
+    document.getElementById("salaryDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  var UTILITY_NUM_FIELDS = ["uYear","uMonth","uRent","uWater","uElectric","uGas"];
+  function utilityTotal(){
+    return numVal("uRent") + numVal("uWater") + numVal("uElectric") + numVal("uGas");
+  }
+  function updateUtilityCalcBox(){
+    document.getElementById("uCalcTotal").textContent = fmt(utilityTotal());
+  }
+  UTILITY_NUM_FIELDS.forEach(function(id){
+    document.getElementById(id).addEventListener("input", updateUtilityCalcBox);
+  });
+
+  function openAddUtility(){
+    editingUtilityId = null;
+    document.getElementById("utilitySheetTitle").textContent = "新增水電瓦斯紀錄";
+    document.getElementById("utilityDeleteBtn").hidden = true;
+    document.getElementById("utilityDuplicateBtn").hidden = true;
+    var d = new Date();
+    document.getElementById("uYear").value = d.getFullYear();
+    document.getElementById("uMonth").value = d.getMonth() + 1;
+    ["uRent","uWater","uElectric","uGas"].forEach(function(id){
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("uNote").value = "";
+    updateUtilityCalcBox();
+    document.getElementById("utilitySheetBackdrop").hidden = false;
+  }
+  function openEditUtility(d){
+    editingUtilityId = d._id;
+    document.getElementById("utilitySheetTitle").textContent = "編輯水電瓦斯紀錄";
+    document.getElementById("utilityDeleteBtn").hidden = false;
+    document.getElementById("utilityDuplicateBtn").hidden = false;
+    document.getElementById("uYear").value = d.year || "";
+    document.getElementById("uMonth").value = d.month || "";
+    document.getElementById("uRent").value = d.rent || "";
+    document.getElementById("uWater").value = d.water || "";
+    document.getElementById("uElectric").value = d.electric || "";
+    document.getElementById("uGas").value = d.gas || "";
+    document.getElementById("uNote").value = d.note || "";
+    updateUtilityCalcBox();
+    document.getElementById("utilitySheetBackdrop").hidden = false;
+  }
+  function closeUtilitySheet(){ document.getElementById("utilitySheetBackdrop").hidden = true; }
+  document.getElementById("utilityCancelBtn").addEventListener("click", closeUtilitySheet);
+  document.getElementById("utilitySheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeUtilitySheet(); });
+
+  document.getElementById("utilitySaveBtn").addEventListener("click", async function(){
+    var year = numVal("uYear");
+    var month = numVal("uMonth");
+    if (!year || !month){ showToast("請輸入年份和月份"); return; }
+    var data = {
+      year: year, month: month,
+      rent: numVal("uRent"), water: numVal("uWater"), electric: numVal("uElectric"),
+      gas: numVal("uGas"),
+      note: document.getElementById("uNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !utilityCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingUtilityId){
+        await utilityCol.doc(editingUtilityId).set(Object.assign({}, utilitiesById[editingUtilityId], data));
+      } else {
+        data.createdAt = Date.now();
+        await utilityCol.add(data);
+      }
+      closeUtilitySheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("utilityDeleteBtn").addEventListener("click", async function(){
+    if (!editingUtilityId || !utilityCol) return;
+    try{ await utilityCol.doc(editingUtilityId).delete(); closeUtilitySheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("utilityDuplicateBtn").addEventListener("click", function(){
+    editingUtilityId = null;
+    document.getElementById("utilitySheetTitle").textContent = "新增水電瓦斯紀錄";
+    document.getElementById("utilityDeleteBtn").hidden = true;
+    document.getElementById("utilityDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  var utilityYearFilterValue = "all";
+  function updateUtilityYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered.map(function(d){ return String(d.year || ""); }).filter(Boolean)))
+      .sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("utilityYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      utilityYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("utilityYearFilter").addEventListener("change", function(){
+    utilityYearFilterValue = this.value;
+    renderUtilities();
+  });
+
+  var utilityCategoryFilterValue = "all";
+  var UTILITY_CAT_LABEL = { rent:"房租", water:"水費", electric:"電費", gas:"天然氣" };
+  document.querySelectorAll("#utilityCatFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      utilityCategoryFilterValue = b.getAttribute("data-ucat");
+      document.querySelectorAll("#utilityCatFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      renderUtilities();
+    });
+  });
+
+  function renderUtilities(){
+    var list = document.getElementById("utilityList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(utilitiesById).map(function(id){
+      return Object.assign({}, utilitiesById[id], { _id: id });
+    }).sort(function(a,b){
+      var ka = (a.year||0)*100 + (a.month||0);
+      var kb = (b.year||0)*100 + (b.month||0);
+      return SORT_DIR.utility === "asc" ? ka - kb : kb - ka;
+    });
+
+    updateUtilityYearOptions(allUnfiltered);
+    document.getElementById("utilityTotalCount").textContent = allUnfiltered.length;
+
+    var all = utilityYearFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
+      return String(d.year) === utilityYearFilterValue;
+    });
+    if (utilityCategoryFilterValue !== "all"){
+      all = all.filter(function(d){ return (Number(d[utilityCategoryFilterValue])||0) > 0; });
+    }
+    document.getElementById("utilityCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var isFiltered = utilityYearFilterValue !== "all" || utilityCategoryFilterValue !== "all";
+    var filteredTotal = all.reduce(function(s,d){
+      if (utilityCategoryFilterValue !== "all"){ return s + (Number(d[utilityCategoryFilterValue])||0); }
+      return s + (Number(d.rent)||0) + (Number(d.water)||0) + (Number(d.electric)||0) + (Number(d.gas)||0);
+    }, 0);
+    document.getElementById("utilityFilteredTotal").textContent =
+      (isFiltered ? "篩選總額 " : "總額 ") + fmt(filteredTotal);
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "點右下角 ＋ 記一筆水電瓦斯支出";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var total = (Number(d.rent)||0) + (Number(d.water)||0) + (Number(d.electric)||0) + (Number(d.gas)||0);
+      var parts = [];
+      if (d.rent) parts.push("房租 " + fmt(d.rent));
+      if (d.water) parts.push("水費 " + fmt(d.water));
+      if (d.electric) parts.push("電費 " + fmt(d.electric));
+      if (d.gas) parts.push("天然氣 " + fmt(d.gas));
+      var el = document.createElement("div");
+      el.className = "utility-card";
+      var monthLabel = (d.year||"") + "-" + String(d.month||"").padStart(2,"0");
+      var bigAmount = utilityCategoryFilterValue !== "all" ? (Number(d[utilityCategoryFilterValue])||0) : total;
+      var dateLabel = monthLabel + (utilityCategoryFilterValue !== "all" ?
+        '<span class="hist-badge">' + UTILITY_CAT_LABEL[utilityCategoryFilterValue] + '</span>' : '');
+      var html =
+        '<div class="row1"><span class="date">' + dateLabel + '</span>' +
+          '<span class="net num">' + fmt(bigAmount) + '</span></div>' +
+        '<div class="breakdown">' + escapeHtml(parts.join(" · ")) + '</div>';
+      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
+      el.innerHTML = html;
+      el.addEventListener("click", function(){ openEditUtility(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 每年固定支出 ----
+  var currentAfPerson = "hua";
+  function setAfPerson(p){
+    currentAfPerson = p;
+    document.querySelectorAll("#afPersonSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-afperson") === p);
+    });
+  }
+  document.getElementById("afPersonSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setAfPerson(btn.getAttribute("data-afperson"));
+  });
+  function openAddAnnualFixed(){
+    editingAnnualFixedId = null;
+    document.getElementById("annualFixedSheetTitle").textContent = "新增每年固定支出";
+    document.getElementById("annualFixedDeleteBtn").hidden = true;
+    document.getElementById("annualFixedDuplicateBtn").hidden = true;
+    setAfPerson(currentPerson === "yupas" ? "yupas" : "hua");
+    document.getElementById("afName").value = "";
+    document.getElementById("afAnnualAmount").value = "";
+    document.getElementById("afMonthlyAmount").value = "";
+    document.getElementById("afNote").value = "";
+    document.getElementById("annualFixedSheetBackdrop").hidden = false;
+  }
+  function openEditAnnualFixed(d){
+    editingAnnualFixedId = d._id;
+    document.getElementById("annualFixedSheetTitle").textContent = "編輯每年固定支出";
+    document.getElementById("annualFixedDeleteBtn").hidden = false;
+    document.getElementById("annualFixedDuplicateBtn").hidden = false;
+    setAfPerson(d.person || "hua");
+    document.getElementById("afName").value = d.name || "";
+    document.getElementById("afAnnualAmount").value = d.annualAmount || "";
+    document.getElementById("afMonthlyAmount").value = d.monthlyAmount || "";
+    document.getElementById("afNote").value = d.note || "";
+    document.getElementById("annualFixedSheetBackdrop").hidden = false;
+  }
+  function closeAnnualFixedSheet(){ document.getElementById("annualFixedSheetBackdrop").hidden = true; }
+  document.getElementById("addAnnualFixedBtn").addEventListener("click", openAddAnnualFixed);
+  document.getElementById("annualFixedCancelBtn").addEventListener("click", closeAnnualFixedSheet);
+  document.getElementById("annualFixedSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeAnnualFixedSheet(); });
+
+  document.getElementById("annualFixedSaveBtn").addEventListener("click", async function(){
+    var name = document.getElementById("afName").value.trim();
+    if (!name){ showToast("請輸入項目名稱"); return; }
+    var data = {
+      name: name, person: currentAfPerson,
+      annualAmount: numVal("afAnnualAmount"),
+      monthlyAmount: numVal("afMonthlyAmount"),
+      note: document.getElementById("afNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !annualFixedCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingAnnualFixedId){
+        await annualFixedCol.doc(editingAnnualFixedId).set(Object.assign({}, annualFixedById[editingAnnualFixedId], data));
+      } else {
+        data.createdAt = Date.now();
+        await annualFixedCol.add(data);
+      }
+      closeAnnualFixedSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("annualFixedDeleteBtn").addEventListener("click", async function(){
+    if (!editingAnnualFixedId || !annualFixedCol) return;
+    try{ await annualFixedCol.doc(editingAnnualFixedId).delete(); closeAnnualFixedSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("annualFixedDuplicateBtn").addEventListener("click", function(){
+    editingAnnualFixedId = null;
+    document.getElementById("annualFixedSheetTitle").textContent = "新增每年固定支出";
+    document.getElementById("annualFixedDeleteBtn").hidden = true;
+    document.getElementById("annualFixedDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderAnnualFixed(){
+    var list = document.getElementById("annualFixedList");
+    list.innerHTML = "";
+    var all = Object.keys(annualFixedById).map(function(id){
+      return Object.assign({}, annualFixedById[id], { _id: id });
+    }).filter(function(d){
+      return currentPerson === "combined" || (d.person || "hua") === currentPerson;
+    }).sort(function(a,b){
+      var d = (b.annualAmount||0) - (a.annualAmount||0);
+      return SORT_DIR.annualFixed === "asc" ? -d : d;
+    });
+    document.getElementById("annualFixedCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var total = all.reduce(function(s,d){ return s + (Number(d.annualAmount)||0); }, 0);
+    document.getElementById("annualFixedTotal").textContent = fmt(total);
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty"; e.textContent = "點「＋ 新增」記一筆每年固定支出，例如保險費、車險";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "item";
+      var metaParts = [];
+      if (d.monthlyAmount) metaParts.push("約當月繳 " + fmt(d.monthlyAmount));
+      var afNameLabel = escapeHtml(d.name || "未命名") +
+        (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '');
+      el.innerHTML =
+        '<div class="stripe annual"></div>' +
+        '<div class="body">' +
+          '<div class="name">' + afNameLabel + '</div>' +
+          '<div class="meta">' + escapeHtml(metaParts.join(" · ") || (d.note || "")) + '</div>' +
+        '</div>' +
+        '<div class="amt annual num">' + fmt(d.annualAmount) + '</div>';
+      el.addEventListener("click", function(){ openEditAnnualFixed(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 年終獎金分配 ----
+  var annualBonusYearFilterValue = "all";
+  function updateAnnualBonusCalcBox(){
+    var total = numVal("abHuaAmount") + numVal("abYupasAmount");
+    document.getElementById("abCalcTotal").textContent = fmt(total);
+  }
+  ["abHuaAmount","abYupasAmount"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", updateAnnualBonusCalcBox);
+  });
+  function openAddAnnualBonus(){
+    editingAnnualBonusId = null;
+    document.getElementById("annualBonusSheetTitle").textContent = "新增年終獎金分配";
+    document.getElementById("annualBonusDeleteBtn").hidden = true;
+    document.getElementById("annualBonusDuplicateBtn").hidden = true;
+    document.getElementById("abYear").value = new Date().getFullYear();
+    document.getElementById("abName").value = "";
+    document.getElementById("abHuaAmount").value = "";
+    document.getElementById("abYupasAmount").value = "";
+    document.getElementById("abNote").value = "";
+    updateAnnualBonusCalcBox();
+    document.getElementById("annualBonusSheetBackdrop").hidden = false;
+  }
+  function openEditAnnualBonus(d){
+    editingAnnualBonusId = d._id;
+    document.getElementById("annualBonusSheetTitle").textContent = "編輯年終獎金分配";
+    document.getElementById("annualBonusDeleteBtn").hidden = false;
+    document.getElementById("annualBonusDuplicateBtn").hidden = false;
+    document.getElementById("abYear").value = d.year || "";
+    document.getElementById("abName").value = d.name || "";
+    document.getElementById("abHuaAmount").value = d.huaAmount || "";
+    document.getElementById("abYupasAmount").value = d.yupasAmount || "";
+    document.getElementById("abNote").value = d.note || "";
+    updateAnnualBonusCalcBox();
+    document.getElementById("annualBonusSheetBackdrop").hidden = false;
+  }
+  function closeAnnualBonusSheet(){ document.getElementById("annualBonusSheetBackdrop").hidden = true; }
+  document.getElementById("addAnnualBonusBtn").addEventListener("click", openAddAnnualBonus);
+  document.getElementById("annualBonusCancelBtn").addEventListener("click", closeAnnualBonusSheet);
+  document.getElementById("annualBonusSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeAnnualBonusSheet(); });
+
+  document.getElementById("annualBonusSaveBtn").addEventListener("click", async function(){
+    var year = numVal("abYear");
+    var name = document.getElementById("abName").value.trim();
+    if (!year){ showToast("請輸入年份"); return; }
+    if (!name){ showToast("請輸入項目名稱"); return; }
+    var data = {
+      year: year, name: name,
+      huaAmount: numVal("abHuaAmount"),
+      yupasAmount: numVal("abYupasAmount"),
+      note: document.getElementById("abNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !annualBonusCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingAnnualBonusId){
+        await annualBonusCol.doc(editingAnnualBonusId).set(Object.assign({}, annualBonusById[editingAnnualBonusId], data));
+      } else {
+        data.createdAt = Date.now();
+        await annualBonusCol.add(data);
+      }
+      closeAnnualBonusSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("annualBonusDeleteBtn").addEventListener("click", async function(){
+    if (!editingAnnualBonusId || !annualBonusCol) return;
+    try{ await annualBonusCol.doc(editingAnnualBonusId).delete(); closeAnnualBonusSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("annualBonusDuplicateBtn").addEventListener("click", function(){
+    editingAnnualBonusId = null;
+    document.getElementById("annualBonusSheetTitle").textContent = "新增年終獎金分配";
+    document.getElementById("annualBonusDeleteBtn").hidden = true;
+    document.getElementById("annualBonusDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function updateAnnualBonusYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered.map(function(d){ return String(d.year || ""); }).filter(Boolean)))
+      .sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("annualBonusYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      annualBonusYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("annualBonusYearFilter").addEventListener("change", function(){
+    annualBonusYearFilterValue = this.value;
+    renderAnnualBonus();
+  });
+
+  function renderAnnualBonus(){
+    var list = document.getElementById("annualBonusList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(annualBonusById).map(function(id){
+      return Object.assign({}, annualBonusById[id], { _id: id });
+    }).sort(function(a,b){
+      var d = (b.year||0) - (a.year||0);
+      return SORT_DIR.annualBonus === "asc" ? -d : d;
+    });
+    updateAnnualBonusYearOptions(allUnfiltered);
+
+    var all = annualBonusYearFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
+      return String(d.year) === annualBonusYearFilterValue;
+    });
+    function bonusAmountFor(d){
+      if (currentPerson === "hua") return Number(d.huaAmount)||0;
+      if (currentPerson === "yupas") return Number(d.yupasAmount)||0;
+      return (Number(d.huaAmount)||0) + (Number(d.yupasAmount)||0);
+    }
+    document.getElementById("annualBonusCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var total = all.reduce(function(s,d){ return s + bonusAmountFor(d); }, 0);
+    document.getElementById("annualBonusTotal").textContent = fmt(total);
+    var personLbl = PERSON_LABEL[currentPerson];
+    document.getElementById("annualBonusTotalLbl").textContent = "年終分配-" + personLbl + "(所選年)";
+    document.getElementById("abAllocatedLbl").textContent = personLbl + " 已分配總額";
+    document.getElementById("abScopeHint").textContent = "目前顯示「" + personLbl + "」的分配金額，可用上方 HUA／YUPAS／兩人合計切換";
+
+    var bonusIncome = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(s){
+        if (s.recordType !== "bonus" || s.bonusName !== "年終獎金") return false;
+        if (currentPerson !== "combined" && (s.person || "hua") !== currentPerson) return false;
+        if (annualBonusYearFilterValue === "all") return true;
+        return (s.payDate || "").slice(0,4) === annualBonusYearFilterValue;
+      })
+      .reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    var remain = bonusIncome - total;
+    document.getElementById("abIncomeVal").textContent = fmt(bonusIncome);
+    document.getElementById("abAllocatedVal").textContent = "-" + fmt(total);
+    var remainEl = document.getElementById("abRemainVal");
+    remainEl.textContent = fmtSigned(remain);
+    remainEl.className = "v num " + (remain >= 0 ? "pos" : "neg");
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length ? "這個年份沒有分配紀錄" : "點「＋ 新增」規劃年終獎金怎麼分配運用";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var subtotal = bonusAmountFor(d);
+      var metaParts = [];
+      if (d.year) metaParts.push(d.year + " 年");
+      if (d.huaAmount) metaParts.push("HUA " + fmt(d.huaAmount));
+      if (d.yupasAmount) metaParts.push("YUPAS " + fmt(d.yupasAmount));
+      var el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML =
+        '<div class="stripe bonus"></div>' +
+        '<div class="body">' +
+          '<div class="name">' + escapeHtml(d.name || "未命名") + '</div>' +
+          '<div class="meta">' + escapeHtml(metaParts.join(" · ")) + '</div>' +
+        '</div>' +
+        '<div class="amt bonus num">' + fmt(subtotal) + '</div>';
+      el.addEventListener("click", function(){ openEditAnnualBonus(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 保險理賠 ----
+  var claimYearFilterValue = "all";
+  function updateClaimYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered.map(function(d){ return (d.incidentDate||"").slice(0,4); }).filter(function(y){ return y.length===4; })))
+      .sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("claimYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      claimYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("claimYearFilter").addEventListener("change", function(){
+    claimYearFilterValue = this.value;
+    renderClaims();
+  });
+
+  function openAddClaim(){
+    editingClaimId = null;
+    document.getElementById("claimSheetTitle").textContent = "新增保險理賠";
+    document.getElementById("claimDeleteBtn").hidden = true;
+    document.getElementById("claimDuplicateBtn").hidden = true;
+    document.getElementById("clCompany").value = "";
+    document.getElementById("clDiagnosis").value = "";
+    document.getElementById("clIncidentDate").value = "";
+    document.getElementById("clApplyDate").value = "";
+    document.getElementById("clPayDate").value = "";
+    document.getElementById("clAmount").value = "";
+    document.getElementById("clNote").value = "";
+    document.getElementById("clProcessNote").value = "";
+    document.getElementById("claimSheetBackdrop").hidden = false;
+  }
+  function openEditClaim(d){
+    editingClaimId = d._id;
+    document.getElementById("claimSheetTitle").textContent = "編輯保險理賠";
+    document.getElementById("claimDeleteBtn").hidden = false;
+    document.getElementById("claimDuplicateBtn").hidden = false;
+    document.getElementById("clCompany").value = d.company || "";
+    document.getElementById("clDiagnosis").value = d.diagnosis || "";
+    document.getElementById("clIncidentDate").value = d.incidentDate || "";
+    document.getElementById("clApplyDate").value = d.applyDate || "";
+    document.getElementById("clPayDate").value = d.payDate || "";
+    document.getElementById("clAmount").value = d.amount || "";
+    document.getElementById("clNote").value = d.note || "";
+    document.getElementById("clProcessNote").value = d.processNote || "";
+    document.getElementById("claimSheetBackdrop").hidden = false;
+  }
+  function closeClaimSheet(){ document.getElementById("claimSheetBackdrop").hidden = true; }
+  document.getElementById("addClaimBtn").addEventListener("click", openAddClaim);
+  document.getElementById("claimCancelBtn").addEventListener("click", closeClaimSheet);
+  document.getElementById("claimSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeClaimSheet(); });
+
+  document.getElementById("claimSaveBtn").addEventListener("click", async function(){
+    var company = document.getElementById("clCompany").value.trim();
+    if (!company){ showToast("請輸入保險公司"); return; }
+    var data = {
+      company: company,
+      diagnosis: document.getElementById("clDiagnosis").value.trim(),
+      incidentDate: document.getElementById("clIncidentDate").value,
+      applyDate: document.getElementById("clApplyDate").value,
+      payDate: document.getElementById("clPayDate").value,
+      amount: numVal("clAmount"),
+      note: document.getElementById("clNote").value.trim(),
+      processNote: document.getElementById("clProcessNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !claimCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingClaimId){
+        await claimCol.doc(editingClaimId).set(Object.assign({}, claimsById[editingClaimId], data));
+      } else {
+        data.createdAt = Date.now();
+        await claimCol.add(data);
+      }
+      closeClaimSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("claimDeleteBtn").addEventListener("click", async function(){
+    if (!editingClaimId || !claimCol) return;
+    try{ await claimCol.doc(editingClaimId).delete(); closeClaimSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("claimDuplicateBtn").addEventListener("click", function(){
+    editingClaimId = null;
+    document.getElementById("claimSheetTitle").textContent = "新增保險理賠";
+    document.getElementById("claimDeleteBtn").hidden = true;
+    document.getElementById("claimDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderClaims(){
+    var list = document.getElementById("claimList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(claimsById).map(function(id){
+      return Object.assign({}, claimsById[id], { _id: id });
+    }).sort(function(a,b){
+      var d = (b.incidentDate||"").localeCompare(a.incidentDate||"");
+      return SORT_DIR.claim === "asc" ? -d : d;
+    });
+    updateClaimYearOptions(allUnfiltered);
+    var all = claimYearFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
+      return (d.incidentDate||"").slice(0,4) === claimYearFilterValue;
+    });
+    document.getElementById("claimCount").textContent = all.length ? "(" + all.length + ")" : "";
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length ? "這個年份沒有理賠紀錄" : "點「＋ 新增」記一筆保險理賠";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "claim-card";
+      var parts = [];
+      if (d.applyDate) parts.push("申請 " + d.applyDate);
+      if (d.payDate) parts.push("理賠 " + d.payDate);
+      var html =
+        '<div class="row1"><span class="date">' + escapeHtml(d.company || "") + '</span>' +
+          '<span class="net num">' + fmt(d.amount) + '</span></div>' +
+        '<div class="breakdown">' + escapeHtml((d.incidentDate||"") + (parts.length ? " · " + parts.join(" · ") : "")) + '</div>';
+      if (d.diagnosis){ html += '<div class="breakdown">' + escapeHtml(d.diagnosis) + '</div>'; }
+      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
+      el.innerHTML = html;
+      el.addEventListener("click", function(){ openEditClaim(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 年資規劃 ----
+  function updateTimelineCalcBox(year){
+    var y = Number(year);
+    document.getElementById("tCalcTenure").textContent = y ? (y - TENURE_BASE_YEAR) + " 年" : "-";
+    document.getElementById("tCalcAge").textContent = y ? (y - AGE_BASE_YEAR) + " 歲" : "-";
+  }
+  document.getElementById("tYear").addEventListener("input", function(){ updateTimelineCalcBox(this.value); });
+
+  function openAddTimeline(){
+    editingTimelineId = null;
+    document.getElementById("timelineSheetTitle").textContent = "新增年度紀錄";
+    document.getElementById("timelineDeleteBtn").hidden = true;
+    document.getElementById("timelineDuplicateBtn").hidden = true;
+    document.getElementById("tYear").value = new Date().getFullYear();
+    document.getElementById("tSongGrade").value = "";
+    document.getElementById("tShanGrade").value = "";
+    document.getElementById("tNote").value = "";
+    updateTimelineCalcBox(document.getElementById("tYear").value);
+    document.getElementById("timelineSheetBackdrop").hidden = false;
+  }
+  function openEditTimeline(d){
+    editingTimelineId = d._id;
+    document.getElementById("timelineSheetTitle").textContent = "編輯年度紀錄";
+    document.getElementById("timelineDeleteBtn").hidden = false;
+    document.getElementById("timelineDuplicateBtn").hidden = false;
+    document.getElementById("tYear").value = d.year || "";
+    document.getElementById("tSongGrade").value = d.songGrade || "";
+    document.getElementById("tShanGrade").value = d.shanGrade || "";
+    document.getElementById("tNote").value = d.note || "";
+    updateTimelineCalcBox(d.year);
+    document.getElementById("timelineSheetBackdrop").hidden = false;
+  }
+  function closeTimelineSheet(){ document.getElementById("timelineSheetBackdrop").hidden = true; }
+  document.getElementById("addTimelineBtn").addEventListener("click", openAddTimeline);
+  document.getElementById("timelineCancelBtn").addEventListener("click", closeTimelineSheet);
+  document.getElementById("timelineSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeTimelineSheet(); });
+
+  document.getElementById("timelineSaveBtn").addEventListener("click", async function(){
+    var year = numVal("tYear");
+    if (!year){ showToast("請輸入年份"); return; }
+    var id = editingTimelineId || String(year);
+    var data = {
+      year: year,
+      songGrade: document.getElementById("tSongGrade").value.trim(),
+      shanGrade: document.getElementById("tShanGrade").value.trim(),
+      note: document.getElementById("tNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !timelineCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (timelineById[id]){
+        await timelineCol.doc(id).set(Object.assign({}, timelineById[id], data));
+      } else {
+        data.createdAt = Date.now();
+        await timelineCol.doc(id).set(data);
+      }
+      closeTimelineSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("timelineDeleteBtn").addEventListener("click", async function(){
+    if (!editingTimelineId || !timelineCol) return;
+    try{ await timelineCol.doc(editingTimelineId).delete(); closeTimelineSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("timelineDuplicateBtn").addEventListener("click", function(){
+    editingTimelineId = null;
+    document.getElementById("timelineSheetTitle").textContent = "新增年度紀錄";
+    document.getElementById("timelineDeleteBtn").hidden = true;
+    document.getElementById("timelineDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderTimeline(){
+    var list = document.getElementById("timelineList");
+    list.innerHTML = "";
+    var all = Object.keys(timelineById).map(function(id){
+      return Object.assign({}, timelineById[id], { _id: id });
+    }).sort(function(a,b){
+      var d = (a.year||0) - (b.year||0);
+      return SORT_DIR.timeline === "asc" ? d : -d;
+    });
+    document.getElementById("timelineCount").textContent = all.length ? "(" + all.length + ")" : "";
+
+    var nowYear = new Date().getFullYear();
+    document.getElementById("tNowYear").textContent = nowYear;
+    var nowEntry = all.filter(function(d){ return d.year === nowYear; })[0];
+    var gradeParts = [];
+    if (nowEntry && nowEntry.songGrade) gradeParts.push("宸 " + nowEntry.songGrade);
+    if (nowEntry && nowEntry.shanGrade) gradeParts.push("杉 " + nowEntry.shanGrade);
+    document.getElementById("tNowSummary").textContent =
+      "年資 " + (nowYear - TENURE_BASE_YEAR) + " 年 · 年齡 " + (nowYear - AGE_BASE_YEAR) + " 歲" +
+      (gradeParts.length ? " · " + gradeParts.join(" · ") : "");
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "點「＋ 新增年度」記錄年資、年齡與人生規劃";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "timeline-card" + (d.year === nowYear ? " is-current" : "");
+      var metaParts = ["年資 " + (d.year - TENURE_BASE_YEAR) + " 年", "年齡 " + (d.year - AGE_BASE_YEAR) + " 歲"];
+      if (d.songGrade) metaParts.push("宸 " + d.songGrade);
+      if (d.shanGrade) metaParts.push("杉 " + d.shanGrade);
+      el.innerHTML =
+        '<div class="yr num">' + d.year + '</div>' +
+        '<div class="body">' +
+          '<div class="meta">' + escapeHtml(metaParts.join(" · ")) + '</div>' +
+          (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '') +
+        '</div>';
+      el.addEventListener("click", function(){ openEditTimeline(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 紅包紀錄（包出去） ----
+  var redOutYearFilterValue = "all";
+  var redOutOccasionFilterValue = "all";
+  function updateRedOutYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered.map(function(d){ return String(d.year||""); }).filter(Boolean)))
+      .sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("redOutYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      redOutYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("redOutYearFilter").addEventListener("change", function(){
+    redOutYearFilterValue = this.value; renderRedOut();
+  });
+  document.getElementById("redOutOccasionFilter").addEventListener("change", function(){
+    redOutOccasionFilterValue = this.value; renderRedOut();
+  });
+
+  function openAddRedOut(){
+    editingRedOutId = null;
+    document.getElementById("redOutSheetTitle").textContent = "新增紅包紀錄";
+    document.getElementById("redOutDeleteBtn").hidden = true;
+    document.getElementById("redOutDuplicateBtn").hidden = true;
+    document.getElementById("roYear").value = new Date().getFullYear();
+    document.getElementById("roOccasion").value = "過年";
+    document.getElementById("roRecipient").value = "";
+    document.getElementById("roAmount").value = "";
+    document.getElementById("roNote").value = "";
+    document.getElementById("redOutSheetBackdrop").hidden = false;
+  }
+  function openEditRedOut(d){
+    editingRedOutId = d._id;
+    document.getElementById("redOutSheetTitle").textContent = "編輯紅包紀錄";
+    document.getElementById("redOutDeleteBtn").hidden = false;
+    document.getElementById("redOutDuplicateBtn").hidden = false;
+    document.getElementById("roYear").value = d.year || "";
+    document.getElementById("roOccasion").value = d.occasion || "過年";
+    document.getElementById("roRecipient").value = d.recipient || "";
+    document.getElementById("roAmount").value = d.amount || "";
+    document.getElementById("roNote").value = d.note || "";
+    document.getElementById("redOutSheetBackdrop").hidden = false;
+  }
+  function closeRedOutSheet(){ document.getElementById("redOutSheetBackdrop").hidden = true; }
+  document.getElementById("addRedOutBtn").addEventListener("click", openAddRedOut);
+  document.getElementById("redOutCancelBtn").addEventListener("click", closeRedOutSheet);
+  document.getElementById("redOutSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeRedOutSheet(); });
+
+  document.getElementById("redOutSaveBtn").addEventListener("click", async function(){
+    var year = numVal("roYear");
+    var recipient = document.getElementById("roRecipient").value.trim();
+    if (!year){ showToast("請輸入年份"); return; }
+    if (!recipient){ showToast("請輸入包給誰"); return; }
+    var data = {
+      year: year, occasion: document.getElementById("roOccasion").value,
+      recipient: recipient, amount: numVal("roAmount"),
+      note: document.getElementById("roNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !redOutCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingRedOutId){
+        await redOutCol.doc(editingRedOutId).set(Object.assign({}, redOutById[editingRedOutId], data));
+      } else {
+        data.createdAt = Date.now();
+        await redOutCol.add(data);
+      }
+      closeRedOutSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("redOutDeleteBtn").addEventListener("click", async function(){
+    if (!editingRedOutId || !redOutCol) return;
+    try{ await redOutCol.doc(editingRedOutId).delete(); closeRedOutSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("redOutDuplicateBtn").addEventListener("click", function(){
+    editingRedOutId = null;
+    document.getElementById("redOutSheetTitle").textContent = "新增紅包紀錄";
+    document.getElementById("redOutDeleteBtn").hidden = true;
+    document.getElementById("redOutDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderRedOut(){
+    var list = document.getElementById("redOutList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(redOutById).map(function(id){
+      return Object.assign({}, redOutById[id], { _id: id });
+    }).sort(function(a,b){
+      var d = (b.year||0) - (a.year||0);
+      return SORT_DIR.redOut === "asc" ? -d : d;
+    });
+    updateRedOutYearOptions(allUnfiltered);
+    var all = allUnfiltered.filter(function(d){
+      if (redOutYearFilterValue !== "all" && String(d.year) !== redOutYearFilterValue) return false;
+      if (redOutOccasionFilterValue !== "all" && d.occasion !== redOutOccasionFilterValue) return false;
+      return true;
+    });
+    document.getElementById("redOutCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var total = all.reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    document.getElementById("redOutTotal").textContent = fmt(total);
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "點「＋ 新增」記一筆紅包紀錄";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "hb-card";
+      el.innerHTML =
+        '<div class="amt num">' + fmt(d.amount) + '</div>' +
+        '<div class="body">' +
+          '<div class="name">' + escapeHtml(d.recipient || "") + '</div>' +
+          '<div class="meta">' + (d.year||"") + ' 年 · ' + escapeHtml(d.occasion||"") + (d.note ? " · " + escapeHtml(d.note) : "") + '</div>' +
+        '</div>';
+      el.addEventListener("click", function(){ openEditRedOut(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 收到紅包 ----
+  var redInYearFilterValue = "all";
+  var redInChildFilterValue = "all";
+  var currentRiChild = "宸";
+  function setRiChild(c){
+    currentRiChild = c;
+    document.querySelectorAll("#riChildSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-richild") === c);
+    });
+  }
+  document.getElementById("riChildSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (btn) setRiChild(btn.getAttribute("data-richild"));
+  });
+  function updateRedInYearOptions(allUnfiltered){
+    var years = Array.from(new Set(allUnfiltered.map(function(d){ return String(d.year||""); }).filter(Boolean)))
+      .sort(function(a,b){ return b.localeCompare(a); });
+    var sel = document.getElementById("redInYearFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部年份</option>' +
+      years.map(function(y){ return '<option value="' + y + '">' + y + ' 年</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = years.indexOf(current) !== -1 || current === "all" ? current : "all";
+      redInYearFilterValue = sel.value;
+    }
+  }
+  document.getElementById("redInYearFilter").addEventListener("change", function(){
+    redInYearFilterValue = this.value; renderRedIn();
+  });
+  document.getElementById("redInChildFilter").addEventListener("change", function(){
+    redInChildFilterValue = this.value; renderRedIn();
+  });
+
+  function openAddRedIn(){
+    editingRedInId = null;
+    document.getElementById("redInSheetTitle").textContent = "新增收到紅包紀錄";
+    document.getElementById("redInDeleteBtn").hidden = true;
+    document.getElementById("redInDuplicateBtn").hidden = true;
+    document.getElementById("riYear").value = new Date().getFullYear();
+    document.getElementById("riOccasion").value = "過年";
+    setRiChild("宸");
+    document.getElementById("riGiver").value = "";
+    document.getElementById("riAmount").value = "";
+    document.getElementById("riNote").value = "";
+    document.getElementById("redInSheetBackdrop").hidden = false;
+  }
+  function openEditRedIn(d){
+    editingRedInId = d._id;
+    document.getElementById("redInSheetTitle").textContent = "編輯收到紅包紀錄";
+    document.getElementById("redInDeleteBtn").hidden = false;
+    document.getElementById("redInDuplicateBtn").hidden = false;
+    document.getElementById("riYear").value = d.year || "";
+    document.getElementById("riOccasion").value = d.occasion || "過年";
+    setRiChild(d.child || "宸");
+    document.getElementById("riGiver").value = d.giver || "";
+    document.getElementById("riAmount").value = d.amount || "";
+    document.getElementById("riNote").value = d.note || "";
+    document.getElementById("redInSheetBackdrop").hidden = false;
+  }
+  function closeRedInSheet(){ document.getElementById("redInSheetBackdrop").hidden = true; }
+  document.getElementById("addRedInBtn").addEventListener("click", openAddRedIn);
+  document.getElementById("redInCancelBtn").addEventListener("click", closeRedInSheet);
+  document.getElementById("redInSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeRedInSheet(); });
+
+  document.getElementById("redInSaveBtn").addEventListener("click", async function(){
+    var year = numVal("riYear");
+    var giver = document.getElementById("riGiver").value.trim();
+    if (!year){ showToast("請輸入年份"); return; }
+    if (!giver){ showToast("請輸入誰給的"); return; }
+    var data = {
+      year: year, occasion: document.getElementById("riOccasion").value,
+      child: currentRiChild, giver: giver, amount: numVal("riAmount"),
+      note: document.getElementById("riNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !redInCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingRedInId){
+        await redInCol.doc(editingRedInId).set(Object.assign({}, redInById[editingRedInId], data));
+      } else {
+        data.createdAt = Date.now();
+        await redInCol.add(data);
+      }
+      closeRedInSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("redInDeleteBtn").addEventListener("click", async function(){
+    if (!editingRedInId || !redInCol) return;
+    try{ await redInCol.doc(editingRedInId).delete(); closeRedInSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("redInDuplicateBtn").addEventListener("click", function(){
+    editingRedInId = null;
+    document.getElementById("redInSheetTitle").textContent = "新增收到紅包紀錄";
+    document.getElementById("redInDeleteBtn").hidden = true;
+    document.getElementById("redInDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderRedIn(){
+    var list = document.getElementById("redInList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(redInById).map(function(id){
+      return Object.assign({}, redInById[id], { _id: id });
+    }).sort(function(a,b){
+      var d = (b.year||0) - (a.year||0);
+      return SORT_DIR.redIn === "asc" ? -d : d;
+    });
+    updateRedInYearOptions(allUnfiltered);
+    var all = allUnfiltered.filter(function(d){
+      if (redInYearFilterValue !== "all" && String(d.year) !== redInYearFilterValue) return false;
+      if (redInChildFilterValue !== "all" && d.child !== redInChildFilterValue) return false;
+      return true;
+    });
+    document.getElementById("redInCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var songTotal = allUnfiltered.filter(function(d){ return d.child === "宸"; }).reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    var shanTotal = allUnfiltered.filter(function(d){ return d.child === "杉"; }).reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    var bothTotal = allUnfiltered.filter(function(d){ return d.child === "宸+杉"; }).reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    document.getElementById("redInSongTotal").textContent = fmt(songTotal);
+    document.getElementById("redInShanTotal").textContent = fmt(shanTotal);
+    document.getElementById("redInBothTotal").textContent = fmt(bothTotal);
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "點「＋ 新增」記一筆收到的紅包";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "hb-card";
+      el.innerHTML =
+        '<div class="amt num">' + fmt(d.amount) + '</div>' +
+        '<div class="body">' +
+          '<div class="name">' + escapeHtml(d.giver || "") + '<span class="child-badge">' + escapeHtml(d.child||"") + '</span></div>' +
+          '<div class="meta">' + (d.year||"") + ' 年 · ' + escapeHtml(d.occasion||"") + (d.note ? " · " + escapeHtml(d.note) : "") + '</div>' +
+        '</div>';
+      el.addEventListener("click", function(){ openEditRedIn(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 發燒歷程 ----
+  var feverPersonFilterValue = "all";
+  var currentFeverEpisode = null;
+
+  function updateFeverPersonOptions(){
+    var episodes = Object.keys(episodesById).map(function(id){ return episodesById[id]; });
+    var persons = Array.from(new Set(episodes.map(function(d){ return d.person || ""; }).filter(Boolean)));
+    var sel = document.getElementById("feverPersonFilter");
+    var current = sel.value || "all";
+    var html = '<option value="all">全部</option>' +
+      persons.map(function(p){ return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>'; }).join("");
+    if (sel.innerHTML !== html){
+      sel.innerHTML = html;
+      sel.value = persons.indexOf(current) !== -1 || current === "all" ? current : "all";
+      feverPersonFilterValue = sel.value;
+    }
+    var dl = document.getElementById("feverPersonList");
+    dl.innerHTML = persons.map(function(p){ return '<option value="' + escapeHtml(p) + '">'; }).join("");
+  }
+  document.getElementById("feverPersonFilter").addEventListener("change", function(){
+    feverPersonFilterValue = this.value;
+    currentFeverEpisode = null;
+    renderEpisodes(); renderFever();
+  });
+
+  function daysBetween(a, b){
+    var d1 = new Date(a + "T00:00:00"), d2 = new Date(b + "T00:00:00");
+    return Math.round((d2 - d1) / 86400000) + 1;
+  }
+
+  function openAddEpisode(){
+    editingEpisodeId = null;
+    document.getElementById("episodeSheetTitle").textContent = "新增一次發燒";
+    document.getElementById("episodeDeleteBtn").hidden = true;
+    document.getElementById("episodeDuplicateBtn").hidden = true;
+    document.getElementById("epPerson").value = feverPersonFilterValue !== "all" ? feverPersonFilterValue : "";
+    document.getElementById("epStartDate").value = todayStr();
+    document.getElementById("epEndDate").value = "";
+    document.getElementById("epNote").value = "";
+    document.getElementById("episodeSheetBackdrop").hidden = false;
+  }
+  function openEditEpisode(d){
+    editingEpisodeId = d._id;
+    document.getElementById("episodeSheetTitle").textContent = "編輯這次發燒";
+    document.getElementById("episodeDeleteBtn").hidden = false;
+    document.getElementById("episodeDuplicateBtn").hidden = false;
+    document.getElementById("epPerson").value = d.person || "";
+    document.getElementById("epStartDate").value = d.startDate || "";
+    document.getElementById("epEndDate").value = d.endDate || "";
+    document.getElementById("epNote").value = d.note || "";
+    document.getElementById("episodeSheetBackdrop").hidden = false;
+  }
+  function closeEpisodeSheet(){ document.getElementById("episodeSheetBackdrop").hidden = true; }
+  document.getElementById("addEpisodeBtn").addEventListener("click", openAddEpisode);
+  document.getElementById("episodeCancelBtn").addEventListener("click", closeEpisodeSheet);
+  document.getElementById("episodeSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeEpisodeSheet(); });
+
+  document.getElementById("episodeSaveBtn").addEventListener("click", async function(){
+    var person = document.getElementById("epPerson").value.trim();
+    var startDate = document.getElementById("epStartDate").value;
+    if (!person){ showToast("請輸入姓名"); return; }
+    if (!startDate){ showToast("請選擇開始日期"); return; }
+    var data = {
+      person: person, startDate: startDate,
+      endDate: document.getElementById("epEndDate").value,
+      note: document.getElementById("epNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !episodeCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingEpisodeId){
+        await episodeCol.doc(editingEpisodeId).set(Object.assign({}, episodesById[editingEpisodeId], data));
+      } else {
+        data.createdAt = Date.now();
+        var ref = await episodeCol.add(data);
+        currentFeverEpisode = ref && ref.id ? ref.id : null;
+      }
+      closeEpisodeSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("episodeDeleteBtn").addEventListener("click", async function(){
+    if (!editingEpisodeId || !episodeCol) return;
+    try{
+      await episodeCol.doc(editingEpisodeId).delete();
+      if (currentFeverEpisode === editingEpisodeId) currentFeverEpisode = null;
+      closeEpisodeSheet(); showToast("已刪除");
+    }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("episodeDuplicateBtn").addEventListener("click", function(){
+    editingEpisodeId = null;
+    document.getElementById("episodeSheetTitle").textContent = "新增一次發燒";
+    document.getElementById("episodeDeleteBtn").hidden = true;
+    document.getElementById("episodeDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function renderEpisodes(){
+    var list = document.getElementById("episodeList");
+    list.innerHTML = "";
+    updateFeverPersonOptions();
+    var all = Object.keys(episodesById).map(function(id){
+      return Object.assign({}, episodesById[id], { _id: id });
+    }).filter(function(d){
+      return feverPersonFilterValue === "all" || d.person === feverPersonFilterValue;
+    }).sort(function(a,b){
+      var d = (a.startDate||"").localeCompare(b.startDate||"");
+      return SORT_DIR.fever === "asc" ? d : -d;
+    });
+    document.getElementById("episodeCount").textContent = all.length ? "(" + all.length + ")" : "";
+    if (!all.some(function(d){ return d._id === currentFeverEpisode; })){
+      currentFeverEpisode = null;
+    }
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "點「＋ 新增一次」開始記錄一次發燒的日期範圍";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var entries = Object.keys(feverById).map(function(id){ return feverById[id]; })
+        .filter(function(f){ return f.episodeId === d._id; });
+      var withTemp = entries.filter(function(f){ return f.temp !== null && f.temp !== undefined && f.temp !== ""; });
+      var maxTemp = withTemp.length ? withTemp.reduce(function(m,f){ return Number(f.temp) > m ? Number(f.temp) : m; }, 0) : null;
+      var dur = d.endDate ? daysBetween(d.startDate, d.endDate) : null;
+      var el = document.createElement("div");
+      el.className = "episode-card" + (d._id === currentFeverEpisode ? " selected" : "");
+      var rangeLabel = d.startDate.replace(/-/g,"/") + (d.endDate ? " – " + d.endDate.replace(/-/g,"/") : " – 尚未退燒");
+      var metaParts = [];
+      if (dur) metaParts.push(dur + " 天");
+      if (maxTemp !== null) metaParts.push("最高 " + maxTemp.toFixed(1) + "°C");
+      metaParts.push(entries.length + " 筆量測");
+      el.innerHTML =
+        '<div class="row1"><span class="name">' + escapeHtml(d.person || "") + '</span>' +
+          '<span class="range">' + rangeLabel + '</span></div>' +
+        '<div class="meta"><span>' + metaParts.join(" · ") + (d.note ? " · " + escapeHtml(d.note) : "") + '</span>' +
+          '<span class="edit-icon">✎</span></div>';
+      el.addEventListener("click", function(e){
+        currentFeverEpisode = (currentFeverEpisode === d._id) ? null : d._id;
+        renderEpisodes(); renderFever();
+      });
+      el.querySelector(".edit-icon").addEventListener("click", function(e){ e.stopPropagation(); openEditEpisode(d); });
+      list.appendChild(el);
+    });
+  }
+
+  function openAddFever(){
+    if (!currentFeverEpisode){ showToast("請先在上方選一次發燒紀錄（或新增一次）"); return; }
+    editingFeverId = null;
+    document.getElementById("feverSheetTitle").textContent = "新增體溫量測";
+    document.getElementById("feverDeleteBtn").hidden = true;
+    document.getElementById("feverDuplicateBtn").hidden = true;
+    var ep = episodesById[currentFeverEpisode];
+    document.getElementById("fvEpisodeHint").textContent = "所屬發燒：" + (ep ? ep.person + " " + ep.startDate.replace(/-/g,"/") : "");
+    document.getElementById("fvDate").value = ep ? ep.startDate : todayStr();
+    document.getElementById("fvTime").value = "";
+    document.getElementById("fvTemp").value = "";
+    document.getElementById("fvMed").value = "";
+    document.getElementById("fvNote").value = "";
+    document.getElementById("feverSheetBackdrop").hidden = false;
+  }
+  function openEditFever(d){
+    editingFeverId = d._id;
+    document.getElementById("feverSheetTitle").textContent = "編輯體溫量測";
+    document.getElementById("feverDeleteBtn").hidden = false;
+    document.getElementById("feverDuplicateBtn").hidden = false;
+    var ep = episodesById[d.episodeId];
+    document.getElementById("fvEpisodeHint").textContent = "所屬發燒：" + (ep ? ep.person + " " + ep.startDate.replace(/-/g,"/") : (d.person || ""));
+    document.getElementById("fvDate").value = d.date || "";
+    document.getElementById("fvTime").value = d.time || "";
+    document.getElementById("fvTemp").value = (d.temp === null || d.temp === undefined) ? "" : d.temp;
+    document.getElementById("fvMed").value = d.medication || "";
+    document.getElementById("fvNote").value = d.note || "";
+    document.getElementById("feverSheetBackdrop").hidden = false;
+  }
+  function closeFeverSheet(){ document.getElementById("feverSheetBackdrop").hidden = true; }
+  document.getElementById("addFeverBtn").addEventListener("click", openAddFever);
+  document.getElementById("feverCancelBtn").addEventListener("click", closeFeverSheet);
+  document.getElementById("feverSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeFeverSheet(); });
+
+  document.getElementById("feverSaveBtn").addEventListener("click", async function(){
+    var date = document.getElementById("fvDate").value;
+    if (!date){ showToast("請選擇日期"); return; }
+    var episodeId = editingFeverId ? (feverById[editingFeverId] || {}).episodeId : currentFeverEpisode;
+    var ep = episodesById[episodeId];
+    if (!ep){ showToast("找不到所屬的發燒次，請重新選擇"); return; }
+    var tempStr = document.getElementById("fvTemp").value;
+    var data = {
+      person: ep.person, episodeId: episodeId, date: date,
+      time: document.getElementById("fvTime").value,
+      temp: tempStr === "" ? null : parseFloat(tempStr),
+      medication: document.getElementById("fvMed").value.trim(),
+      note: document.getElementById("fvNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !feverCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingFeverId){
+        await feverCol.doc(editingFeverId).set(Object.assign({}, feverById[editingFeverId], data));
+      } else {
+        data.createdAt = Date.now();
+        await feverCol.add(data);
+      }
+      closeFeverSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("feverDeleteBtn").addEventListener("click", async function(){
+    if (!editingFeverId || !feverCol) return;
+    try{ await feverCol.doc(editingFeverId).delete(); closeFeverSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("feverDuplicateBtn").addEventListener("click", function(){
+    editingFeverId = null;
+    document.getElementById("feverSheetTitle").textContent = "新增體溫量測";
+    document.getElementById("feverDeleteBtn").hidden = true;
+    document.getElementById("feverDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  function buildFeverChartSvg(points){
+    if (!points.length){
+      return '<div class="chart-empty">篩選這位的紀錄裡還沒有體溫數值</div>';
+    }
+    var W = 600, H = 200, padL = 34, padR = 12, padT = 14, padB = 26;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var minT = 35, maxT = 41.5;
+    var n = points.length;
+    function xAt(i){ return n === 1 ? padL + innerW/2 : padL + (innerW * i / (n - 1)); }
+    function yAt(t){ return padT + innerH * (1 - (t - minT) / (maxT - minT)); }
+    var feverY = yAt(38);
+    var pathD = points.map(function(p, i){ return (i === 0 ? "M" : "L") + xAt(i).toFixed(1) + "," + yAt(p.temp).toFixed(1); }).join(" ");
+    var dots = points.map(function(p, i){
+      var col = p.temp >= 38 ? "var(--fever)" : "var(--income)";
+      return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(p.temp).toFixed(1) + '" r="3.2" fill="' + col + '"><title>' + escapeHtml(p.label) + " " + p.temp + '°C</title></circle>';
+    }).join("");
+    var lastDate = "";
+    var dateLabels = "";
+    points.forEach(function(p, i){
+      if (p.date !== lastDate){
+        lastDate = p.date;
+        var md = p.date.slice(5).replace("-", "/");
+        dateLabels += '<text x="' + xAt(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="9" fill="var(--muted)" text-anchor="start">' + md + '</text>';
+        dateLabels += '<line x1="' + xAt(i).toFixed(1) + '" y1="' + padT + '" x2="' + xAt(i).toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--line)" stroke-width="1" stroke-dasharray="2,3"/>';
+      }
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="' + padL + '" y1="' + feverY.toFixed(1) + '" x2="' + (W-padR) + '" y2="' + feverY.toFixed(1) + '" stroke="var(--fever)" stroke-width="1" stroke-dasharray="4,3" opacity=".6"/>' +
+      '<text x="' + (W-padR) + '" y="' + (feverY - 4).toFixed(1) + '" font-size="9" fill="var(--fever)" text-anchor="end">38.0</text>' +
+      dateLabels +
+      '<path d="' + pathD + '" fill="none" stroke="var(--fever)" stroke-width="2"/>' +
+      dots +
+      '</svg>';
+  }
+
+  function renderFever(){
+    var list = document.getElementById("feverList");
+    list.innerHTML = "";
+    var allUnfiltered = Object.keys(feverById).map(function(id){
+      return Object.assign({}, feverById[id], { _id: id });
+    });
+    var all;
+    var hintEl = document.getElementById("feverScopeHint");
+    if (currentFeverEpisode){
+      all = allUnfiltered.filter(function(d){ return d.episodeId === currentFeverEpisode; });
+      var ep = episodesById[currentFeverEpisode];
+      hintEl.textContent = ep ? ("目前顯示：" + ep.person + " " + ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 尚未退燒") + " 這一次") : "";
+    } else {
+      all = feverPersonFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
+        return d.person === feverPersonFilterValue;
+      });
+      hintEl.textContent = feverPersonFilterValue === "all" ? "目前顯示：全部人、全部次的量測" : "目前顯示：" + feverPersonFilterValue + " 的全部次數合併";
+    }
+    all.sort(function(a,b){
+      var d = ((a.date||"")+" "+(a.time||"00:00")).localeCompare((b.date||"")+" "+(b.time||"00:00"));
+      return SORT_DIR.fever === "asc" ? d : -d;
+    });
+    document.getElementById("feverCount").textContent = all.length ? "(" + all.length + ")" : "";
+    document.getElementById("feverEntryCount").textContent = all.length;
+
+    var chronological = all.slice().sort(function(a,b){
+      return ((a.date||"")+" "+(a.time||"00:00")).localeCompare((b.date||"")+" "+(b.time||"00:00"));
+    });
+    var withTemp = chronological.filter(function(d){ return d.temp !== null && d.temp !== undefined && d.temp !== ""; });
+    var points = withTemp.map(function(d){
+      return { temp: Number(d.temp), date: d.date, label: d.date.slice(5) + " " + (d.time||"") };
+    });
+    document.getElementById("feverChartBox").innerHTML = buildFeverChartSvg(points);
+    if (withTemp.length){
+      var last = withTemp[withTemp.length - 1];
+      var maxD = withTemp.reduce(function(m,d){ return Number(d.temp) > Number(m.temp) ? d : m; }, withTemp[0]);
+      document.getElementById("feverLatest").textContent = last.temp + "°C";
+      document.getElementById("feverMax").textContent = maxD.temp + "°C";
+    } else {
+      document.getElementById("feverLatest").textContent = "-";
+      document.getElementById("feverMax").textContent = "-";
+    }
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = currentFeverEpisode ? "點「＋ 新增量測」記錄這一次的第一筆體溫" : "選一次發燒紀錄，或新增一次開始記錄";
+      list.appendChild(e);
+      return;
+    }
+    var lastDateSep = "";
+    all.forEach(function(d){
+      if (d.date !== lastDateSep){
+        lastDateSep = d.date;
+        var sep = document.createElement("div");
+        sep.className = "fever-date-sep";
+        sep.textContent = d.date;
+        list.appendChild(sep);
+      }
+      var el = document.createElement("div");
+      el.className = "fever-card";
+      var hasTemp = d.temp !== null && d.temp !== undefined && d.temp !== "";
+      var tempHtml = hasTemp ? '<div class="temp num">' + Number(d.temp).toFixed(1) + '</div>' : '<div class="temp na">-</div>';
+      var metaParts = [];
+      if (d.time) metaParts.push(d.time);
+      metaParts.push(escapeHtml(d.person || ""));
+      var noteHtml = escapeHtml(d.note || "") + (d.medication ? '<span class="med-badge">' + escapeHtml(d.medication) + '</span>' : '');
+      el.innerHTML =
+        tempHtml +
+        '<div class="body">' +
+          '<div class="meta">' + metaParts.join(" · ") + '</div>' +
+          (noteHtml ? '<div class="note">' + noteHtml + '</div>' : '') +
+        '</div>';
+      el.addEventListener("click", function(){ openEditFever(d); });
+      list.appendChild(el);
+    });
+  }
+
+  // ---- 請假紀錄 ----
+  var currentLeavePeriod = null;
+  var currentLeaveTypeFilter = "all";
+
+  function updateLeavePeriodOptions(list){
+    var optsHtml = list.map(function(p){
+      return '<option value="' + p._id + '">' + periodLabel(p.startDate, p.endDate) + '</option>';
+    }).join("");
+    var filterSel = document.getElementById("leavePeriodFilter");
+    if (filterSel.innerHTML !== optsHtml) filterSel.innerHTML = optsHtml;
+    if (!list.some(function(p){ return p._id === currentLeavePeriod; })){
+      currentLeavePeriod = defaultLeavePeriod(list);
+    }
+    filterSel.value = currentLeavePeriod;
+    document.getElementById("lPeriod").innerHTML = optsHtml;
+  }
+  document.getElementById("leavePeriodFilter").addEventListener("change", function(){
+    currentLeavePeriod = this.value;
+    renderLeaves();
+  });
+  document.querySelectorAll("#leaveTypeFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      currentLeaveTypeFilter = b.getAttribute("data-lfilter");
+      document.querySelectorAll("#leaveTypeFilterTabs button").forEach(function(x){
+        x.classList.toggle("active", x === b);
+      });
+      renderLeaves();
+    });
+  });
+
+  function openAddLeave(){
+    editingLeaveId = null;
+    document.getElementById("leaveSheetTitle").textContent = "新增請假紀錄";
+    document.getElementById("leaveDeleteBtn").hidden = true;
+    document.getElementById("leaveDuplicateBtn").hidden = true;
+    document.getElementById("lPeriod").value = currentLeavePeriod;
+    document.getElementById("lDate").value = "";
+    document.getElementById("lType").value = "特休";
+    document.getElementById("lHours").value = "";
+    document.getElementById("lNote").value = "";
+    document.getElementById("leaveSheetBackdrop").hidden = false;
+  }
+  function openEditLeave(d){
+    editingLeaveId = d._id;
+    document.getElementById("leaveSheetTitle").textContent = "編輯請假紀錄";
+    document.getElementById("leaveDeleteBtn").hidden = false;
+    document.getElementById("leaveDuplicateBtn").hidden = false;
+    document.getElementById("lPeriod").value = d.period || currentLeavePeriod;
+    document.getElementById("lDate").value = d.date || "";
+    document.getElementById("lType").value = d.leaveType || "特休";
+    document.getElementById("lHours").value = d.hours || "";
+    document.getElementById("lNote").value = d.note || "";
+    document.getElementById("leaveSheetBackdrop").hidden = false;
+  }
+  function closeLeaveSheet(){ document.getElementById("leaveSheetBackdrop").hidden = true; }
+  document.getElementById("leaveCancelBtn").addEventListener("click", closeLeaveSheet);
+  document.getElementById("leaveSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeLeaveSheet(); });
+
+  document.getElementById("leaveSaveBtn").addEventListener("click", async function(){
+    var date = document.getElementById("lDate").value;
+    if (!date){ showToast("請選擇請假日期"); return; }
+    var hours = numVal("lHours");
+    if (!hours){ showToast("請輸入時數"); return; }
+    var leaveType = document.getElementById("lType").value;
+    var isAnnual = !!LEAVE_ANNUAL_TYPES[leaveType];
+    var data = {
+      period: document.getElementById("lPeriod").value,
+      date: date,
+      leaveType: leaveType,
+      hours: hours,
+      annualHours: isAnnual ? hours : 0,
+      otherHours: isAnnual ? 0 : hours,
+      note: document.getElementById("lNote").value.trim(),
+      person: "hua",
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !leaveCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingLeaveId){
+        await leaveCol.doc(editingLeaveId).set(Object.assign({}, leavesById[editingLeaveId], data));
+      } else {
+        data.createdAt = Date.now();
+        await leaveCol.add(data);
+      }
+      closeLeaveSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("leaveDeleteBtn").addEventListener("click", async function(){
+    if (!editingLeaveId || !leaveCol) return;
+    try{ await leaveCol.doc(editingLeaveId).delete(); closeLeaveSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("leaveDuplicateBtn").addEventListener("click", function(){
+    editingLeaveId = null;
+    document.getElementById("leaveSheetTitle").textContent = "新增請假紀錄";
+    document.getElementById("leaveDeleteBtn").hidden = true;
+    document.getElementById("leaveDuplicateBtn").hidden = true;
+    showToast("已複製，請修改後儲存");
+  });
+
+  // ---- 請假週期設定 ----
+  function openAddPeriod(){
+    editingPeriodId = null;
+    document.getElementById("periodSheetTitle").textContent = "新增請假週期";
+    document.getElementById("periodDeleteBtn").hidden = true;
+    var list = getAllPeriods();
+    var latest = list[0];
+    var nextStart = "";
+    if (latest && latest.endDate){
+      var d = new Date(latest.endDate + "T00:00:00");
+      d.setDate(d.getDate() + 1);
+      nextStart = d.toISOString().slice(0,10);
+    }
+    document.getElementById("pStartDate").value = nextStart;
+    document.getElementById("pEndDate").value = "";
+    document.getElementById("pEntitlement").value = "";
+    document.getElementById("pNote").value = "";
+    document.getElementById("periodSheetBackdrop").hidden = false;
+  }
+  function openEditPeriod(p){
+    editingPeriodId = p._id;
+    document.getElementById("periodSheetTitle").textContent = "設定週期特休總時數";
+    document.getElementById("periodDeleteBtn").hidden = !periodsById[p._id];
+    document.getElementById("pStartDate").value = p.startDate || "";
+    document.getElementById("pEndDate").value = p.endDate || "";
+    document.getElementById("pEntitlement").value = p.entitlementHours || "";
+    document.getElementById("pNote").value = p.note || "";
+    document.getElementById("periodSheetBackdrop").hidden = false;
+  }
+  function closePeriodSheet(){ document.getElementById("periodSheetBackdrop").hidden = true; }
+  document.getElementById("addPeriodBtn").addEventListener("click", openAddPeriod);
+  document.getElementById("editPeriodBtn").addEventListener("click", function(){
+    var list = getAllPeriods();
+    var current = list.filter(function(p){ return p._id === currentLeavePeriod; })[0];
+    if (current) openEditPeriod(current);
+  });
+  document.getElementById("periodCancelBtn").addEventListener("click", closePeriodSheet);
+  document.getElementById("periodSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closePeriodSheet(); });
+
+  document.getElementById("periodSaveBtn").addEventListener("click", async function(){
+    var startDate = document.getElementById("pStartDate").value;
+    var endDate = document.getElementById("pEndDate").value;
+    if (!startDate || !endDate){ showToast("請選擇起訖日期"); return; }
+    if (endDate < startDate){ showToast("結束日期不能早於起始日期"); return; }
+    var id = editingPeriodId || periodIdFromDates(startDate, endDate);
+    var data = {
+      startDate: startDate, endDate: endDate,
+      entitlementHours: numVal("pEntitlement"),
+      note: document.getElementById("pNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !periodsCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (periodsById[id]){
+        await periodsCol.doc(id).set(Object.assign({}, periodsById[id], data));
+      } else {
+        data.createdAt = Date.now();
+        await periodsCol.doc(id).set(data);
+      }
+      currentLeavePeriod = id;
+      closePeriodSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("periodDeleteBtn").addEventListener("click", async function(){
+    if (!editingPeriodId || !periodsCol || !periodsById[editingPeriodId]) return;
+    try{ await periodsCol.doc(editingPeriodId).delete(); closePeriodSheet(); showToast("已刪除週期設定"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
+  function renderLeaves(){
+    var list = document.getElementById("leaveList");
+    list.innerHTML = "";
+    var periods = getAllPeriods();
+    updateLeavePeriodOptions(periods);
+    var currentPeriodObj = periods.filter(function(p){ return p._id === currentLeavePeriod; })[0];
+
+    var allInPeriod = Object.keys(leavesById).map(function(id){
+      return Object.assign({}, leavesById[id], { _id: id });
+    }).filter(function(d){ return d.period === currentLeavePeriod; });
+
+    var all = allInPeriod;
+    var allowedTypes = LEAVE_FILTER_GROUPS[currentLeaveTypeFilter];
+    if (allowedTypes){
+      all = all.filter(function(d){ return allowedTypes.indexOf(d.leaveType) !== -1; });
+    }
+    all.sort(function(a,b){
+      var d = (a.date || "").localeCompare(b.date || "");
+      return SORT_DIR.leave === "asc" ? d : -d;
+    });
+
+    document.getElementById("leaveCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var totalHours = all.reduce(function(s,d){ return s + (Number(d.hours)||0); }, 0);
+    var annualHours = all.reduce(function(s,d){ return s + (Number(d.annualHours)||0); }, 0);
+    var otherHours = all.reduce(function(s,d){ return s + (Number(d.otherHours)||0); }, 0);
+    document.getElementById("leaveTotalHours").textContent = totalHours + " hr";
+    document.getElementById("leaveAnnualHours").textContent = annualHours + " hr";
+    document.getElementById("leaveOtherHours").textContent = otherHours + " hr";
+
+    var annualUsedInPeriod = allInPeriod.reduce(function(s,d){ return s + (Number(d.annualHours)||0); }, 0);
+    var entitlement = currentPeriodObj ? currentPeriodObj.entitlementHours : 0;
+    var remainEl = document.getElementById("leaveAnnualRemain");
+    var hintEl = document.getElementById("leaveRemainHint");
+    if (entitlement > 0){
+      var remain = entitlement - annualUsedInPeriod;
+      remainEl.textContent = remain + " hr";
+      remainEl.className = "v num " + (remain >= 0 ? "pos" : "neg");
+      hintEl.textContent = "特休總時數 " + entitlement + " hr（可點「✎ 設定總時數」修改）";
+    } else {
+      remainEl.textContent = "-";
+      remainEl.className = "v num";
+      hintEl.textContent = "尚未設定本週期特休總時數，點「✎ 設定總時數」輸入後即可計算剩餘特休";
+    }
+
+    if (!all.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "這個週期／篩選條件下沒有請假紀錄，點右下角 ＋ 新增";
+      list.appendChild(e);
+      return;
+    }
+    all.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "leave-card";
+      var html =
+        '<div class="row1"><span class="date">' + escapeHtml(d.date || "") +
+          '<span class="type-badge">' + escapeHtml(d.leaveType || "") + '</span></span>' +
+          '<span class="hours num">' + (Number(d.hours)||0) + ' hr</span></div>';
+      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
+      el.innerHTML = html;
+      el.addEventListener("click", function(){ openEditLeave(d); });
+      list.appendChild(el);
+    });
+  }
+
+  async function boot(){
+    var status = document.getElementById("statusLine");
+    var db = null;
+    try{ db = await window.__fbDbPromise; }catch(e){ db = null; }
+    if (!db){
+      status.textContent = "無法連線資料庫，變更不會被保存"; render(); renderSalaries(); renderUtilities(); renderAnnualFixed(); renderAnnualBonus(); renderLeaves(); renderClaims(); renderTimeline(); renderRedOut(); renderRedIn(); renderEpisodes(); renderFever(); return;
+    }
+    col = db.collection("items");
+    salaryCol = db.collection("salaries");
+    utilityCol = db.collection("utilities");
+    annualFixedCol = db.collection("annualFixed");
+    annualBonusCol = db.collection("annualBonus");
+    leaveCol = db.collection("leaves");
+    periodsCol = db.collection("leavePeriods");
+    claimCol = db.collection("insuranceClaims");
+    timelineCol = db.collection("lifeTimeline");
+    redOutCol = db.collection("redEnvelopesOut");
+    redInCol = db.collection("redEnvelopesIn");
+    feverCol = db.collection("feverLogs");
+    episodeCol = db.collection("feverEpisodes");
+    dbReady = true;
+    col.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      itemsById = next; render(); renderSalaries(); status.textContent = "";
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    salaryCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      salariesById = next; renderSalaries(); renderAnnualBonus();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    utilityCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      utilitiesById = next; renderUtilities();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    annualFixedCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      annualFixedById = next; renderAnnualFixed();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    annualBonusCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      annualBonusById = next; renderAnnualBonus();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    leaveCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      leavesById = next; renderLeaves();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    periodsCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      periodsById = next; renderLeaves();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    claimCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      claimsById = next; renderClaims();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    timelineCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      timelineById = next; renderTimeline();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    redOutCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      redOutById = next; renderRedOut();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    redInCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      redInById = next; renderRedIn();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    feverCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      feverById = next; renderEpisodes(); renderFever();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    episodeCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      episodesById = next; renderEpisodes(); renderFever();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+  }
+
+  wireSortBtn("budgetSortBtn", "budget", render);
+  wireSortBtn("salarySortBtn", "salary", renderSalaries);
+  wireSortBtn("utilitySortBtn", "utility", renderUtilities);
+  wireSortBtn("annualFixedSortBtn", "annualFixed", renderAnnualFixed);
+  wireSortBtn("annualBonusSortBtn", "annualBonus", renderAnnualBonus);
+  wireSortBtn("claimSortBtn", "claim", renderClaims);
+  wireSortBtn("timelineSortBtn", "timeline", renderTimeline);
+  wireSortBtn("leaveSortBtn", "leave", renderLeaves);
+  wireSortBtn("redOutSortBtn", "redOut", renderRedOut);
+  wireSortBtn("redInSortBtn", "redIn", renderRedIn);
+  wireSortBtn("feverSortBtn", "fever", function(){ renderEpisodes(); renderFever(); });
+
+  render();
+  renderSalaries();
+  renderUtilities();
+  renderAnnualFixed();
+  renderAnnualBonus();
+  renderLeaves();
+  renderClaims();
+  renderTimeline();
+  renderRedOut();
+  renderRedIn();
+  renderEpisodes();
+  renderFever();
+  boot();
+})();
+</script>
