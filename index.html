@@ -385,6 +385,7 @@
       <button type="button" data-person="combined">兩人合計</button>
     </div>
     <div class="status" id="statusLine">載入中…</div>
+    <div class="status" style="margin-top:2px;"><button class="addlink" id="backupBtn" type="button" style="font-size:12px;">⬇ 匯出備份</button><span id="backupHint"></span></div>
   </header>
 
   <div data-page="budget" class="active">
@@ -3530,6 +3531,36 @@
       episodesById = next; renderEpisodes(); renderFever();
     }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
   }
+
+  function lastBackupTs(){ try{ return Number(localStorage.getItem("huaLastBackup")) || 0; }catch(e){ return 0; } }
+  function updateBackupHint(){
+    var ts = lastBackupTs();
+    var hint = document.getElementById("backupHint");
+    if (!ts){ hint.textContent = "　尚未備份過"; return; }
+    var days = Math.floor((Date.now() - ts) / 86400000);
+    hint.textContent = "　上次備份：" + (days === 0 ? "今天" : days + " 天前") + (days > 30 ? "（建議重新備份）" : "");
+  }
+  document.getElementById("backupBtn").addEventListener("click", function(){
+    if (!dbReady){ showToast("尚未連線，稍後再試"); return; }
+    var data = {
+      items: itemsById, salaries: salariesById, utilities: utilitiesById,
+      annualFixed: annualFixedById, annualBonus: annualBonusById,
+      leaves: leavesById, leavePeriods: periodsById,
+      insuranceClaims: claimsById, lifeTimeline: timelineById,
+      redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
+      feverLogs: feverById, feverEpisodes: episodesById
+    };
+    var d = new Date();
+    var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "hua-budget-backup-" + stamp + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    try{ localStorage.setItem("huaLastBackup", String(Date.now())); }catch(e){}
+    updateBackupHint(); showToast("備份已下載");
+  });
+  updateBackupHint();
 
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
