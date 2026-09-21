@@ -1264,6 +1264,7 @@
         <div class="field"><label>病假(hr)</label><input id="sLeaveSick" type="number" inputmode="decimal" placeholder="0"></div>
         <div class="field"><label>事假(hr)</label><input id="sLeavePersonal" type="number" inputmode="decimal" placeholder="0"></div>
       </div>
+      <div id="sLeaveInfo" class="calc-box" style="margin-bottom:12px;"></div>
 
       <div class="section-label">扣款明細</div>
       <div class="section-hint">扣減項目＝勞保＋健保＋福利金＋暫支薪資＋其他＋停車費（獎金通常沒有這些扣款）</div>
@@ -2568,6 +2569,7 @@
     document.getElementById("bonusNameField").hidden = !isBonus;
     document.getElementById("sMonthField").hidden = isBonus;
     document.getElementById("sDateLabel").textContent = isBonus ? "發放日期" : "實際發薪日";
+    if (typeof refreshLeaveInfo === "function") refreshLeaveInfo();
   }
   document.getElementById("recordTypeSeg").addEventListener("click", function(e){
     var btn = e.target.closest("button");
@@ -2703,6 +2705,8 @@
     renderSalaryExtras();
     sAmountTouched = false;
     document.getElementById("sAmount").value = "";
+    applyLeavesToForm();
+    refreshLeaveInfo();
     recomputeGross();
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
@@ -2714,6 +2718,8 @@
   }
   document.getElementById("sDate").addEventListener("change", function(){ sPayDateTouched = true; syncPaidWithDate(); });
   document.getElementById("sMonth").addEventListener("change", function(){
+    if (!editingSalaryId) applyLeavesToForm();
+    refreshLeaveInfo();
     if (!sPayDateTouched){
       document.getElementById("sDate").value = fiveOfNextMonth(document.getElementById("sMonth").value);
       syncPaidWithDate();
@@ -2761,6 +2767,7 @@
     updateSalaryCalcBox();
     var calcTotalNow = numVal("sGrossAmount") - numVal("sAbsenceDeduction") - (numVal("sLaborIns") + numVal("sHealthIns") + numVal("sWelfare") + numVal("sAdvance") + numVal("sOther") + numVal("sParking")) + numVal("sAdvance");
     sAmountTouched = Math.round(Number(d.amount) || 0) !== Math.round(calcTotalNow);
+    refreshLeaveInfo();
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
   function closeSalarySheet(){ document.getElementById("salarySheetBackdrop").hidden = true; }
@@ -4204,12 +4211,74 @@
   function getLeaveTypes(){
     var cfg = leaveCfg();
     var out = LEAVE_BUILTINS.map(function(b){ return { name:b.name, color:cfg.colors[b.name] || b.color, annual:b.annual, builtin:true }; });
-    cfg.custom.forEach(function(c){ out.push({ name:c.name, color:c.color || "#7F8C8D", annual:!!c.annual, builtin:false }); });
+    cfg.custom.forEach(function(c){ out.push({ name:c.name, color:c.color || "#7F8C8D", annual:!!c.annual, deduct:c.deduct || "", builtin:false }); });
     return out;
   }
   function leaveColor(name){
     var t = getLeaveTypes().filter(function(x){ return x.name === name; })[0];
     return t ? t.color : "#7F8C8D";
+  }
+  var LEAVE_DEDUCT_BUILTIN = { "生理假":"physio", "未住院病假":"sick", "住院病假":"sick", "家庭照顧假":"personal" };
+  var DEDUCT_LABEL = { physio:"生理假", sick:"病假", personal:"事假" };
+  function leaveDeductKind(name){
+    if (LEAVE_DEDUCT_BUILTIN[name]) return LEAVE_DEDUCT_BUILTIN[name];
+    var c = leaveCfg().custom.filter(function(x){ return x.name === name; })[0];
+    return c && c.deduct ? c.deduct : "";
+  }
+  function attendancePeriod(monthStr){
+    var p = String(monthStr || "").split("-");
+    var y = Number(p[0]), m = Number(p[1]);
+    if (!y || !m) return null;
+    var py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
+    return { start: py + "-" + String(pm).padStart(2, "0") + "-21", end: y + "-" + String(m).padStart(2, "0") + "-20" };
+  }
+  function leavesInPeriod(per){
+    if (!per) return [];
+    return Object.keys(leavesById).map(function(id){ return leavesById[id]; })
+      .filter(function(d){ return d.date && d.date >= per.start && d.date <= per.end; })
+      .sort(function(a, b){ return a.date.localeCompare(b.date); });
+  }
+  function refreshLeaveInfo(){
+    var box = document.getElementById("sLeaveInfo");
+    var isBonus = currentRecordType === "bonus";
+    if (isBonus){ box.innerHTML = ""; return; }
+    var per = attendancePeriod(document.getElementById("sMonth").value);
+    if (!per){ box.innerHTML = '<div class="section-hint" style="margin:0;">選好薪資月份後，會列出計算區間內的請假紀錄</div>'; return; }
+    var list = leavesInPeriod(per);
+    var sums = { physio:0, sick:0, personal:0 }, deductRows = [], freeRows = [];
+    list.forEach(function(d){
+      var k = leaveDeductKind(d.leaveType), h = Number(d.hours) || 0;
+      var row = d.date.slice(5).replace("-", "/") + "　" + escapeHtml(d.leaveType || "") + "　" + h + " hr";
+      if (k){ sums[k] += h; deductRows.push(row); } else freeRows.push(row);
+    });
+    var totalDeduct = sums.physio + sums.sick + sums.personal;
+    var html = '<div class="line"><span style="font-weight:700;">缺勤計算區間</span><span class="v num">' + per.start.slice(5).replace("-", "/") + ' – ' + per.end.slice(5).replace("-", "/") + '</span></div>';
+    if (deductRows.length){
+      html += '<div class="section-hint" style="margin:6px 0 2px;">扣薪的假別（共 ' + totalDeduct + ' hr：生理 ' + sums.physio + '、病假 ' + sums.sick + '、事假 ' + sums.personal + '）</div>';
+      html += deductRows.map(function(r){ return '<div class="line" style="font-size:12.5px;"><span>' + r + '</span></div>'; }).join("");
+    } else {
+      html += '<div class="section-hint" style="margin:6px 0 2px;">這個區間沒有扣薪的假別紀錄</div>';
+    }
+    if (freeRows.length){
+      html += '<div class="section-hint" style="margin:6px 0 2px;">不扣薪（特休、換休等）：' + freeRows.join("；") + '</div>';
+    }
+    html += '<button type="button" class="btn ghost" id="sLeaveApplyBtn" style="width:100%; margin-top:8px;">↻ 從請假紀錄帶入上面三格</button>';
+    box.innerHTML = html;
+    document.getElementById("sLeaveApplyBtn").addEventListener("click", function(){ applyLeavesToForm(); showToast("已帶入請假時數"); });
+  }
+  function applyLeavesToForm(){
+    var per = attendancePeriod(document.getElementById("sMonth").value);
+    var sums = { physio:0, sick:0, personal:0 };
+    leavesInPeriod(per).forEach(function(d){
+      var k = leaveDeductKind(d.leaveType);
+      if (k) sums[k] += Number(d.hours) || 0;
+    });
+    document.getElementById("sLeavePhysio").value = sums.physio || "";
+    document.getElementById("sLeaveSick").value = sums.sick || "";
+    document.getElementById("sLeavePersonal").value = sums.personal || "";
+    var total = sums.physio + sums.sick + sums.personal;
+    document.getElementById("sAbsenceHours").value = total || "";
+    updateSalaryCalcBox();
   }
   function isAnnualLeave(name){
     if (LEAVE_ANNUAL_TYPES[name]) return true;
@@ -4242,7 +4311,7 @@
       var idx = cfg.custom.findIndex(function(c){ return c.name === t.name; });
       row.innerHTML = '<input type="color" value="' + t.color + '" style="width:42px; height:38px; padding:2px; flex:none;">' +
         (t.builtin ? '<div style="flex:1; font-size:14px; font-weight:600;">' + escapeHtml(t.name) + (t.annual ? ' <span class="hist-badge">計入特休</span>' : '') + '</div>'
-                   : '<input type="text" value="' + escapeHtml(t.name) + '" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" ' + (t.annual ? "checked" : "") + ' style="width:18px; height:18px; margin:0;">計入特休</label><button type="button" class="btn danger" style="flex:none; padding:8px 12px;" aria-label="刪除">✕</button>');
+                   : '<input type="text" value="' + escapeHtml(t.name) + '" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" ' + (t.annual ? "checked" : "") + ' style="width:18px; height:18px; margin:0;">計入特休</label><select class="lt-deduct" style="flex:none; width:auto; padding:8px 6px; font-size:12px;"><option value="">不扣薪</option><option value="physio"' + (t.deduct === "physio" ? " selected" : "") + '>扣薪:生理</option><option value="sick"' + (t.deduct === "sick" ? " selected" : "") + '>扣薪:病假</option><option value="personal"' + (t.deduct === "personal" ? " selected" : "") + '>扣薪:事假</option></select><button type="button" class="btn danger" style="flex:none; padding:8px 12px;" aria-label="刪除">✕</button>');
       var color = row.querySelector('input[type="color"]');
       color.addEventListener("change", async function(){
         var c = leaveCfg();
@@ -4262,6 +4331,10 @@
           var c = leaveCfg(); c.custom[idx].annual = chk.checked;
           if (await saveLeaveCfg(c)) renderLtManage();
         });
+        row.querySelector(".lt-deduct").addEventListener("change", async function(){
+          var c = leaveCfg(); c.custom[idx].deduct = this.value;
+          if (await saveLeaveCfg(c)) renderLtManage();
+        });
         row.querySelector("button").addEventListener("click", async function(){
           var c = leaveCfg(); c.custom.splice(idx, 1);
           if (await saveLeaveCfg(c)){ refreshLeaveTypeOptions("特休"); renderLtManage(); renderLeaves(); }
@@ -4271,14 +4344,14 @@
     });
     var add = document.createElement("div");
     add.style.cssText = "display:flex; gap:8px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);";
-    add.innerHTML = '<input type="color" value="#16A085" id="ltNewColor" style="width:42px; height:38px; padding:2px; flex:none;"><input type="text" id="ltNewName" placeholder="新假別名稱，例如：公假" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" id="ltNewAnnual" style="width:18px; height:18px; margin:0;">計入特休</label><button type="button" class="btn ghost" id="ltNewBtn" style="flex:none; padding:9px 12px;">＋</button>';
+    add.innerHTML = '<input type="color" value="#16A085" id="ltNewColor" style="width:42px; height:38px; padding:2px; flex:none;"><input type="text" id="ltNewName" placeholder="新假別名稱，例如：公假" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" id="ltNewAnnual" style="width:18px; height:18px; margin:0;">計入特休</label><select id="ltNewDeduct" style="flex:none; width:auto; padding:8px 6px; font-size:12px;"><option value="">不扣薪</option><option value="physio">扣薪:生理</option><option value="sick">扣薪:病假</option><option value="personal">扣薪:事假</option></select><button type="button" class="btn ghost" id="ltNewBtn" style="flex:none; padding:9px 12px;">＋</button>';
     box.appendChild(add);
     add.querySelector("#ltNewBtn").addEventListener("click", async function(){
       var name = add.querySelector("#ltNewName").value.trim();
       if (!name) return;
       if (getLeaveTypes().some(function(x){ return x.name === name; })){ showToast("已有相同名稱的假別"); return; }
       var c = leaveCfg();
-      c.custom.push({ name: name, color: add.querySelector("#ltNewColor").value, annual: add.querySelector("#ltNewAnnual").checked });
+      c.custom.push({ name: name, color: add.querySelector("#ltNewColor").value, annual: add.querySelector("#ltNewAnnual").checked, deduct: add.querySelector("#ltNewDeduct").value });
       if (await saveLeaveCfg(c)){ refreshLeaveTypeOptions(name); renderLtManage(); }
     });
   }
@@ -5583,6 +5656,7 @@
         var pm = new Date(pd.getFullYear(), pd.getMonth() - 1, 1);
         document.getElementById("sMonth").value = pm.getFullYear() + "-" + String(pm.getMonth() + 1).padStart(2, "0");
         document.getElementById("sDate").value = d; sPayDateTouched = true; syncPaidWithDate();
+        applyLeavesToForm(); refreshLeaveInfo();
       } },
     { ico:"🎁", name:"獎金", run:function(d){ openAddSalary(); document.querySelector('#recordTypeSeg [data-rtype="bonus"]').click(); document.getElementById("sDate").value = d; sPayDateTouched = true; syncPaidWithDate(); } },
     { ico:"💡", name:"水電瓦斯", run:function(d){ openAddUtility(); document.getElementById("uYear").value = d.slice(0, 4); document.getElementById("uMonth").value = Number(d.slice(5, 7)); } },
