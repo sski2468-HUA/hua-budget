@@ -742,6 +742,24 @@
 
     <section class="group" style="margin-top:16px;">
       <div class="ghead">
+        <h2><span class="dot income"></span>每月實際入帳</h2>
+        <button type="button" class="sort-btn" id="cashToggleBtn" style="margin:0;">▾ 收合</button>
+      </div>
+      <div id="cashBody">
+        <div class="field" style="margin-bottom:10px;">
+          <label>顯示範圍</label>
+          <select id="cashRange">
+            <option value="6">近 6 個月</option>
+            <option value="12">近 12 個月</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+        <div id="cashBox"></div>
+      </div>
+    </section>
+
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead">
         <h2><span class="dot salary"></span>薪資比較</h2>
         <button type="button" class="sort-btn" id="cmpToggleBtn" style="margin:0;">▸ 展開</button>
       </div>
@@ -1261,15 +1279,17 @@
       </div>
     </div>
 
-    <div class="section-label">實發金額</div>
-    <div class="row2">
-      <div class="field"><label>實發金額 (NT$)</label><input id="sAmount" type="number" inputmode="decimal" placeholder="0"></div>
-    </div>
+    <div class="section-label">實領金額（自動計算）</div>
     <div class="calc-box" id="grossCalcBox">
       <div class="line"><span>應發金額</span><span class="v num" id="calcGross">$0</span></div>
       <div class="line"><span>缺勤減發</span><span class="v neg num" id="calcAbsence">-$0</span></div>
-      <div class="line"><span>扣款合計（勞健保等6項）</span><span class="v neg num" id="calcDeduction">-$0</span></div>
-      <div class="line total"><span>建議實發金額</span><span class="v num" id="calcSuggested">$0</span></div>
+      <div class="line"><span>扣款合計（含暫支）</span><span class="v neg num" id="calcDeduction">-$0</span></div>
+      <div class="line total"><span>實發金額（發薪日入帳）</span><span class="v num" id="calcSuggested">$0</span></div>
+      <div class="line"><span>＋ 暫支薪資（上月已先領）</span><span class="v pos num" id="calcAdvance">$0</span></div>
+      <div class="line total"><span>本月薪資總額</span><span class="v num" id="calcTotal">$0</span></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>本月薪資總額 (NT$)（實發＋暫支，會自動算，可手動改）</label><input id="sAmount" type="number" inputmode="decimal" placeholder="0"></div>
     </div>
 
     <div class="field" style="display:flex; align-items:center; gap:10px;">
@@ -2296,7 +2316,86 @@
   document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
   document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
 
+  function renderSalaryCash(){
+    var box = document.getElementById("cashBox");
+    var months = {};
+    var today = todayStr();
+    function slot(ym){ return months[ym] || (months[ym] = { net:0, adv:0, bonus:0, pending:false, items:[] }); }
+    Object.keys(salariesById).forEach(function(id){
+      var d = salariesById[id];
+      if (currentPerson !== "combined" && (d.person || "hua") !== currentPerson) return;
+      if (d.recordType === "bonus"){
+        var bd = paidOnDate(d), by = bd.slice(0, 7);
+        if (!by) return;
+        var b = slot(by), bp = !salaryPaid(d);
+        b.bonus += Number(d.amount) || 0; if (bp) b.pending = true;
+        b.items.push({ date:bd, label:(d.bonusName || "獎金"), amount:Number(d.amount) || 0, pending:bp, kind:"bonus", id:id });
+        return;
+      }
+      var adv = Number(d.advance) || 0;
+      var netPaid = (Number(d.amount) || 0) - adv;
+      var pd = paidOnDate(d), py = pd.slice(0, 7);
+      var ml = salaryMonthLabel(d).replace(/^\d+年/, "");
+      if (py){
+        var s1 = slot(py), np = !salaryPaid(d);
+        s1.net += netPaid; if (np) s1.pending = true;
+        s1.items.push({ date:pd, label:ml + " 實發", amount:netPaid, pending:np, kind:"net", id:id });
+      }
+      var sy = String(d.payDate || "").slice(0, 7);
+      if (sy && adv){
+        var ad = sy + "-20", ap = ad > today;
+        var s2 = slot(sy);
+        s2.adv += adv; if (ap) s2.pending = true;
+        s2.items.push({ date:ad, label:ml + " 暫支（20日先領）", amount:adv, pending:ap, kind:"adv", id:id });
+      }
+    });
+    var thisYm = today.slice(0, 7);
+    var keys = Object.keys(months).sort().reverse();
+    var rangeVal = document.getElementById("cashRange").value;
+    if (rangeVal !== "all") keys = keys.slice(0, Number(rangeVal));
+    if (!keys.length){ box.innerHTML = '<div class="empty">還沒有薪水紀錄</div>'; return; }
+    var cur = months[thisYm] || { items:[] };
+    var got = 0, upcoming = 0;
+    cur.items.forEach(function(x){ if (x.pending) upcoming += x.amount; else got += x.amount; });
+    var html = '<div class="calc-box" style="margin-bottom:10px;"><div class="line total"><span>本月（' + Number(thisYm.slice(5)) + '月）已領到</span><span class="v num">' + fmt(got) + '</span></div>';
+    cur.items.slice().sort(function(a, b){ return a.date.localeCompare(b.date); }).forEach(function(x){
+      html += '<div class="line cash-line" data-rec="' + x.id + '" style="cursor:pointer;"><span>　' + x.date.slice(5).replace("-", "/") + '　' + escapeHtml(x.label) + '<small style="color:var(--muted);"> ' + (x.pending ? "預計" : "已領") + '</small></span><span class="v num" style="' + (x.pending ? "opacity:.6;" : "") + '">' + fmt(x.amount) + '</span></div>';
+    });
+    if (!cur.items.length) html += '<div class="line"><span style="color:var(--muted);">　本月沒有薪水相關入帳紀錄</span><span></span></div>';
+    if (upcoming) html += '<div class="line"><span style="color:var(--muted);">本月還預計會領</span><span class="v num" style="color:var(--muted);">' + fmt(upcoming) + '</span></div>';
+    html += '</div>';
+    html += '<div class="cmp-head" style="grid-template-columns:.8fr 1fr 1fr 1fr 1.1fr;"><span></span><span>5號入帳</span><span>20號暫支</span><span>獎金</span><span>合計</span></div>';
+    keys.forEach(function(ym){
+      var m = months[ym];
+      html += '<div class="cmp-row" style="grid-template-columns:.8fr 1fr 1fr 1fr 1.1fr;' + (ym === thisYm ? "background:var(--surface-2); border-radius:8px;" : "") + '"><span class="cmp-l">' + ym.slice(2).replace("-", "/") + (m.pending ? '<small style="color:var(--muted); font-weight:500;"> 預計</small>' : "") + '</span>' +
+        '<span class="num cmp-v">' + fmt(m.net) + '</span><span class="num cmp-v cmp-b">' + fmt(m.adv) + '</span><span class="num cmp-v cmp-b">' + fmt(m.bonus) + '</span><span class="num cmp-d">' + fmt(m.net + m.adv + m.bonus) + '</span></div>';
+    });
+    html += '<div class="section-hint" style="margin:8px 2px 0;">5號入帳＝當月 5 號發的（上個月薪水）實發；20號暫支＝當月 20 號先領、之後從薪水單扣掉的那筆。點上方任一筆可直接修改。實際領到的暫支金額和預設不同時，到該月份的薪水單改「暫支薪資」即可。</div>';
+    box.innerHTML = '<div id="cashInner" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow);">' + html + '</div>';
+    box.querySelectorAll(".cash-line").forEach(function(el){
+      el.addEventListener("click", function(){
+        var rid = el.getAttribute("data-rec");
+        if (salariesById[rid]) openEditSalary(Object.assign({}, salariesById[rid], { _id: rid }));
+      });
+    });
+  }  (function(){
+    var open = true;
+    try{ open = localStorage.getItem("huaCashOpen") !== "0"; }catch(e){}
+    function apply(){
+      document.getElementById("cashBody").hidden = !open;
+      document.getElementById("cashToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+    }
+    apply();
+    document.getElementById("cashToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaCashOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+    document.getElementById("cashRange").addEventListener("change", renderSalaryCash);
+  })();
+
   function renderSalaries(){
+    renderSalaryCash();
     renderSalaryCompare();
     var list = document.getElementById("salaryList");
     list.innerHTML = "";
@@ -2375,6 +2474,8 @@
         var metaParts = [];
         var po = paidOnDate(d);
         if (po) metaParts.push("發薪日 " + po.slice(5).replace("-", "/"));
+        var advAmt = Number(d.advance) || 0;
+        if (advAmt){ metaParts.push("入帳 " + fmt((Number(d.amount) || 0) - advAmt)); metaParts.push("暫支 " + fmt(advAmt)); }
         if (d.grossAmount) metaParts.push("應發 " + fmt(d.grossAmount));
         if (d.bonus) metaParts.push("效率獎金 " + fmt(d.bonus));
         (d.extraItems || []).forEach(function(x){ metaParts.push(escapeHtml(x.name || "其他") + " " + fmt(x.amount)); });
@@ -2415,11 +2516,19 @@
     var deductionTotal = numVal("sLaborIns") + numVal("sHealthIns") + numVal("sWelfare") +
       numVal("sAdvance") + numVal("sOther") + numVal("sParking");
     var suggested = gross - absenceDeduction - deductionTotal;
+    var advance = numVal("sAdvance");
+    var total = suggested + advance;
     document.getElementById("calcGross").textContent = fmt(gross);
     document.getElementById("calcAbsence").textContent = "-" + fmt(absenceDeduction);
     document.getElementById("calcDeduction").textContent = "-" + fmt(deductionTotal);
     document.getElementById("calcSuggested").textContent = fmt(suggested);
+    document.getElementById("calcAdvance").textContent = "+" + fmt(advance);
+    document.getElementById("calcTotal").textContent = fmt(total);
+    if (!sAmountTouched && currentRecordType === "salary"){
+      document.getElementById("sAmount").value = total || "";
+    }
   }
+  var sAmountTouched = false;
 
   function setType(t){
     currentType = t;
@@ -2571,16 +2680,30 @@
     sPayDateTouched = false;
     document.getElementById("sRating").value = "";
     document.getElementById("sBonusName").value = "";
+    var tplRec = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === whoP && d.payDate; })
+      .sort(function(a, b){ return b.payDate.localeCompare(a.payDate); })[0];
+    var tpl = {};
+    if (tplRec){
+      tpl.sLaborIns = tplRec.laborIns; tpl.sHealthIns = tplRec.healthIns; tpl.sWelfare = tplRec.welfare;
+      tpl.sAdvance = tplRec.advance; tpl.sOther = tplRec.other; tpl.sParking = tplRec.parking;
+      if (tplRec.transportAllowance !== undefined){
+        tpl.sBaseSalary = tplRec.baseSalary; tpl.sTransport = tplRec.transportAllowance; tpl.sRegion = tplRec.regionAllowance;
+        tpl.sSupply = tplRec.supplyAllowance; tpl.sMeal = tplRec.mealAllowance; tpl.sHousing = tplRec.housingAllowance;
+      }
+    }
     SALARY_NUM_FIELDS.forEach(function(id){
-      document.getElementById(id).value = (id in SALARY_PRESET) ? SALARY_PRESET[id] : "";
+      var v = (id in tpl && tpl[id] !== undefined) ? tpl[id] : ((id in SALARY_PRESET) ? SALARY_PRESET[id] : "");
+      document.getElementById(id).value = v === 0 ? "" : v;
     });
-    document.getElementById("sAmount").value = "";
     document.getElementById("sGeneralNote").value = "";
     sPaidTouched = false;
     syncPaidWithDate();
     salaryExtras = [];
     renderSalaryExtras();
-    updateSalaryCalcBox();
+    sAmountTouched = false;
+    document.getElementById("sAmount").value = "";
+    recomputeGross();
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
   var sPaidTouched = false;
@@ -2633,8 +2756,11 @@
     document.getElementById("sAmount").value = d.amount || "";
     document.getElementById("sGeneralNote").value = d.generalNote || "";
     sPaidTouched = true;
+    sAmountTouched = true;
     document.getElementById("sPaid").checked = salaryPaid(d);
     updateSalaryCalcBox();
+    var calcTotalNow = numVal("sGrossAmount") - numVal("sAbsenceDeduction") - (numVal("sLaborIns") + numVal("sHealthIns") + numVal("sWelfare") + numVal("sAdvance") + numVal("sOther") + numVal("sParking")) + numVal("sAdvance");
+    sAmountTouched = Math.round(Number(d.amount) || 0) !== Math.round(calcTotalNow);
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
   function closeSalarySheet(){ document.getElementById("salarySheetBackdrop").hidden = true; }
@@ -2652,7 +2778,7 @@
   document.getElementById("sheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeSheet(); });
   document.getElementById("salaryCancelBtn").addEventListener("click", closeSalarySheet);
   document.getElementById("salarySheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeSalarySheet(); });
-  document.getElementById("sAmount").addEventListener("input", updateSalaryCalcBox);
+  document.getElementById("sAmount").addEventListener("input", function(){ sAmountTouched = true; updateSalaryCalcBox(); });
   SALARY_NUM_FIELDS.forEach(function(id){
     document.getElementById(id).addEventListener("input", updateSalaryCalcBox);
   });
@@ -2702,7 +2828,7 @@
     var isBonus = currentRecordType === "bonus";
     if (!isBonus && !salaryMonth){ showToast("請選擇薪資月份"); return; }
     if (!paidOn){ showToast(isBonus ? "請選擇發放日期" : "請選擇實際發薪日"); return; }
-    if (!amount){ showToast("請輸入實發金額"); return; }
+    if (!amount){ showToast("請輸入本月薪資總額"); return; }
     var payDate = isBonus ? paidOn : salaryMonth + "-01";
     var data = {
       payDate: payDate, paidOn: paidOn, amount: amount,
