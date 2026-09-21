@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2C4A6E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HUA收支">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>HUA生活收支安排</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -363,9 +370,72 @@
   }
   .icon-btn:active{ transform:scale(.96); }
   header.top h1{ color:var(--brand); font-size:20px; }
-  .tabs{ overflow-x:auto; scrollbar-width:none; }
-  .tabs::-webkit-scrollbar{ display:none; }
-  .tabs button{ white-space:nowrap; padding-inline:8px; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ overscroll-behavior-y:none; -webkit-tap-highlight-color:transparent; padding-block:0 calc(96px + env(safe-area-inset-bottom, 0px)); }
+  button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  .field input, .field textarea, .field select{ font-size:16px; }
+  header.top{ top:0; padding-top:calc(10px + env(safe-area-inset-top, 0px)); margin-inline:-16px; padding-inline:16px; border-bottom:1px solid var(--line); }
+  header.top .subtabs{ margin-top:8px; }
+  header.top .status{ margin:2px 0 0; min-height:0; }
+  .top-row{ display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
+  header.top .top-row h1{ text-align:center; font-size:17px; margin:0; letter-spacing:.04em; color:var(--ink); }
+  .menu-btn{ border:none; background:transparent; color:var(--ink); font-size:24px; width:44px; height:40px; cursor:pointer; border-radius:10px; }
+  .menu-spacer{ display:block; }
+
+  .drawer-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:40; }
+  .drawer{
+    position:fixed; top:0; bottom:0; left:0; width:80%; max-width:320px; z-index:41;
+    background:var(--surface); display:flex; flex-direction:column;
+    padding:calc(14px + env(safe-area-inset-top, 0px)) 12px calc(14px + env(safe-area-inset-bottom, 0px));
+    transform:translateX(-102%); transition:transform .25s ease; box-shadow:var(--shadow);
+  }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-head{ display:flex; align-items:center; gap:10px; padding:4px 4px 14px; }
+  .drawer-logo{ font-size:26px; color:var(--savings); }
+  .drawer-title{ flex:1; font-size:18px; font-weight:900; }
+  .drawer .tabs{ display:flex; flex-direction:column; gap:4px; background:transparent; border:none; padding:0; margin:0; overflow-y:auto; flex:1; }
+  .drawer .tabs button{
+    display:flex; flex-direction:row; align-items:center; gap:14px; justify-content:flex-start;
+    padding:14px 14px; font-size:16px; font-weight:600; color:var(--ink); border-radius:14px; text-align:left; flex:none;
+  }
+  .drawer .tabs button .ico{ font-size:20px; width:26px; text-align:center; filter:none; opacity:1; }
+  .drawer .tabs button.active{ background:var(--brand); color:var(--brand-ink); box-shadow:none; }
+  .drawer-foot{ border-top:1px solid var(--line); padding-top:12px; }
+  .drawer-user{ font-size:13px; color:var(--muted); margin-bottom:10px; word-break:break-all; }
+  .drawer-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .total-pill{ display:inline-flex; gap:4px; background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:16px 28px; font-size:20px; font-weight:800; margin-top:16px; }
+  .home-head{ display:flex; justify-content:space-between; align-items:center; margin:22px 0 12px; }
+  .home-head h2{ margin:0; font-size:24px; font-weight:900; }
+  .pill-btn{ border:none; background:var(--brand); color:var(--brand-ink); font-family:inherit; font-size:15px; font-weight:800; padding:10px 20px; border-radius:99px; cursor:pointer; }
+  .acct-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px 10px; }
+  .acct-cell{ cursor:pointer; padding:4px 2px; min-width:0; }
+  .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
+  .acct-cell:active{ opacity:.6; }
+  .acct-cell .mv{ display:flex; gap:6px; margin-top:6px; }
+  .acct-cell .mv button{ border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; width:34px; height:28px; font-size:14px; cursor:pointer; }
+  .acct-cell .mv button:disabled{ opacity:.3; }
+  .hist-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .hist-row .l{ min-width:0; }
+  .hist-row .nm{ font-weight:700; }
+  .hist-row .tm{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .hist-row .r{ text-align:right; white-space:nowrap; }
+  .hist-row .d.up{ color:var(--income); font-weight:700; }
+  .hist-row .d.down{ color:var(--fixed); font-weight:700; }
+  .hist-row .b{ font-size:11.5px; color:var(--muted); }
+  .home-divider{ height:1px; background:var(--line); margin:22px 0; }
+  .donut-card{ background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:22px 12px 16px; box-shadow:var(--shadow); }
+  .donut-card svg{ display:block; width:78%; max-width:300px; margin:0 auto; height:auto; }
+  .legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin-top:18px; font-size:13px; color:var(--muted); }
+  .legend i{ display:inline-block; width:12px; height:12px; border-radius:4px; margin-right:5px; vertical-align:-1px; }
+  .fab{ bottom:calc(24px + env(safe-area-inset-bottom, 0px)); right:18px; }
+  .toast{ bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  :root[data-theme="dark"]{
+    --bg:#111111; --surface:#1C1C1E; --surface-2:#2A2A2D; --line:#2E2E31;
+    --brand:#E8622C; --brand-ink:#FFFFFF;
+  }
   .summary .card, .breakdown-strip .chip{ border-radius:16px; }
   .summary .card.balance{ background:linear-gradient(135deg, var(--surface), var(--surface-2)); }
   .item, .salary-card, .utility-card, .leave-card, .claim-card, .timeline-card, .hb-card, .episode-card{
@@ -390,33 +460,67 @@
 <div class="wrap">
   <header class="top">
     <div class="top-row">
-      <div>
-        <h1>HUA 生活收支安排</h1>
-        <p>固定收入、支出、儲蓄總覽 · 資料自動同步</p>
-      </div>
-      <div class="top-actions">
-        <button type="button" class="icon-btn" id="themeBtn" aria-label="切換亮暗">☾</button>
-        <button type="button" class="icon-btn" id="backupBtn" aria-label="匯出備份">⬇ 備份</button>
-      </div>
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="開啟選單">☰</button>
+      <h1 id="pageTitle">MY MONEY</h1>
+      <span class="menu-spacer"></span>
     </div>
-    <div class="tabs">
-      <button type="button" data-tab="budget" class="active">收支安排<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="salary">薪水紀錄<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="utility">水電瓦斯</button>
-      <button type="button" data-tab="annual">年度計畫<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="leave">請假</button>
-      <button type="button" data-tab="other">其他</button>
-    </div>
-    <div class="subtabs" id="personFilterTabs" style="margin-top:8px;">
+    <div class="subtabs" id="personFilterTabs" style="margin-top:8px;" hidden>
       <button type="button" data-person="hua" class="active">HUA</button>
       <button type="button" data-person="yupas">YUPAS</button>
       <button type="button" data-person="combined">兩人合計</button>
     </div>
     <div class="status" id="statusLine">載入中…</div>
-    <div class="status" style="margin-top:2px; font-size:11px;"><span id="backupHint"></span></div>
   </header>
 
-  <div data-page="budget" class="active">
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="drawer-logo">⚓</span>
+      <span class="drawer-title">HUA 生活</span>
+      <button type="button" class="menu-btn" id="drawerClose" aria-label="關閉選單">✕</button>
+    </div>
+    <nav class="tabs">
+      <button type="button" data-tab="home" class="active"><span class="ico">💵</span><span class="lbl">MY MONEY 帳戶餘額</span></button>
+      <button type="button" data-tab="budget"><span class="ico">💰</span><span class="lbl">收支安排</span></button>
+      <button type="button" data-tab="salary"><span class="ico">🧾</span><span class="lbl">薪水紀錄</span></button>
+      <button type="button" data-tab="utility"><span class="ico">💡</span><span class="lbl">水電瓦斯</span></button>
+      <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度計畫</span></button>
+      <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
+      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、發燒…）</span></button>
+    </nav>
+    <div class="drawer-foot">
+      <div class="drawer-user" id="drawerUser"></div>
+      <div class="drawer-actions">
+        <button type="button" class="icon-btn" id="themeBtn">☾ 亮/暗</button>
+        <button type="button" class="icon-btn" id="backupBtn">⬇ 備份</button>
+        <button type="button" class="icon-btn" id="logoutBtn">登出</button>
+      </div>
+      <div class="status" style="margin-top:8px; font-size:11px; text-align:left;"><span id="backupHint"></span></div>
+    </div>
+  </aside>
+
+  <div data-page="home" class="active">
+    <div class="total-pill"><span>TOTAL：</span><span class="num" id="acctTotal">0</span></div>
+    <div class="home-head">
+      <h2>目前帳戶餘額</h2>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button type="button" class="sort-btn" id="acctSortBtn" style="margin:0;">⇅ 排序</button>
+        <button type="button" class="pill-btn" id="addAcctBtn">＋ Add</button>
+      </div>
+    </div>
+    <div class="acct-grid" id="acctGrid"></div>
+    <div class="home-divider"></div>
+    <div class="donut-card" id="acctChart"></div>
+    <div class="section-hint" id="acctUpdated" style="text-align:center; margin-top:10px;"></div>
+
+    <section class="group" style="margin-top:22px;">
+      <div class="ghead"><h2><span class="dot income"></span>總額變化 <span class="count" id="acctHistCount"></span></h2></div>
+      <div class="chart-box" id="acctTrend"></div>
+      <div id="acctHistList" style="margin-top:12px;"></div>
+    </section>
+  </div>
+
+  <div data-page="budget">
     <div class="summary">
       <div class="card income"><div class="lbl">月收入</div><div class="val num" id="sumIncome">$0</div></div>
       <div class="card expense"><div class="lbl">支出總計</div><div class="val num" id="sumExpense">$0</div></div>
@@ -750,7 +854,7 @@
   </div>
 </div>
 
-<button class="fab" id="addBtn" aria-label="新增">＋</button>
+<button class="fab" id="addBtn" aria-label="新增" hidden>＋</button>
 
 <div class="sheet-backdrop" id="sheetBackdrop" hidden>
   <div class="sheet">
@@ -1151,6 +1255,21 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="acctSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="acctSheetTitle">新增帳戶</h3>
+    <div class="field"><label>帳戶名稱</label><input id="acName" type="text" placeholder="例如：中信、台新、元大-hua"></div>
+    <div class="field"><label>目前餘額 (NT$)</label><input id="acBalance" type="number" inputmode="decimal" placeholder="0"></div>
+    <div class="field"><label>備註</label><textarea id="acNote" placeholder="其他說明…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="acctCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="acctDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="acctDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="acctSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1158,7 +1277,7 @@
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
   import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   var firebaseConfig = {
@@ -1226,9 +1345,13 @@
   passInput.addEventListener("keydown", function(e){ if (e.key === "Enter") doLogin(); });
   emailInput.addEventListener("keydown", function(e){ if (e.key === "Enter") doLogin(); });
 
+  window.__fbSignOut = function(){ signOut(auth).then(function(){ location.reload(); }); };
+
   onAuthStateChanged(auth, function(user){
     if (user){
       gate.style.display = "none";
+      var u = document.getElementById("drawerUser");
+      if (u) u.textContent = user.email || "";
       resolveDbReady(makeDbShim());
     }
   });
@@ -1261,7 +1384,13 @@
   var editingFeverId = null;
   var editingEpisodeId = null;
   var currentType = "income";
-  var currentTab = "budget";
+  var currentTab = "home";
+  var accountsById = {};
+  var editingAcctId = null;
+  var acctCol = null;
+  var accountHistById = {};
+  var acctHistCol = null;
+  var acctSortMode = false;
   var currentPerson = "hua";
   var PERSON_LABEL = { hua:"HUA", yupas:"YUPAS", combined:"兩人合計" };
   var dbReady = false;
@@ -1361,11 +1490,24 @@
     document.querySelectorAll("[data-page]").forEach(function(p){
       p.classList.toggle("active", p.getAttribute("data-page") === tab);
     });
-    document.getElementById("addBtn").hidden = (tab === "annual" || tab === "other");
+    document.getElementById("addBtn").hidden = (tab === "annual" || tab === "other" || tab === "home");
     document.getElementById("personFilterTabs").hidden = !PERSON_FILTERED_TABS[tab];
+    document.getElementById("pageTitle").textContent = TAB_TITLE[tab] || "";
+    window.scrollTo(0, 0);
   }
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", leave:"請假", other:"其他" };
+  var drawerEl = document.getElementById("drawer");
+  var drawerBackdropEl = document.getElementById("drawerBackdrop");
+  function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
+  function closeDrawer(){ drawerBackdropEl.hidden = true; drawerEl.classList.remove("open"); drawerEl.setAttribute("aria-hidden", "true"); }
+  document.getElementById("menuBtn").addEventListener("click", openDrawer);
+  document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+  drawerBackdropEl.addEventListener("click", closeDrawer);
+  document.getElementById("logoutBtn").addEventListener("click", function(){
+    if (window.__fbSignOut) window.__fbSignOut();
+  });
   document.querySelectorAll(".tabs button").forEach(function(b){
-    b.addEventListener("click", function(){ switchTab(b.getAttribute("data-tab")); });
+    b.addEventListener("click", function(){ switchTab(b.getAttribute("data-tab")); closeDrawer(); });
   });
 
   document.querySelectorAll("#personFilterTabs button").forEach(function(b){
@@ -3496,7 +3638,19 @@
     redInCol = db.collection("redEnvelopesIn");
     feverCol = db.collection("feverLogs");
     episodeCol = db.collection("feverEpisodes");
+    acctCol = db.collection("accounts");
+    acctHistCol = db.collection("accountHistory");
     dbReady = true;
+    acctHistCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      accountHistById = next; renderAcctHistory();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    acctCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      accountsById = next; renderAccounts();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     col.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -3580,7 +3734,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -3594,13 +3748,217 @@
   });
   updateBackupHint();
 
+  var ACCT_COLORS = ["#E8622C","#2F80ED","#3A9A1E","#E0368F","#0F9BD0","#B07A00","#8E5BD9","#16A085","#D35400","#7F8C8D"];
+  function sortedAccounts(){
+    return Object.keys(accountsById).map(function(id){ return Object.assign({ _id:id }, accountsById[id]); })
+      .sort(function(a, b){
+        var ka = a.order === 0 || a.order ? a.order : (a.createdAt || 0);
+        var kb = b.order === 0 || b.order ? b.order : (b.createdAt || 0);
+        return ka - kb;
+      });
+  }
+  function currentTotal(){
+    return Object.keys(accountsById).reduce(function(s, id){ return s + (Number(accountsById[id].balance) || 0); }, 0);
+  }
+  async function logAcctHistory(rec){
+    if (!acctHistCol) return;
+    try{ await acctHistCol.add(Object.assign({ at: Date.now() }, rec)); }catch(e){}
+  }
+  async function moveAcct(id, dir){
+    var list = sortedAccounts();
+    var i = list.findIndex(function(a){ return a._id === id; });
+    var j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+    try{
+      await Promise.all(list.map(function(a, idx){
+        if (a.order === idx) return null;
+        var base = Object.assign({}, accountsById[a._id]); base.order = idx;
+        return acctCol.doc(a._id).set(base);
+      }));
+    }catch(e){ showToast("排序儲存失敗，請再試一次"); }
+  }
+  function renderAccounts(){
+    var list = sortedAccounts();
+    var total = list.reduce(function(s, a){ return s + (Number(a.balance) || 0); }, 0);
+    document.getElementById("acctTotal").textContent = Math.round(total).toLocaleString("en-US");
+    var grid = document.getElementById("acctGrid");
+    grid.innerHTML = "";
+    if (!list.length){
+      grid.style.display = "block";
+      grid.innerHTML = '<div class="empty">還沒有帳戶，點右上角「＋ Add」新增</div>';
+    } else {
+      grid.style.display = "";
+      list.forEach(function(a, idx){
+        var el = document.createElement("div");
+        el.className = "acct-cell";
+        var html = '<div class="n">' + escapeHtml(a.name || "") + '</div><div class="v num">' + Math.round(Number(a.balance) || 0).toLocaleString("en-US") + '</div>';
+        if (acctSortMode){
+          html += '<div class="mv"><button type="button" data-mv="-1"' + (idx === 0 ? " disabled" : "") + '>◀</button><button type="button" data-mv="1"' + (idx === list.length - 1 ? " disabled" : "") + '>▶</button></div>';
+        }
+        el.innerHTML = html;
+        if (acctSortMode){
+          el.querySelectorAll("[data-mv]").forEach(function(b){
+            b.addEventListener("click", function(e){ e.stopPropagation(); moveAcct(a._id, Number(b.getAttribute("data-mv"))); });
+          });
+        } else {
+          el.addEventListener("click", function(){ openEditAcct(a); });
+        }
+        grid.appendChild(el);
+      });
+    }
+    var chart = document.getElementById("acctChart");
+    var pos = list.filter(function(a){ return (Number(a.balance) || 0) > 0; });
+    var posTotal = pos.reduce(function(s, a){ return s + Number(a.balance); }, 0);
+    if (!pos.length){ chart.hidden = true; }
+    else {
+      chart.hidden = false;
+      var R = 72, C = 2 * Math.PI * R, offset = 0, svg = '<svg viewBox="0 0 200 200"><g transform="rotate(-90 100 100)">', legend = "";
+      pos.forEach(function(a, i){
+        var frac = Number(a.balance) / posTotal, len = frac * C, color = ACCT_COLORS[i % ACCT_COLORS.length];
+        svg += '<circle cx="100" cy="100" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="42" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-offset) + '"><title>' + escapeHtml(a.name || "") + '</title></circle>';
+        offset += len;
+        legend += '<span><i style="background:' + color + '"></i>' + escapeHtml(a.name || "") + ' ' + Math.round(Number(a.balance)).toLocaleString("en-US") + '</span>';
+      });
+      svg += '</g></svg><div class="legend">' + legend + '</div>';
+      chart.innerHTML = svg;
+    }
+    var latest = list.reduce(function(m, a){ return Math.max(m, a.updatedAt || 0); }, 0);
+    document.getElementById("acctUpdated").textContent = latest ? "最近更新：" + new Date(latest).toLocaleString("zh-TW", { hour12:false }) : "";
+    var sb = document.getElementById("acctSortBtn");
+    sb.textContent = acctSortMode ? "✓ 完成" : "⇅ 排序";
+    renderAcctHistory();
+  }
+  function fmtTs(ts){
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + "/" + d.getDate() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function renderAcctHistory(){
+    var hist = Object.keys(accountHistById).map(function(id){ return accountHistById[id]; })
+      .sort(function(a, b){ return (a.at || 0) - (b.at || 0); });
+    document.getElementById("acctHistCount").textContent = hist.length ? "(" + hist.length + ")" : "";
+    var box = document.getElementById("acctTrend");
+    var pts = hist.filter(function(h){ return typeof h.total === "number"; }).slice(-30);
+    if (pts.length < 2){
+      box.innerHTML = '<div class="chart-empty">' + (pts.length ? "再更新一次餘額，就會出現變化圖" : "更新帳戶餘額後，這裡會顯示總額變化") + '</div>';
+    } else {
+      var W = 320, H = 170, pl = 46, pr = 14, pt = 14, pb = 26;
+      var min = Math.min.apply(null, pts.map(function(p){ return p.total; })), max = Math.max.apply(null, pts.map(function(p){ return p.total; }));
+      if (min === max){ min -= 1; max += 1; }
+      var pad = (max - min) * 0.12; min -= pad; max += pad;
+      var xAt = function(i){ return pl + (W - pl - pr) * i / (pts.length - 1); };
+      var yAt = function(v){ return pt + (H - pt - pb) * (1 - (v - min) / (max - min)); };
+      var s = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
+      [0, 0.5, 1].forEach(function(f){
+        var v = min + (max - min) * f, y = yAt(v);
+        s += '<line x1="' + pl + '" y1="' + y + '" x2="' + (W - pr) + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/>';
+        s += '<text x="' + (pl - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + Math.round(v).toLocaleString("en-US") + '</text>';
+      });
+      var d = pts.map(function(p, i){ return (i ? "L" : "M") + xAt(i).toFixed(1) + " " + yAt(p.total).toFixed(1); }).join(" ");
+      s += '<path d="' + d + '" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>';
+      pts.forEach(function(p, i){
+        s += '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(p.total).toFixed(1) + '" r="3.5" fill="var(--brand)"><title>' + fmtTs(p.at) + '  ' + Math.round(p.total).toLocaleString("en-US") + '</title></circle>';
+      });
+      s += '<text x="' + pl + '" y="' + (H - 6) + '" font-size="10" fill="var(--muted)">' + fmtTs(pts[0].at) + '</text>';
+      s += '<text x="' + (W - pr) + '" y="' + (H - 6) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + fmtTs(pts[pts.length - 1].at) + '</text></svg>';
+      box.innerHTML = s;
+    }
+    var listEl = document.getElementById("acctHistList");
+    listEl.innerHTML = "";
+    hist.slice().reverse().slice(0, 30).forEach(function(h){
+      var delta = Number(h.delta) || 0;
+      var row = document.createElement("div");
+      row.className = "hist-row";
+      var label = h.type === "create" ? "新增帳戶" : h.type === "delete" ? "刪除帳戶" : "更新餘額";
+      row.innerHTML = '<div class="l"><div class="nm">' + escapeHtml(h.name || "") + '</div><div class="tm">' + fmtTs(h.at) + ' · ' + label + '</div></div>' +
+        '<div class="r num"><div class="d ' + (delta >= 0 ? "up" : "down") + '">' + (delta >= 0 ? "+" : "-") + Math.abs(Math.round(delta)).toLocaleString("en-US") + '</div>' +
+        '<div class="b">→ ' + Math.round(Number(h.balance) || 0).toLocaleString("en-US") + '</div></div>';
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById("acctSortBtn").addEventListener("click", function(){
+    acctSortMode = !acctSortMode;
+    renderAccounts();
+  });
+  function openAddAcct(){
+    editingAcctId = null;
+    document.getElementById("acctSheetTitle").textContent = "新增帳戶";
+    document.getElementById("acctDeleteBtn").hidden = true;
+    document.getElementById("acctDuplicateBtn").hidden = true;
+    document.getElementById("acName").value = "";
+    document.getElementById("acBalance").value = "";
+    document.getElementById("acNote").value = "";
+    document.getElementById("acctSheetBackdrop").hidden = false;
+  }
+  function openEditAcct(d){
+    editingAcctId = d._id;
+    document.getElementById("acctSheetTitle").textContent = "更新帳戶餘額";
+    document.getElementById("acctDeleteBtn").hidden = false;
+    document.getElementById("acctDuplicateBtn").hidden = false;
+    document.getElementById("acName").value = d.name || "";
+    document.getElementById("acBalance").value = d.balance === 0 || d.balance ? d.balance : "";
+    document.getElementById("acNote").value = d.note || "";
+    document.getElementById("acctSheetBackdrop").hidden = false;
+  }
+  function closeAcctSheet(){ document.getElementById("acctSheetBackdrop").hidden = true; }
+  document.getElementById("addAcctBtn").addEventListener("click", openAddAcct);
+  document.getElementById("acctCancelBtn").addEventListener("click", closeAcctSheet);
+  document.getElementById("acctSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeAcctSheet(); });
+  document.getElementById("acctDuplicateBtn").addEventListener("click", function(){
+    editingAcctId = null;
+    document.getElementById("acctSheetTitle").textContent = "新增帳戶";
+    document.getElementById("acctDeleteBtn").hidden = true;
+    document.getElementById("acctDuplicateBtn").hidden = true;
+  });
+  document.getElementById("acctSaveBtn").addEventListener("click", async function(){
+    var name = document.getElementById("acName").value.trim();
+    if (!name){ showToast("請輸入帳戶名稱"); return; }
+    var balStr = document.getElementById("acBalance").value;
+    var data = {
+      name: name,
+      balance: balStr === "" ? 0 : parseFloat(balStr),
+      note: document.getElementById("acNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !acctCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      var total = currentTotal();
+      if (editingAcctId){
+        var prev = Number((accountsById[editingAcctId] || {}).balance) || 0;
+        await acctCol.doc(editingAcctId).set(Object.assign({}, accountsById[editingAcctId], data));
+        if (prev !== data.balance){
+          await logAcctHistory({ type:"update", accountId:editingAcctId, name:data.name, prev:prev, balance:data.balance, delta:data.balance - prev, total:total - prev + data.balance });
+        }
+      } else {
+        data.createdAt = Date.now();
+        var ls = sortedAccounts();
+        var last = ls.length ? ls[ls.length - 1] : null;
+        data.order = last ? ((last.order === 0 || last.order ? last.order : (last.createdAt || 0)) + 1) : 0;
+        var ref = await acctCol.add(data);
+        await logAcctHistory({ type:"create", accountId:ref && ref.id ? ref.id : "", name:data.name, prev:0, balance:data.balance, delta:data.balance, total:total + data.balance });
+      }
+      closeAcctSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("acctDeleteBtn").addEventListener("click", async function(){
+    if (!editingAcctId || !acctCol) return;
+    try{
+      var old = accountsById[editingAcctId] || {};
+      var oldBal = Number(old.balance) || 0, total = currentTotal();
+      await acctCol.doc(editingAcctId).delete();
+      await logAcctHistory({ type:"delete", accountId:editingAcctId, name:old.name || "", prev:oldBal, balance:0, delta:-oldBal, total:total - oldBal });
+      closeAcctSheet(); showToast("已刪除");
+    }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
   var themeBtn = document.getElementById("themeBtn");
   function applyTheme(t){
     document.documentElement.setAttribute("data-theme", t);
-    themeBtn.textContent = t === "dark" ? "☀" : "☾";
+    themeBtn.textContent = t === "dark" ? "☀ 亮色" : "☾ 暗色";
   }
-  var savedTheme = "light";
-  try{ savedTheme = localStorage.getItem("huaTheme") || "light"; }catch(e){}
+  var savedTheme = "dark";
+  try{ savedTheme = localStorage.getItem("huaTheme") || "dark"; }catch(e){}
   applyTheme(savedTheme);
   themeBtn.addEventListener("click", function(){
     var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
@@ -3620,6 +3978,7 @@
   wireSortBtn("redInSortBtn", "redIn", renderRedIn);
   wireSortBtn("feverSortBtn", "fever", function(){ renderEpisodes(); renderFever(); });
 
+  renderAccounts();
   render();
   renderSalaries();
   renderUtilities();
