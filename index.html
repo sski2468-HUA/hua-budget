@@ -422,6 +422,26 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
+  .plan-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
+    border-left:4px solid var(--fixed); display:flex; gap:12px; align-items:flex-start;
+  }
+  .plan-card.paid{ border-left-color:var(--income); opacity:.75; }
+  .plan-card .chk{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:2px solid var(--muted);
+    background:transparent; color:var(--brand-ink); font-size:15px; line-height:1; cursor:pointer; padding:0; margin-top:1px;
+  }
+  .plan-card.paid .chk{ background:var(--income); border-color:var(--income); }
+  .plan-card .pbody{ flex:1; min-width:0; }
+  .plan-card .row1{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .plan-card .nm{ font-weight:700; font-size:15px; }
+  .plan-card.paid .nm{ text-decoration:line-through; }
+  .plan-card .amt{ font-weight:700; font-size:16px; color:var(--fixed); white-space:nowrap; }
+  .plan-card.paid .amt{ color:var(--income); }
+  .plan-card .dt{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .plan-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; white-space:pre-wrap; }
+  .plan-card .extra{ margin-top:6px; font-size:12.5px; color:var(--muted); background:transparent; border:1px dashed var(--line); border-radius:10px; padding:8px 10px; white-space:pre-wrap; }
   .acct-cell .mv{ display:flex; gap:6px; margin-top:6px; }
   .acct-cell .mv button{ border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; width:34px; height:28px; font-size:14px; cursor:pointer; }
   .acct-cell .mv button:disabled{ opacity:.3; }
@@ -510,6 +530,7 @@
       <button type="button" data-tab="salary"><span class="ico">🧾</span><span class="lbl">薪水紀錄</span></button>
       <button type="button" data-tab="utility"><span class="ico">💡</span><span class="lbl">水電瓦斯</span></button>
       <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度計畫</span></button>
+      <button type="button" data-tab="planned"><span class="ico">📌</span><span class="lbl">預計大筆支出</span></button>
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
       <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、發燒…）</span></button>
     </nav>
@@ -737,6 +758,29 @@
         <button class="sort-btn" id="leaveSortBtn" type="button"></button>
       </div>
       <div id="leaveList"></div>
+    </section>
+  </div>
+
+  <div data-page="planned">
+    <div class="breakdown-strip">
+      <div class="chip"><div class="lbl">未支付合計</div><div class="val num" id="plUnpaidTotal" style="color:var(--fixed)">$0</div></div>
+      <div class="chip"><div class="lbl">已支付合計</div><div class="val num" id="plPaidTotal" style="color:var(--income)">$0</div></div>
+      <div class="chip"><div class="lbl">筆數</div><div class="val num" id="plCountChip">0</div></div>
+    </div>
+    <div class="subtabs" id="plannedFilterTabs" style="margin-top:12px;">
+      <button type="button" data-pfilter="all" class="active">全部</button>
+      <button type="button" data-pfilter="unpaid">未支付</button>
+      <button type="button" data-pfilter="paid">已支付</button>
+    </div>
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot fixed"></span>預計大筆支出 <span class="count" id="plannedCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="plannedSortBtn" type="button"></button>
+          <button class="addlink" id="addPlannedBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div id="plannedList"></div>
     </section>
   </div>
 
@@ -1281,6 +1325,29 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="plannedSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="plannedSheetTitle">新增預計支出</h3>
+    <div class="row2">
+      <div class="field"><label>日期</label><input id="plDate" type="date"></div>
+      <div class="field"><label>金額 (NT$)</label><input id="plAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    </div>
+    <div class="field"><label>項目</label><input id="plItem" type="text" placeholder="例如：廚房櫃、住宿費-南投"></div>
+    <div class="field"><label>備註</label><textarea id="plNote" placeholder="明細、算式…"></textarea></div>
+    <div class="field"><label>補充說明（選填）</label><textarea id="plExtra" placeholder="資金來源、方案比較等…"></textarea></div>
+    <div class="field" style="display:flex; align-items:center; gap:10px;">
+      <input id="plPaid" type="checkbox" style="width:22px; height:22px; margin:0;">
+      <label for="plPaid" style="margin:0; font-size:14px; color:var(--ink);">已支付</label>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="plannedCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="plannedDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="plannedDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="plannedSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="acctSheetBackdrop" hidden>
   <div class="sheet">
     <h3 id="acctSheetTitle">新增帳戶</h3>
@@ -1417,6 +1484,10 @@
   var accountHistById = {};
   var acctHistCol = null;
   var acctSortMode = false;
+  var plannedById = {};
+  var editingPlannedId = null;
+  var plannedCol = null;
+  var plannedFilter = "all";
   var currentPerson = "hua";
   var PERSON_LABEL = { hua:"HUA", yupas:"YUPAS", combined:"兩人合計" };
   var dbReady = false;
@@ -1483,7 +1554,7 @@
   // desc = newest/largest first (default), asc = oldest/smallest first
   var SORT_DIR = {
     budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
-    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc"
+    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc"
   };
   function wireSortBtn(btnId, key, renderFn){
     var btn = document.getElementById(btnId);
@@ -1521,7 +1592,7 @@
     document.getElementById("pageTitle").textContent = TAB_TITLE[tab] || "";
     window.scrollTo(0, 0);
   }
-  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", leave:"請假", other:"其他" };
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他" };
   var drawerEl = document.getElementById("drawer");
   var drawerBackdropEl = document.getElementById("drawerBackdrop");
   function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
@@ -2006,6 +2077,7 @@
     if (currentTab === "salary") openAddSalary();
     else if (currentTab === "utility") openAddUtility();
     else if (currentTab === "leave") openAddLeave();
+    else if (currentTab === "planned") openAddPlanned();
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -3666,7 +3738,13 @@
     episodeCol = db.collection("feverEpisodes");
     acctCol = db.collection("accounts");
     acctHistCol = db.collection("accountHistory");
+    plannedCol = db.collection("plannedExpenses");
     dbReady = true;
+    plannedCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      plannedById = next; renderPlanned();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     acctHistCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -3760,7 +3838,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -3978,6 +4056,121 @@
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
 
+  function renderPlanned(){
+    var list = document.getElementById("plannedList");
+    list.innerHTML = "";
+    var all = Object.keys(plannedById).map(function(id){ return Object.assign({}, plannedById[id], { _id: id }); });
+    var unpaid = 0, paid = 0;
+    all.forEach(function(d){ if (d.paid) paid += Number(d.amount) || 0; else unpaid += Number(d.amount) || 0; });
+    document.getElementById("plUnpaidTotal").textContent = fmt(unpaid);
+    document.getElementById("plPaidTotal").textContent = fmt(paid);
+    document.getElementById("plCountChip").textContent = all.length;
+    var shown = all.filter(function(d){
+      return plannedFilter === "all" || (plannedFilter === "paid" ? !!d.paid : !d.paid);
+    }).sort(function(a, b){
+      var d = (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0);
+      return SORT_DIR.planned === "asc" ? -d : d;
+    });
+    document.getElementById("plannedCount").textContent = shown.length ? "(" + shown.length + ")" : "";
+    if (!shown.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = all.length ? "這個分類沒有項目" : "點「＋ 新增」記一筆預計大筆支出";
+      list.appendChild(e);
+      return;
+    }
+    shown.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "plan-card" + (d.paid ? " paid" : "");
+      var html = '<button type="button" class="chk" aria-label="切換已支付">' + (d.paid ? "✓" : "") + '</button><div class="pbody">' +
+        '<div class="row1"><span class="nm">' + escapeHtml(d.item || "") + '</span><span class="amt num">' + fmt(d.amount) + '</span></div>' +
+        '<div class="dt num">' + escapeHtml(d.date || "") + (d.paid ? " · 已支付" : " · 未支付") + '</div>';
+      if (d.note) html += '<div class="note">' + escapeHtml(d.note) + '</div>';
+      if (d.extra) html += '<div class="extra">' + escapeHtml(d.extra) + '</div>';
+      html += '</div>';
+      el.innerHTML = html;
+      el.querySelector(".chk").addEventListener("click", async function(e){
+        e.stopPropagation();
+        if (!dbReady || !plannedCol) return;
+        try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { paid: !d.paid, updatedAt: Date.now() })); }
+        catch(err){ showToast("更新失敗，請再試一次"); }
+      });
+      el.addEventListener("click", function(){ openEditPlanned(d); });
+      list.appendChild(el);
+    });
+  }
+  function fillPlannedForm(d){
+    document.getElementById("plDate").value = d.date || "";
+    document.getElementById("plAmount").value = d.amount === 0 || d.amount ? d.amount : "";
+    document.getElementById("plItem").value = d.item || "";
+    document.getElementById("plNote").value = d.note || "";
+    document.getElementById("plExtra").value = d.extra || "";
+    document.getElementById("plPaid").checked = !!d.paid;
+  }
+  function openAddPlanned(){
+    editingPlannedId = null;
+    document.getElementById("plannedSheetTitle").textContent = "新增預計支出";
+    document.getElementById("plannedDeleteBtn").hidden = true;
+    document.getElementById("plannedDuplicateBtn").hidden = true;
+    fillPlannedForm({});
+    document.getElementById("plannedSheetBackdrop").hidden = false;
+  }
+  function openEditPlanned(d){
+    editingPlannedId = d._id;
+    document.getElementById("plannedSheetTitle").textContent = "編輯預計支出";
+    document.getElementById("plannedDeleteBtn").hidden = false;
+    document.getElementById("plannedDuplicateBtn").hidden = false;
+    fillPlannedForm(d);
+    document.getElementById("plannedSheetBackdrop").hidden = false;
+  }
+  function closePlannedSheet(){ document.getElementById("plannedSheetBackdrop").hidden = true; }
+  document.getElementById("addPlannedBtn").addEventListener("click", openAddPlanned);
+  document.getElementById("plannedCancelBtn").addEventListener("click", closePlannedSheet);
+  document.getElementById("plannedSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closePlannedSheet(); });
+  document.getElementById("plannedDuplicateBtn").addEventListener("click", function(){
+    editingPlannedId = null;
+    document.getElementById("plannedSheetTitle").textContent = "新增預計支出";
+    document.getElementById("plannedDeleteBtn").hidden = true;
+    document.getElementById("plannedDuplicateBtn").hidden = true;
+    document.getElementById("plPaid").checked = false;
+  });
+  document.getElementById("plannedSaveBtn").addEventListener("click", async function(){
+    var item = document.getElementById("plItem").value.trim();
+    if (!item){ showToast("請輸入項目"); return; }
+    var amtStr = document.getElementById("plAmount").value;
+    var data = {
+      date: document.getElementById("plDate").value,
+      item: item,
+      amount: amtStr === "" ? 0 : parseFloat(amtStr),
+      note: document.getElementById("plNote").value.trim(),
+      extra: document.getElementById("plExtra").value.trim(),
+      paid: document.getElementById("plPaid").checked,
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !plannedCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingPlannedId){
+        await plannedCol.doc(editingPlannedId).set(Object.assign({}, plannedById[editingPlannedId], data));
+      } else {
+        data.createdAt = Date.now();
+        await plannedCol.add(data);
+      }
+      closePlannedSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("plannedDeleteBtn").addEventListener("click", async function(){
+    if (!editingPlannedId || !plannedCol) return;
+    try{ await plannedCol.doc(editingPlannedId).delete(); closePlannedSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.querySelectorAll("#plannedFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      plannedFilter = b.getAttribute("data-pfilter");
+      document.querySelectorAll("#plannedFilterTabs button").forEach(function(x){ x.classList.toggle("active", x === b); });
+      renderPlanned();
+    });
+  });
+
   var viewBtn = document.getElementById("viewBtn");
   function syncViewBtn(){
     viewBtn.textContent = document.documentElement.getAttribute("data-view") === "web" ? "📱 切換手機模式" : "🖥 切換網頁模式";
@@ -4004,6 +4197,7 @@
     try{ localStorage.setItem("huaTheme", next); }catch(e){}
   });
 
+  wireSortBtn("plannedSortBtn", "planned", renderPlanned);
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
   wireSortBtn("utilitySortBtn", "utility", renderUtilities);
@@ -4017,6 +4211,7 @@
   wireSortBtn("feverSortBtn", "fever", function(){ renderEpisodes(); renderFever(); });
 
   renderAccounts();
+  renderPlanned();
   render();
   renderSalaries();
   renderUtilities();
