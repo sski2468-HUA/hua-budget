@@ -121,6 +121,8 @@
 
   [data-page]{ display:none; }
   [data-page].active{ display:block; }
+  [data-hsub-page]{ display:none; }
+  [data-hsub-page].active{ display:block; }
   [data-osub-page]{ display:none; }
   [data-osub-page].active{ display:block; }
 
@@ -236,6 +238,10 @@
     padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
     border-left:4px solid var(--leave);
   }
+  .leave-card{ border-left-color:var(--lc, var(--leave)); }
+  .leave-card .type-badge{ background:var(--lc-bg, var(--leave-bg)); color:var(--lc, var(--leave)); }
+  .leave-card .hours{ color:var(--lc, var(--leave)); }
+  .ldot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:1px; }
   .leave-card .row1{ display:flex; justify-content:space-between; align-items:baseline; }
   .leave-card .date{ font-weight:700; font-size:14.5px; }
   .leave-card .type-badge{ display:inline-block; font-size:11px; background:var(--leave-bg); color:var(--leave); border-radius:6px; padding:1px 7px; margin-left:6px; font-weight:700; vertical-align:middle; }
@@ -436,6 +442,7 @@
   .cycle-card .rg{ font-weight:700; font-size:14.5px; }
   .cycle-card .ln{ font-weight:700; color:var(--period); font-size:14px; white-space:nowrap; }
   .cycle-card .meta{ font-size:12px; color:var(--muted); margin-top:3px; white-space:pre-wrap; }
+  .claim-card .type-badge{ display:inline-block; font-size:11px; border-radius:6px; padding:1px 7px; margin-left:6px; font-weight:700; vertical-align:middle; }
   .plog-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin-bottom:6px; box-shadow:var(--shadow); cursor:pointer; border-left:4px solid var(--period); }
   .plog-card .row1{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
   .plog-card .tm{ font-size:12px; color:var(--muted); }
@@ -606,8 +613,8 @@
       <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度計畫</span></button>
       <button type="button" data-tab="planned"><span class="ico">📌</span><span class="lbl">預計大筆支出</span></button>
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
-      <button type="button" data-tab="period"><span class="ico">🌸</span><span class="lbl">經期紀錄</span></button>
-      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、發燒…）</span></button>
+      <button type="button" data-tab="period"><span class="ico">🌸</span><span class="lbl">健康管理</span></button>
+      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、年資）</span></button>
       <button type="button" data-tab="calendar"><span class="ico">🗓️</span><span class="lbl">行事曆</span></button>
     </nav>
     <div class="drawer-foot">
@@ -726,7 +733,11 @@
     </div>
 
     <section class="group" style="margin-top:16px;">
-      <div class="ghead"><h2><span class="dot salary"></span>薪資比較</h2></div>
+      <div class="ghead">
+        <h2><span class="dot salary"></span>薪資比較</h2>
+        <button type="button" class="sort-btn" id="cmpToggleBtn" style="margin:0;">▸ 展開</button>
+      </div>
+      <div id="cmpBody" hidden>
       <div class="row2" style="margin-bottom:10px;">
         <div class="field" style="margin:0;"><label>這一期</label><select id="cmpPick"></select></div>
         <div class="field" style="margin:0;"><label>比較基準</label>
@@ -739,6 +750,7 @@
         </div>
       </div>
       <div id="cmpBox"></div>
+      </div>
     </section>
 
     <section class="group" style="margin-top:14px;">
@@ -843,6 +855,7 @@
         <button type="button" data-lfilter="physio" style="padding:8px 0; font-size:12px;">生理假</button>
         <button type="button" data-lfilter="family" style="padding:8px 0; font-size:12px;">家庭照顧假</button>
         <button type="button" data-lfilter="swap" style="padding:8px 0; font-size:12px;">換休</button>
+        <button type="button" data-lfilter="other" style="padding:8px 0; font-size:12px;">其他假別</button>
       </div>
     </div>
 
@@ -864,7 +877,14 @@
   </div>
 
   <div data-page="period">
-    <div class="breakdown-strip">
+    <div class="subtabs" id="healthSubTabs" style="margin-top:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:4px;">
+      <button type="button" data-hsub="cycle" class="active" style="font-size:12.5px;">經期紀錄</button>
+      <button type="button" data-hsub="health" style="font-size:12.5px;">健康紀錄</button>
+      <button type="button" data-hsub="visit" style="font-size:12.5px;">就醫紀錄</button>
+      <button type="button" data-hsub="fever" style="font-size:12.5px;">發燒歷程</button>
+    </div>
+    <div data-hsub-page="cycle" class="active">
+    <div class="breakdown-strip" style="margin-top:12px;">
       <div class="chip"><div class="lbl">平均週期</div><div class="val num" id="perAvgCycle">-</div></div>
       <div class="chip"><div class="lbl">平均經期</div><div class="val num" id="perAvgLen">-</div></div>
       <div class="chip"><div class="lbl">預計下次</div><div class="val num" id="perNext">-</div></div>
@@ -879,9 +899,12 @@
       <div id="cycleList"></div>
     </section>
 
-    <section class="group">
+    </div>
+
+    <div data-hsub-page="health">
+    <section class="group" style="margin-top:14px;">
       <div class="ghead">
-        <h2><span class="dot period"></span>症狀與服藥 <span class="count" id="plogCount"></span></h2>
+        <h2><span class="dot period"></span>健康紀錄 <span class="count" id="plogCount"></span></h2>
         <div style="display:flex; align-items:center; gap:6px;">
           <button class="sort-btn" id="periodSortBtn" type="button"></button>
           <button class="addlink" id="addPLogBtn" type="button">＋ 新增</button>
@@ -899,6 +922,61 @@
       <div class="cal-chips" id="plStats" style="flex-wrap:wrap; overflow:visible;"></div>
       <div id="plogList" style="margin-top:8px;"></div>
     </section>
+    </div>
+
+    <div data-hsub-page="visit">
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot claim"></span>就醫紀錄 <span class="count" id="visitCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="visitSortBtn" type="button"></button>
+          <button class="addlink" id="addVisitBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div class="row2" style="margin-bottom:10px;">
+        <div class="field" style="margin:0;"><label>依科別篩選</label><select id="visitDeptFilter"><option value="all">全部</option></select></div>
+        <div class="field" style="margin:0;"><label>依看診的人篩選</label><select id="visitPersonFilter"><option value="all">全部</option></select></div>
+      </div>
+      <div class="breakdown-strip">
+        <div class="chip"><div class="lbl">就醫次數</div><div class="val num" id="visitTimes">0</div></div>
+        <div class="chip"><div class="lbl">費用合計</div><div class="val num" id="visitCostTotal">$0</div></div>
+        <div class="chip"><div class="lbl">下次回診</div><div class="val num" id="visitNextFollow">-</div></div>
+      </div>
+      <div id="visitList" style="margin-top:10px;"></div>
+    </section>
+    </div>
+
+    <div data-hsub-page="fever">
+      <section class="group" style="margin-top:14px;">
+        <div class="ghead">
+          <h2><span class="dot fever"></span>發燒次數 <span class="count" id="episodeCount"></span></h2>
+          <button class="addlink" id="addEpisodeBtn" type="button">＋ 新增一次</button>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>依姓名篩選</label>
+          <select id="feverPersonFilter"><option value="all">全部</option></select>
+        </div>
+        <div id="episodeList"></div>
+      </section>
+
+      <section class="group">
+        <div class="ghead">
+          <h2><span class="dot fever"></span>體溫量測 <span class="count" id="feverCount"></span></h2>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="sort-btn" id="feverSortBtn" type="button"></button>
+            <button class="addlink" id="addFeverBtn" type="button">＋ 新增量測</button>
+          </div>
+        </div>
+        <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
+        <div class="breakdown-strip">
+          <div class="chip"><div class="lbl">最新體溫</div><div class="val num" id="feverLatest">-</div></div>
+          <div class="chip"><div class="lbl">最高溫</div><div class="val num" id="feverMax">-</div></div>
+          <div class="chip"><div class="lbl">紀錄筆數</div><div class="val num" id="feverEntryCount">0</div></div>
+        </div>
+        <div class="chart-box" id="feverChartBox" style="margin-top:10px;"></div>
+        <div id="feverList" style="margin-top:10px;"></div>
+      </section>
+    </div>
   </div>
 
   <div data-page="calendar">
@@ -953,7 +1031,6 @@
       <button type="button" data-osub="timeline">年資規劃</button>
       <button type="button" data-osub="redout">紅包紀錄</button>
       <button type="button" data-osub="redin">收到紅包</button>
-      <button type="button" data-osub="fever">發燒歷程</button>
     </div>
 
     <div data-osub-page="claim" class="active">
@@ -1053,37 +1130,6 @@
       </section>
     </div>
 
-    <div data-osub-page="fever">
-      <section class="group" style="margin-top:14px;">
-        <div class="ghead">
-          <h2><span class="dot fever"></span>發燒次數 <span class="count" id="episodeCount"></span></h2>
-          <button class="addlink" id="addEpisodeBtn" type="button">＋ 新增一次</button>
-        </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>依姓名篩選</label>
-          <select id="feverPersonFilter"><option value="all">全部</option></select>
-        </div>
-        <div id="episodeList"></div>
-      </section>
-
-      <section class="group">
-        <div class="ghead">
-          <h2><span class="dot fever"></span>體溫量測 <span class="count" id="feverCount"></span></h2>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <button class="sort-btn" id="feverSortBtn" type="button"></button>
-            <button class="addlink" id="addFeverBtn" type="button">＋ 新增量測</button>
-          </div>
-        </div>
-        <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
-        <div class="breakdown-strip">
-          <div class="chip"><div class="lbl">最新體溫</div><div class="val num" id="feverLatest">-</div></div>
-          <div class="chip"><div class="lbl">最高溫</div><div class="val num" id="feverMax">-</div></div>
-          <div class="chip"><div class="lbl">紀錄筆數</div><div class="val num" id="feverEntryCount">0</div></div>
-        </div>
-        <div class="chart-box" id="feverChartBox" style="margin-top:10px;"></div>
-        <div id="feverList" style="margin-top:10px;"></div>
-      </section>
-    </div>
   </div>
 </div>
 
@@ -1151,9 +1197,10 @@
 
     <div class="section-label">基本資訊</div>
     <div class="row2">
-      <div class="field"><label>發薪日期</label><input id="sDate" type="date"></div>
-      <div class="field" id="ratingField"><label>考績</label><input id="sRating" type="text" placeholder="例如：甲、乙"></div>
+      <div class="field" id="sMonthField"><label>薪資月份（幾月的薪水）</label><input id="sMonth" type="month"></div>
+      <div class="field"><label id="sDateLabel">實際發薪日</label><input id="sDate" type="date"></div>
     </div>
+    <div class="field" id="ratingField"><label>考績</label><input id="sRating" type="text" placeholder="例如：甲、乙"></div>
     <div class="field" id="bonusNameField" hidden><label>獎金名稱</label><input id="sBonusName" type="text" placeholder="例如：端午獎金、中秋獎金、年終獎金、慰勉金"></div>
 
     <div id="salaryOnlySections">
@@ -1481,6 +1528,8 @@
         </select>
       </div>
     </div>
+    <div style="margin:-4px 0 10px;"><button type="button" class="addlink" id="ltManageBtn" style="padding:0; font-size:12.5px;">✎ 新增 / 管理假別與顏色</button></div>
+    <div id="ltManage" hidden style="margin-bottom:12px; background:var(--surface-2); border-radius:12px; padding:10px;"></div>
     <div class="field"><label>時數</label><input id="lHours" type="number" inputmode="decimal" placeholder="例如：8"></div>
     <div class="field"><label>備註</label><textarea id="lNote" placeholder="原因、地點等說明…"></textarea></div>
     <div class="sheet-actions">
@@ -1505,6 +1554,33 @@
       <button class="btn ghost" id="periodCancelBtn" type="button">取消</button>
       <button class="btn danger" id="periodDeleteBtn" type="button" hidden>刪除</button>
       <button class="btn primary" id="periodSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="visitSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="visitSheetTitle">新增就醫紀錄</h3>
+    <div class="row2">
+      <div class="field"><label>看診日期</label><input id="vsDate" type="date"></div>
+      <div class="field"><label>看診的人</label><input id="vsPerson" type="text" list="visitPersonList" placeholder="例如：HUA、宸、杉"><datalist id="visitPersonList"></datalist></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>科別 / 類型</label><input id="vsDept" type="text" list="visitDeptList" placeholder="例如：牙科、婦科、感冒"><datalist id="visitDeptList"></datalist></div>
+      <div class="field"><label>醫院 / 診所</label><input id="vsPlace" type="text" placeholder="例如：禾馨"></div>
+    </div>
+    <div class="field"><label>原因 / 診斷</label><input id="vsReason" type="text" placeholder="例如：洗牙、經痛、流感"></div>
+    <div class="row2">
+      <div class="field"><label>費用 (NT$)</label><input id="vsCost" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label>回診日期（選填）</label><input id="vsFollow" type="date"></div>
+    </div>
+    <div class="field"><label>處方 / 用藥</label><input id="vsMeds" type="text" placeholder="例如：抗生素 5 天"></div>
+    <div class="field"><label>備註</label><textarea id="vsNote" placeholder="醫囑、注意事項…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="visitCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="visitDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="visitDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="visitSaveBtn" type="button">儲存</button>
     </div>
   </div>
 </div>
@@ -1536,12 +1612,19 @@
 
 <div class="sheet-backdrop" id="plogSheetBackdrop" hidden>
   <div class="sheet">
-    <h3 id="plogSheetTitle">新增症狀 / 服藥</h3>
+    <h3 id="plogSheetTitle">新增健康紀錄</h3>
     <div class="row2">
       <div class="field"><label>日期</label><input id="plgDate" type="date"></div>
       <div class="field"><label>時間（選填）</label><input id="plgTime" type="time"></div>
     </div>
-    <div class="field"><label>不舒服的症狀（可複選）</label><div class="sym-chips" id="plgChips"></div></div>
+    <div class="field"><label>不舒服的症狀（可複選）</label><div class="sym-chips" id="plgChips"></div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <input id="symNew" type="text" placeholder="新增症狀，例如：偏頭痛" style="flex:1; min-width:0;">
+        <button type="button" class="btn ghost" id="symAddBtn" style="flex:none; padding:10px 14px;">＋ 新增</button>
+        <button type="button" class="btn ghost" id="symManageBtn" style="flex:none; padding:10px 14px;">✎ 編輯清單</button>
+      </div>
+      <div id="symManage" hidden style="margin-top:10px; background:var(--surface-2); border-radius:12px; padding:10px;"></div>
+    </div>
     <div class="row2">
       <div class="field"><label>疼痛程度 0–10（選填）</label><input id="plgPain" type="number" min="0" max="10" inputmode="numeric" placeholder="例如：6"></div>
       <div class="field"><label>服藥</label><input id="plgMed" type="text" list="medList" placeholder="例如：依普芬 400mg"><datalist id="medList"></datalist></div>
@@ -1745,6 +1828,14 @@
   var cycleCol = null;
   var plogCol = null;
   var plgSelected = [];
+  var visitsById = {};
+  var editingVisitId = null;
+  var visitCol = null;
+  var currentHealthSub = "cycle";
+  var visitDeptFilterValue = "all";
+  var visitPersonFilterValue = "all";
+  var settingsById = {};
+  var settingsCol = null;
   var PL_SYMPTOMS = ["頭痛","腰痠","肚子痛","拉肚子","噁心","疲倦","情緒起伏","胸脹","失眠","食慾變化","經血量多","經血量少"];
   var eventsById = {};
   var editingEventId = null;
@@ -1821,7 +1912,7 @@
   // desc = newest/largest first (default), asc = oldest/smallest first
   var SORT_DIR = {
     budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
-    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc"
+    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc", visit:"desc"
   };
   function wireSortBtn(btnId, key, renderFn){
     var btn = document.getElementById(btnId);
@@ -1860,7 +1951,7 @@
     if (tab === "calendar") renderCalendar();
     window.scrollTo(0, 0);
   }
-  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆", period:"經期紀錄" };
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆", period:"健康" };
   var drawerEl = document.getElementById("drawer");
   var drawerBackdropEl = document.getElementById("drawerBackdrop");
   function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
@@ -2072,9 +2163,27 @@
   var salaryTypeFilterValue = "all";
   var bonusSubFilterValue = "all";
   var salaryPaidFilterValue = "all";
+  function fiveOfNextMonth(monthStr){
+    var p = String(monthStr || "").split("-");
+    var y = Number(p[0]), m = Number(p[1]);
+    if (!y || !m) return "";
+    m += 1; if (m > 12){ m = 1; y += 1; }
+    return y + "-" + String(m).padStart(2, "0") + "-05";
+  }
+  function paidOnDate(d){
+    if (d.paidOn) return d.paidOn;
+    if (d.recordType === "bonus") return d.payDate || "";
+    return fiveOfNextMonth((d.payDate || "").slice(0, 7));
+  }
+  function salaryMonthLabel(d){
+    var p = String(d.payDate || "").split("-");
+    return p[1] ? p[0] + "年" + Number(p[1]) + "月薪水" : "薪水";
+  }
+  var sPayDateTouched = false;
   function salaryPaid(d){
     if (typeof d.paid === "boolean") return d.paid;
-    return !!d.payDate && d.payDate <= todayStr();
+    var po = paidOnDate(d);
+    return !!po && po <= todayStr();
   }
   document.querySelectorAll("#salaryPaidFilterTabs button").forEach(function(b){
     b.addEventListener("click", function(){
@@ -2131,9 +2240,9 @@
       .filter(function(d){ return (d.person || "hua") === currentPerson && d.recordType !== "bonus" && d.payDate; })
       .sort(function(a, b){ return b.payDate.localeCompare(a.payDate); });
     var prevVal = pickSel.value;
-    pickSel.innerHTML = recs.map(function(d){ return '<option value="' + d._id + '">' + d.payDate + (salaryPaid(d) ? "" : "（未發）") + '</option>'; }).join("");
+    pickSel.innerHTML = recs.map(function(d){ return '<option value="' + d._id + '">' + salaryMonthLabel(d) + (salaryPaid(d) ? "" : "（未發）") + '</option>'; }).join("");
     if (!recs.length){ box.innerHTML = '<div class="empty">還沒有薪水紀錄可以比較</div>'; return; }
-    var defId = (recs.filter(function(d){ return d.payDate <= todayStr(); })[0] || recs[0])._id;
+    var defId = (recs.filter(function(d){ return salaryPaid(d); })[0] || recs[0])._id;
     pickSel.value = (cmpPickTouched && recs.some(function(d){ return d._id === prevVal; })) ? prevVal : defId;
     var idx = recs.findIndex(function(d){ return d._id === pickSel.value; });
     var cur = recs[idx];
@@ -2141,7 +2250,7 @@
     var mode = document.getElementById("cmpBase").value;
     var basis = mode === "prev" ? older.slice(0, 1) : mode === "all" ? older : older.slice(0, Number(mode));
     if (!basis.length){ box.innerHTML = '<div class="empty">這一期之前沒有紀錄，沒有可比較的對象</div>'; return; }
-    var shortDate = function(s){ return s.slice(2).replace(/-/g, "/"); };
+    var shortDate = function(s){ var p = String(s).split("-"); return Number(p[1]) + "月薪"; };
     var baseLabel = mode === "prev" ? shortDate(basis[0].payDate) : "前" + basis.length + "期均";
     var rows = "", notes = [];
     CMP_METRICS.forEach(function(m){
@@ -2155,12 +2264,26 @@
     });
     notes = notes.filter(function(n){ return Math.round(n.diff) !== 0; }).sort(function(a, b){ return Math.abs(b.diff) - Math.abs(a.diff); }).slice(0, 3);
     var netDiff = CMP_METRICS[0].get(cur) - basis.reduce(function(s, d){ return s + CMP_METRICS[0].get(d); }, 0) / basis.length;
-    var summaryBase = mode === "prev" ? "上一期（" + basis[0].payDate + "）" : baseLabel === "前" + basis.length + "期均" ? "前 " + basis.length + " 期平均" : baseLabel;
+    var summaryBase = mode === "prev" ? "上一期（" + salaryMonthLabel(basis[0]) + "）" : baseLabel === "前" + basis.length + "期均" ? "前 " + basis.length + " 期平均" : baseLabel;
     var summary = "實發" + (Math.round(netDiff) === 0 ? "與" + summaryBase + "相同" : "比" + summaryBase + (netDiff > 0 ? "多 " : "少 ") + Math.abs(Math.round(netDiff)).toLocaleString("en-US")) +
       (notes.length ? "；主要變動：" + notes.map(function(n){ return n.label + " " + fmtDiff(n.diff); }).join("、") : "");
     box.innerHTML = '<div class="cmp-head"><span></span><span>' + escapeHtml(shortDate(cur.payDate)) + '</span><span>' + escapeHtml(baseLabel) + '</span><span>差異</span></div>' + rows +
       '<div class="section-hint" style="margin:8px 2px 0;">' + escapeHtml(summary) + '</div>';
   }
+  (function(){
+    var open = false;
+    try{ open = localStorage.getItem("huaCmpOpen") === "1"; }catch(e){}
+    function apply(){
+      document.getElementById("cmpBody").hidden = !open;
+      document.getElementById("cmpToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+    }
+    apply();
+    document.getElementById("cmpToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaCmpOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+  })();
   var cmpPickTouched = false;
   document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
   document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
@@ -2224,7 +2347,7 @@
       var el = document.createElement("div");
       var isPaid = salaryPaid(d);
       el.className = "salary-card" + (isBonus ? " bonus-card" : "") + (isPaid ? "" : " unpaid");
-      var titleLabel = isBonus ? escapeHtml(d.bonusName || "獎金") : escapeHtml(d.payDate || "未填日期");
+      var titleLabel = isBonus ? escapeHtml(d.bonusName || "獎金") : escapeHtml(salaryMonthLabel(d));
       var dateLabel = titleLabel +
         (isBonus ? '<span class="bonus-badge">🎁 獎金</span>' : '') +
         (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '') +
@@ -2242,6 +2365,8 @@
           (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0);
         var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
         var metaParts = [];
+        var po = paidOnDate(d);
+        if (po) metaParts.push("發薪日 " + po.slice(5).replace("-", "/"));
         if (d.grossAmount) metaParts.push("應發 " + fmt(d.grossAmount));
         if (d.bonus) metaParts.push("效率獎金 " + fmt(d.bonus));
         (d.extraItems || []).forEach(function(x){ metaParts.push(escapeHtml(x.name || "其他") + " " + fmt(x.amount)); });
@@ -2324,6 +2449,8 @@
     document.getElementById("grossCalcBox").hidden = isBonus;
     document.getElementById("ratingField").hidden = isBonus;
     document.getElementById("bonusNameField").hidden = !isBonus;
+    document.getElementById("sMonthField").hidden = isBonus;
+    document.getElementById("sDateLabel").textContent = isBonus ? "發放日期" : "實際發薪日";
   }
   document.getElementById("recordTypeSeg").addEventListener("click", function(e){
     var btn = e.target.closest("button");
@@ -2418,7 +2545,22 @@
     document.getElementById("salaryDuplicateBtn").hidden = true;
     setRecordType("salary");
     setSalaryPerson(currentPerson === "yupas" ? "yupas" : "hua");
-    document.getElementById("sDate").value = todayStr();
+    var nowD = new Date();
+    var whoP = currentPerson === "yupas" ? "yupas" : "hua";
+    var latestMonth = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === whoP && d.payDate; })
+      .map(function(d){ return d.payDate.slice(0, 7); }).sort().pop();
+    var defMonth;
+    if (latestMonth){
+      var lp = latestMonth.split("-");
+      defMonth = new Date(Number(lp[0]), Number(lp[1]), 1);
+    } else {
+      defMonth = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1);
+    }
+    var defMonthStr = defMonth.getFullYear() + "-" + String(defMonth.getMonth() + 1).padStart(2, "0");
+    document.getElementById("sMonth").value = defMonthStr;
+    document.getElementById("sDate").value = fiveOfNextMonth(defMonthStr);
+    sPayDateTouched = false;
     document.getElementById("sRating").value = "";
     document.getElementById("sBonusName").value = "";
     SALARY_NUM_FIELDS.forEach(function(id){
@@ -2439,7 +2581,13 @@
     var dt = document.getElementById("sDate").value;
     document.getElementById("sPaid").checked = !!dt && dt <= todayStr();
   }
-  document.getElementById("sDate").addEventListener("change", syncPaidWithDate);
+  document.getElementById("sDate").addEventListener("change", function(){ sPayDateTouched = true; syncPaidWithDate(); });
+  document.getElementById("sMonth").addEventListener("change", function(){
+    if (!sPayDateTouched){
+      document.getElementById("sDate").value = fiveOfNextMonth(document.getElementById("sMonth").value);
+      syncPaidWithDate();
+    }
+  });
   document.getElementById("sPaid").addEventListener("change", function(){ sPaidTouched = true; });
   function openEditSalary(d){
     editingSalaryId = d._id;
@@ -2448,7 +2596,9 @@
     document.getElementById("salaryDuplicateBtn").hidden = false;
     setRecordType(d.recordType === "bonus" ? "bonus" : "salary");
     setSalaryPerson(d.person || "hua");
-    document.getElementById("sDate").value = d.payDate || todayStr();
+    document.getElementById("sMonth").value = d.recordType === "bonus" ? "" : (d.payDate || "").slice(0, 7);
+    document.getElementById("sDate").value = paidOnDate(d) || todayStr();
+    sPayDateTouched = true;
     document.getElementById("sRating").value = d.rating || "";
     document.getElementById("sBonusName").value = d.bonusName || "";
     document.getElementById("sBaseSalary").value = d.baseSalary || "";
@@ -2487,7 +2637,7 @@
     else if (currentTab === "leave") openAddLeave();
     else if (currentTab === "planned") openAddPlanned();
     else if (currentTab === "calendar") openCalAddChooser(calSelected);
-    else if (currentTab === "period") openAddPLog();
+    else if (currentTab === "period") (currentHealthSub === "cycle" ? openAddCycle : currentHealthSub === "visit" ? openAddVisit : currentHealthSub === "fever" ? openAddEpisode : openAddPLog)();
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -2538,13 +2688,16 @@
   });
 
   document.getElementById("salarySaveBtn").addEventListener("click", async function(){
-    var payDate = document.getElementById("sDate").value;
+    var paidOn = document.getElementById("sDate").value;
+    var salaryMonth = document.getElementById("sMonth").value;
     var amount = parseFloat(document.getElementById("sAmount").value) || 0;
-    if (!payDate){ showToast("請選擇發薪日期"); return; }
-    if (!amount){ showToast("請輸入實發金額"); return; }
     var isBonus = currentRecordType === "bonus";
+    if (!isBonus && !salaryMonth){ showToast("請選擇薪資月份"); return; }
+    if (!paidOn){ showToast(isBonus ? "請選擇發放日期" : "請選擇實際發薪日"); return; }
+    if (!amount){ showToast("請輸入實發金額"); return; }
+    var payDate = isBonus ? paidOn : salaryMonth + "-01";
     var data = {
-      payDate: payDate, amount: amount,
+      payDate: payDate, paidOn: paidOn, amount: amount,
       recordType: currentRecordType, person: currentSalaryPerson,
       bonusName: isBonus ? document.getElementById("sBonusName").value.trim() : "",
       rating: isBonus ? "" : document.getElementById("sRating").value.trim(),
@@ -3899,6 +4052,108 @@
     });
   }
 
+  // ---- 假別（可自訂）----
+  var LEAVE_BUILTINS = [
+    { name:"特休", color:"#2F80ED", annual:true },
+    { name:"復職用特休", color:"#0F9BD0", annual:true },
+    { name:"未住院病假", color:"#E8622C", annual:false },
+    { name:"住院病假", color:"#D63031", annual:false },
+    { name:"生理假", color:"#E0368F", annual:false },
+    { name:"家庭照顧假", color:"#3A9A1E", annual:false },
+    { name:"換休", color:"#8E5BD9", annual:false },
+    { name:"其他", color:"#7F8C8D", annual:false }
+  ];
+  function leaveCfg(){
+    var s = settingsById.leaveTypes || {};
+    return { colors: s.colors || {}, custom: Array.isArray(s.custom) ? s.custom : [] };
+  }
+  function getLeaveTypes(){
+    var cfg = leaveCfg();
+    var out = LEAVE_BUILTINS.map(function(b){ return { name:b.name, color:cfg.colors[b.name] || b.color, annual:b.annual, builtin:true }; });
+    cfg.custom.forEach(function(c){ out.push({ name:c.name, color:c.color || "#7F8C8D", annual:!!c.annual, builtin:false }); });
+    return out;
+  }
+  function leaveColor(name){
+    var t = getLeaveTypes().filter(function(x){ return x.name === name; })[0];
+    return t ? t.color : "#7F8C8D";
+  }
+  function isAnnualLeave(name){
+    if (LEAVE_ANNUAL_TYPES[name]) return true;
+    return leaveCfg().custom.some(function(c){ return c.name === name && c.annual; });
+  }
+  async function saveLeaveCfg(cfg){
+    if (!dbReady || !settingsCol){ showToast("尚未連線，稍後再試"); return false; }
+    try{
+      await settingsCol.doc("leaveTypes").set({ colors: cfg.colors, custom: cfg.custom, updatedAt: Date.now() });
+      settingsById.leaveTypes = { colors: cfg.colors, custom: cfg.custom };
+      return true;
+    }catch(err){ showToast("儲存失敗，請再試一次"); return false; }
+  }
+  function refreshLeaveTypeOptions(selected){
+    var sel = document.getElementById("lType");
+    var types = getLeaveTypes();
+    var names = types.map(function(t){ return t.name; });
+    if (selected && names.indexOf(selected) < 0) names.push(selected);
+    sel.innerHTML = names.map(function(n){ return '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>'; }).join("");
+    if (selected) sel.value = selected;
+  }
+  function renderLtManage(){
+    var box = document.getElementById("ltManage");
+    if (box.hidden) return;
+    var cfg = leaveCfg();
+    box.innerHTML = '<div class="section-hint" style="margin:0 0 8px;">內建假別可改顏色；自訂假別可改名稱、顏色、是否計入特休。刪除不會動到舊紀錄。</div>';
+    getLeaveTypes().forEach(function(t){
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex; gap:8px; align-items:center; margin-bottom:6px;";
+      var idx = cfg.custom.findIndex(function(c){ return c.name === t.name; });
+      row.innerHTML = '<input type="color" value="' + t.color + '" style="width:42px; height:38px; padding:2px; flex:none;">' +
+        (t.builtin ? '<div style="flex:1; font-size:14px; font-weight:600;">' + escapeHtml(t.name) + (t.annual ? ' <span class="hist-badge">計入特休</span>' : '') + '</div>'
+                   : '<input type="text" value="' + escapeHtml(t.name) + '" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" ' + (t.annual ? "checked" : "") + ' style="width:18px; height:18px; margin:0;">計入特休</label><button type="button" class="btn danger" style="flex:none; padding:8px 12px;" aria-label="刪除">✕</button>');
+      var color = row.querySelector('input[type="color"]');
+      color.addEventListener("change", async function(){
+        var c = leaveCfg();
+        if (t.builtin) c.colors[t.name] = color.value; else if (idx >= 0) c.custom[idx].color = color.value;
+        if (await saveLeaveCfg(c)){ renderLeaves(); renderLtManage(); }
+      });
+      if (!t.builtin){
+        var txt = row.querySelector('input[type="text"]'), chk = row.querySelector('input[type="checkbox"]');
+        txt.addEventListener("change", async function(){
+          var v = txt.value.trim(), c = leaveCfg();
+          if (!v){ txt.value = t.name; return; }
+          if (getLeaveTypes().some(function(x){ return x.name === v && x.name !== t.name; })){ showToast("已有相同名稱的假別"); txt.value = t.name; return; }
+          c.custom[idx].name = v;
+          if (await saveLeaveCfg(c)){ refreshLeaveTypeOptions(document.getElementById("lType").value === t.name ? v : document.getElementById("lType").value); renderLtManage(); }
+        });
+        chk.addEventListener("change", async function(){
+          var c = leaveCfg(); c.custom[idx].annual = chk.checked;
+          if (await saveLeaveCfg(c)) renderLtManage();
+        });
+        row.querySelector("button").addEventListener("click", async function(){
+          var c = leaveCfg(); c.custom.splice(idx, 1);
+          if (await saveLeaveCfg(c)){ refreshLeaveTypeOptions("特休"); renderLtManage(); renderLeaves(); }
+        });
+      }
+      box.appendChild(row);
+    });
+    var add = document.createElement("div");
+    add.style.cssText = "display:flex; gap:8px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);";
+    add.innerHTML = '<input type="color" value="#16A085" id="ltNewColor" style="width:42px; height:38px; padding:2px; flex:none;"><input type="text" id="ltNewName" placeholder="新假別名稱，例如：公假" style="flex:1; min-width:0;"><label style="display:flex; align-items:center; gap:4px; font-size:12px; white-space:nowrap; margin:0;"><input type="checkbox" id="ltNewAnnual" style="width:18px; height:18px; margin:0;">計入特休</label><button type="button" class="btn ghost" id="ltNewBtn" style="flex:none; padding:9px 12px;">＋</button>';
+    box.appendChild(add);
+    add.querySelector("#ltNewBtn").addEventListener("click", async function(){
+      var name = add.querySelector("#ltNewName").value.trim();
+      if (!name) return;
+      if (getLeaveTypes().some(function(x){ return x.name === name; })){ showToast("已有相同名稱的假別"); return; }
+      var c = leaveCfg();
+      c.custom.push({ name: name, color: add.querySelector("#ltNewColor").value, annual: add.querySelector("#ltNewAnnual").checked });
+      if (await saveLeaveCfg(c)){ refreshLeaveTypeOptions(name); renderLtManage(); }
+    });
+  }
+  document.getElementById("ltManageBtn").addEventListener("click", function(){
+    var box = document.getElementById("ltManage");
+    box.hidden = !box.hidden;
+    renderLtManage();
+  });
+
   // ---- 請假紀錄 ----
   var currentLeavePeriod = null;
   var currentLeaveTypeFilter = "all";
@@ -3936,7 +4191,8 @@
     document.getElementById("leaveDuplicateBtn").hidden = true;
     document.getElementById("lPeriod").value = currentLeavePeriod;
     document.getElementById("lDate").value = "";
-    document.getElementById("lType").value = "特休";
+    document.getElementById("ltManage").hidden = true;
+    refreshLeaveTypeOptions("特休");
     document.getElementById("lHours").value = "";
     document.getElementById("lNote").value = "";
     document.getElementById("leaveSheetBackdrop").hidden = false;
@@ -3948,7 +4204,8 @@
     document.getElementById("leaveDuplicateBtn").hidden = false;
     document.getElementById("lPeriod").value = d.period || currentLeavePeriod;
     document.getElementById("lDate").value = d.date || "";
-    document.getElementById("lType").value = d.leaveType || "特休";
+    document.getElementById("ltManage").hidden = true;
+    refreshLeaveTypeOptions(d.leaveType || "特休");
     document.getElementById("lHours").value = d.hours || "";
     document.getElementById("lNote").value = d.note || "";
     document.getElementById("leaveSheetBackdrop").hidden = false;
@@ -3963,7 +4220,7 @@
     var hours = numVal("lHours");
     if (!hours){ showToast("請輸入時數"); return; }
     var leaveType = document.getElementById("lType").value;
-    var isAnnual = !!LEAVE_ANNUAL_TYPES[leaveType];
+    var isAnnual = isAnnualLeave(leaveType);
     var data = {
       period: document.getElementById("lPeriod").value,
       date: date,
@@ -4083,7 +4340,17 @@
     var allowedTypes = LEAVE_FILTER_GROUPS[currentLeaveTypeFilter];
     if (allowedTypes){
       all = all.filter(function(d){ return allowedTypes.indexOf(d.leaveType) !== -1; });
+    } else if (currentLeaveTypeFilter === "other"){
+      var grouped = [].concat(LEAVE_FILTER_GROUPS.annual, LEAVE_FILTER_GROUPS.sick, LEAVE_FILTER_GROUPS.physio, LEAVE_FILTER_GROUPS.family, LEAVE_FILTER_GROUPS.swap);
+      all = all.filter(function(d){ return grouped.indexOf(d.leaveType) === -1; });
     }
+    var REP = { annual:"特休", sick:"未住院病假", physio:"生理假", family:"家庭照顧假", swap:"換休", other:"其他" };
+    document.querySelectorAll("#leaveTypeFilterTabs button").forEach(function(b){
+      var k = b.getAttribute("data-lfilter");
+      if (!REP[k]) return;
+      var label = b.textContent.replace(/^\s+/, "");
+      b.innerHTML = '<i class="ldot" style="background:' + leaveColor(REP[k]) + '"></i>' + escapeHtml(label);
+    });
     all.sort(function(a,b){
       var d = (a.date || "").localeCompare(b.date || "");
       return SORT_DIR.leave === "asc" ? d : -d;
@@ -4122,6 +4389,9 @@
     all.forEach(function(d){
       var el = document.createElement("div");
       el.className = "leave-card";
+      var lc = leaveColor(d.leaveType);
+      el.style.setProperty("--lc", lc);
+      el.style.setProperty("--lc-bg", lc + "26");
       var html =
         '<div class="row1"><span class="date">' + escapeHtml(d.date || "") +
           '<span class="type-badge">' + escapeHtml(d.leaveType || "") + '</span></span>' +
@@ -4161,7 +4431,21 @@
     eventCol = db.collection("calendarEvents");
     cycleCol = db.collection("periodCycles");
     plogCol = db.collection("periodLogs");
+    settingsCol = db.collection("appSettings");
+    visitCol = db.collection("medicalVisits");
     dbReady = true;
+    visitCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      visitsById = next; renderVisits(); if (currentTab === "calendar") renderCalendar();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    settingsCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      settingsById = next;
+      renderLeaves();
+      if (!document.getElementById("plogSheetBackdrop").hidden){ renderPLogChips(); renderSymManage(); }
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     cycleCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -4275,7 +4559,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById, periodCycles: cyclesById, periodLogs: plogsById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById, periodCycles: cyclesById, periodLogs: plogsById, appSettings: settingsById, medicalVisits: visitsById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -4653,10 +4937,75 @@
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
 
+  function getSymptoms(){
+    var s = settingsById.periodSymptoms;
+    return s && Array.isArray(s.list) ? s.list.slice() : PL_SYMPTOMS.slice();
+  }
+  async function saveSymptoms(list){
+    if (!dbReady || !settingsCol){ showToast("尚未連線，稍後再試"); return false; }
+    try{
+      await settingsCol.doc("periodSymptoms").set({ list: list, updatedAt: Date.now() });
+      settingsById.periodSymptoms = { list: list, updatedAt: Date.now() };
+      return true;
+    }catch(err){ showToast("儲存失敗，請再試一次"); return false; }
+  }
+  async function addSymptom(){
+    var input = document.getElementById("symNew");
+    var name = input.value.trim();
+    if (!name) return;
+    var list = getSymptoms();
+    if (list.indexOf(name) >= 0){
+      if (plgSelected.indexOf(name) < 0) plgSelected.push(name);
+      input.value = ""; renderPLogChips(); return;
+    }
+    list.push(name);
+    if (await saveSymptoms(list)){
+      plgSelected.push(name);
+      input.value = "";
+      renderPLogChips(); renderSymManage();
+    }
+  }
+  function renderSymManage(){
+    var box = document.getElementById("symManage");
+    if (box.hidden) return;
+    box.innerHTML = '<div class="section-hint" style="margin:0 0 8px;">修改名稱後離開輸入框即儲存；刪除只影響清單，以前的紀錄仍保留原本的症狀名稱。</div>';
+    getSymptoms().forEach(function(name, i){
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex; gap:8px; margin-bottom:6px;";
+      row.innerHTML = '<input type="text" value="' + escapeHtml(name) + '" style="flex:1; min-width:0;"><button type="button" class="btn danger" style="flex:none; padding:9px 13px;" aria-label="刪除">✕</button>';
+      var inp = row.querySelector("input");
+      inp.addEventListener("change", async function(){
+        var v = inp.value.trim();
+        var list = getSymptoms();
+        if (!v){ inp.value = name; return; }
+        if (list.indexOf(v) >= 0 && list.indexOf(v) !== i){ showToast("已有相同名稱的症狀"); inp.value = name; return; }
+        list[i] = v;
+        if (await saveSymptoms(list)){
+          var si = plgSelected.indexOf(name);
+          if (si >= 0) plgSelected[si] = v;
+          renderPLogChips(); renderSymManage();
+        }
+      });
+      row.querySelector("button").addEventListener("click", async function(){
+        var list = getSymptoms();
+        list.splice(i, 1);
+        if (await saveSymptoms(list)){ renderPLogChips(); renderSymManage(); }
+      });
+      box.appendChild(row);
+    });
+  }
+  document.getElementById("symAddBtn").addEventListener("click", addSymptom);
+  document.getElementById("symNew").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); addSymptom(); } });
+  document.getElementById("symManageBtn").addEventListener("click", function(){
+    var box = document.getElementById("symManage");
+    box.hidden = !box.hidden;
+    document.getElementById("symManageBtn").textContent = box.hidden ? "✎ 編輯清單" : "完成編輯";
+    renderSymManage();
+  });
   function renderPLogChips(){
     var box = document.getElementById("plgChips");
     box.innerHTML = "";
-    var list = PL_SYMPTOMS.slice();
+    var list = getSymptoms();
     plgSelected.forEach(function(s){ if (list.indexOf(s) < 0) list.push(s); });
     list.forEach(function(s){
       var b = document.createElement("button");
@@ -4678,11 +5027,14 @@
     document.getElementById("plgMed").value = d.medication || "";
     document.getElementById("plgNote").value = d.note || "";
     plgSelected = (d.symptoms || []).slice();
+    document.getElementById("symManage").hidden = true;
+    document.getElementById("symManageBtn").textContent = "✎ 編輯清單";
+    document.getElementById("symNew").value = "";
     renderPLogChips();
   }
   function openAddPLog(){
     editingPLogId = null;
-    document.getElementById("plogSheetTitle").textContent = "新增症狀 / 服藥";
+    document.getElementById("plogSheetTitle").textContent = "新增健康紀錄";
     document.getElementById("plogDeleteBtn").hidden = true;
     document.getElementById("plogDuplicateBtn").hidden = true;
     fillPLogForm({});
@@ -4691,7 +5043,7 @@
   function openEditPLog(id){
     var d = plogsById[id]; if (!d) return;
     editingPLogId = id;
-    document.getElementById("plogSheetTitle").textContent = "編輯症狀 / 服藥";
+    document.getElementById("plogSheetTitle").textContent = "編輯健康紀錄";
     document.getElementById("plogDeleteBtn").hidden = false;
     document.getElementById("plogDuplicateBtn").hidden = false;
     fillPLogForm(d);
@@ -4703,7 +5055,7 @@
   document.getElementById("plogSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closePLogSheet(); });
   document.getElementById("plogDuplicateBtn").addEventListener("click", function(){
     editingPLogId = null;
-    document.getElementById("plogSheetTitle").textContent = "新增症狀 / 服藥";
+    document.getElementById("plogSheetTitle").textContent = "新增健康紀錄";
     document.getElementById("plogDeleteBtn").hidden = true;
     document.getElementById("plogDuplicateBtn").hidden = true;
   });
@@ -4733,10 +5085,130 @@
   });
   document.getElementById("plogRange").addEventListener("change", renderPeriod);
 
+  function switchHealthSub(name){
+    currentHealthSub = name;
+    document.querySelectorAll("#healthSubTabs button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-hsub") === name); });
+    document.querySelectorAll("[data-hsub-page]").forEach(function(p){ p.classList.toggle("active", p.getAttribute("data-hsub-page") === name); });
+  }
+  document.querySelectorAll("#healthSubTabs button").forEach(function(b){
+    b.addEventListener("click", function(){ switchHealthSub(b.getAttribute("data-hsub")); });
+  });
+
+  function renderVisits(){
+    var all = Object.keys(visitsById).map(function(id){ return Object.assign({ _id:id }, visitsById[id]); });
+    var depts = {}, persons = {};
+    all.forEach(function(d){ if (d.dept) depts[d.dept] = 1; if (d.person) persons[d.person] = 1; });
+    var deptSel = document.getElementById("visitDeptFilter"), personSel = document.getElementById("visitPersonFilter");
+    deptSel.innerHTML = '<option value="all">全部</option>' + Object.keys(depts).map(function(x){ return '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; }).join("");
+    personSel.innerHTML = '<option value="all">全部</option>' + Object.keys(persons).map(function(x){ return '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; }).join("");
+    if (!depts[visitDeptFilterValue]) visitDeptFilterValue = "all";
+    if (!persons[visitPersonFilterValue]) visitPersonFilterValue = "all";
+    deptSel.value = visitDeptFilterValue; personSel.value = visitPersonFilterValue;
+    document.getElementById("visitDeptList").innerHTML = ["牙科","婦科","內科 / 感冒","小兒科","眼科","皮膚科","骨科","耳鼻喉科","中醫","健檢"].concat(Object.keys(depts)).map(function(x){ return '<option value="' + escapeHtml(x) + '">'; }).join("");
+    document.getElementById("visitPersonList").innerHTML = ["HUA","YUPAS","宸","杉"].concat(Object.keys(persons)).map(function(x){ return '<option value="' + escapeHtml(x) + '">'; }).join("");
+    var shown = all.filter(function(d){
+      return (visitDeptFilterValue === "all" || d.dept === visitDeptFilterValue) && (visitPersonFilterValue === "all" || d.person === visitPersonFilterValue);
+    }).sort(function(a, b){
+      var k = (b.date || "").localeCompare(a.date || "");
+      return SORT_DIR.visit === "asc" ? -k : k;
+    });
+    document.getElementById("visitCount").textContent = shown.length ? "(" + shown.length + ")" : "";
+    document.getElementById("visitTimes").textContent = shown.length;
+    document.getElementById("visitCostTotal").textContent = fmt(shown.reduce(function(s, d){ return s + (Number(d.cost) || 0); }, 0));
+    var today = todayStrNow();
+    var follows = shown.map(function(d){ return d.followUp; }).filter(function(f){ return f && f >= today; }).sort();
+    document.getElementById("visitNextFollow").textContent = follows.length ? follows[0].slice(5).replace("-", "/") : "-";
+    var list = document.getElementById("visitList");
+    list.innerHTML = "";
+    if (!shown.length){ list.innerHTML = '<div class="empty">' + (all.length ? "這個條件沒有紀錄" : "點「＋ 新增」記一次就醫") + '</div>'; return; }
+    shown.forEach(function(d){
+      var el = document.createElement("div");
+      el.className = "claim-card";
+      var meta = [d.place, d.reason].filter(Boolean).map(escapeHtml).join(" · ");
+      var html = '<div class="row1"><span class="date">' + escapeHtml((d.date || "").replace(/-/g, "/")) +
+        (d.dept ? '<span class="type-badge" style="background:var(--claim-bg);color:var(--claim)">' + escapeHtml(d.dept) + '</span>' : "") +
+        (d.person ? '<span class="hist-badge">' + escapeHtml(d.person) + '</span>' : "") + '</span>' +
+        (Number(d.cost) ? '<span class="net num">' + fmt(d.cost) + '</span>' : "") + '</div>';
+      if (meta) html += '<div class="breakdown">' + meta + '</div>';
+      if (d.meds) html += '<div class="breakdown">💊 ' + escapeHtml(d.meds) + '</div>';
+      if (d.followUp) html += '<div class="breakdown">🔁 回診：' + escapeHtml(d.followUp.replace(/-/g, "/")) + (d.followUp >= today ? "" : "（已過）") + '</div>';
+      if (d.note) html += '<div class="note">' + escapeHtml(d.note) + '</div>';
+      el.innerHTML = html;
+      el.addEventListener("click", function(){ openEditVisit(d._id); });
+      list.appendChild(el);
+    });
+  }
+  document.getElementById("visitDeptFilter").addEventListener("change", function(){ visitDeptFilterValue = this.value; renderVisits(); });
+  document.getElementById("visitPersonFilter").addEventListener("change", function(){ visitPersonFilterValue = this.value; renderVisits(); });
+  function fillVisitForm(d){
+    document.getElementById("vsDate").value = d.date || todayStrNow();
+    document.getElementById("vsPerson").value = d.person || "";
+    document.getElementById("vsDept").value = d.dept || "";
+    document.getElementById("vsPlace").value = d.place || "";
+    document.getElementById("vsReason").value = d.reason || "";
+    document.getElementById("vsCost").value = d.cost === 0 || d.cost ? d.cost : "";
+    document.getElementById("vsFollow").value = d.followUp || "";
+    document.getElementById("vsMeds").value = d.meds || "";
+    document.getElementById("vsNote").value = d.note || "";
+  }
+  function openAddVisit(){
+    editingVisitId = null;
+    document.getElementById("visitSheetTitle").textContent = "新增就醫紀錄";
+    document.getElementById("visitDeleteBtn").hidden = true;
+    document.getElementById("visitDuplicateBtn").hidden = true;
+    fillVisitForm({});
+    document.getElementById("visitSheetBackdrop").hidden = false;
+  }
+  function openEditVisit(id){
+    var d = visitsById[id]; if (!d) return;
+    editingVisitId = id;
+    document.getElementById("visitSheetTitle").textContent = "編輯就醫紀錄";
+    document.getElementById("visitDeleteBtn").hidden = false;
+    document.getElementById("visitDuplicateBtn").hidden = false;
+    fillVisitForm(d);
+    document.getElementById("visitSheetBackdrop").hidden = false;
+  }
+  function closeVisitSheet(){ document.getElementById("visitSheetBackdrop").hidden = true; }
+  document.getElementById("addVisitBtn").addEventListener("click", openAddVisit);
+  document.getElementById("visitCancelBtn").addEventListener("click", closeVisitSheet);
+  document.getElementById("visitSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeVisitSheet(); });
+  document.getElementById("visitDuplicateBtn").addEventListener("click", function(){
+    editingVisitId = null;
+    document.getElementById("visitSheetTitle").textContent = "新增就醫紀錄";
+    document.getElementById("visitDeleteBtn").hidden = true;
+    document.getElementById("visitDuplicateBtn").hidden = true;
+  });
+  document.getElementById("visitSaveBtn").addEventListener("click", async function(){
+    var date = document.getElementById("vsDate").value;
+    var dept = document.getElementById("vsDept").value.trim();
+    if (!date){ showToast("請選擇看診日期"); return; }
+    if (!dept && !document.getElementById("vsReason").value.trim()){ showToast("請填科別或原因"); return; }
+    var costStr = document.getElementById("vsCost").value;
+    var data = {
+      date: date, person: document.getElementById("vsPerson").value.trim(), dept: dept,
+      place: document.getElementById("vsPlace").value.trim(), reason: document.getElementById("vsReason").value.trim(),
+      cost: costStr === "" ? 0 : parseFloat(costStr), followUp: document.getElementById("vsFollow").value,
+      meds: document.getElementById("vsMeds").value.trim(), note: document.getElementById("vsNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (!dbReady || !visitCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingVisitId){ await visitCol.doc(editingVisitId).set(Object.assign({}, visitsById[editingVisitId], data)); }
+      else { data.createdAt = Date.now(); await visitCol.add(data); }
+      closeVisitSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("visitDeleteBtn").addEventListener("click", async function(){
+    if (!editingVisitId || !visitCol) return;
+    try{ await visitCol.doc(editingVisitId).delete(); closeVisitSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
   var CAL_CATS = [
+    { key:"visit", name:"就醫", color:"var(--utility)" },
     { key:"period", name:"經期", color:"var(--period)" },
     { key:"periodPred", name:"經期預測", color:"#F2A6C3" },
-    { key:"symptom", name:"症狀/服藥", color:"var(--variable)" },
+    { key:"symptom", name:"健康", color:"var(--variable)" },
     { key:"event", name:"行程", color:"var(--plan)" },
     { key:"salary", name:"薪水", color:"var(--salary)" },
     { key:"bonus", name:"獎金", color:"var(--bonus)" },
@@ -4771,11 +5243,11 @@
     });
     Object.keys(salariesById).forEach(function(id){
       var d = salariesById[id], isBonus = d.recordType === "bonus";
-      add(d.payDate, { cat:isBonus ? "bonus" : "salary", title:(isBonus ? (d.bonusName || "獎金") : "薪水") + "　" + (PERSON_LABEL[d.person] || "") + (salaryPaid(d) ? "" : "（未發）"), amount:d.amount, tab:"salary", sort:"01" });
+      add(paidOnDate(d), { cat:isBonus ? "bonus" : "salary", title:(isBonus ? (d.bonusName || "獎金") : salaryMonthLabel(d).replace(/^\d+年/, "")) + "　" + (PERSON_LABEL[d.person] || "") + (salaryPaid(d) ? "" : "（未發）"), amount:d.amount, tab:"salary", sort:"01" });
     });
     Object.keys(leavesById).forEach(function(id){
       var d = leavesById[id];
-      add(d.date, { cat:"leave", title:(d.leaveType || "請假") + "　" + (Number(d.hours) || 0) + " hr", sub:d.note || "", tab:"leave", sort:"02" });
+      add(d.date, { cat:"leave", title:(d.leaveType || "請假") + "　" + (Number(d.hours) || 0) + " hr", sub:d.note || "", tab:"leave", color:leaveColor(d.leaveType), sort:"02" });
     });
     Object.keys(claimsById).forEach(function(id){
       var d = claimsById[id], who = (d.company || "") + " " + (d.diagnosis || "");
@@ -4786,13 +5258,13 @@
     Object.keys(episodesById).forEach(function(id){
       var d = episodesById[id];
       eachDay(d.startDate, d.endDate || d.startDate, function(day){
-        add(day, { cat:"fever", title:(d.person || "") + " 發燒", sub:d.note || "", tab:"other", sort:"04" });
+        add(day, { cat:"fever", title:(d.person || "") + " 發燒", sub:d.note || "", tab:"period", hsub:"fever", sort:"04" });
       });
     });
     var pst = periodStats();
     pst.cycles.forEach(function(c){
       eachDay(c.startDate, cycleEnd(c), function(day){
-        add(day, { cat:"period", title:"經期第 " + (dayDiff(c.startDate, day) + 1) + " 天", sub:day === c.startDate ? (c.note || "") : "", tab:"period", sort:"00" });
+        add(day, { cat:"period", title:"經期第 " + (dayDiff(c.startDate, day) + 1) + " 天", sub:day === c.startDate ? (c.note || "") : "", tab:"period", hsub:"cycle", sort:"00" });
       });
     });
     if (pst.next && pst.cycles.length){
@@ -4800,14 +5272,20 @@
       if (pst.next > lastC.startDate){
         var plen = pst.avgLen || 5;
         eachDay(pst.next, addDaysStr(pst.next, plen - 1), function(day){
-          if (day >= todayStrNow()) add(day, { cat:"periodPred", title:"預計經期（推算）", tab:"period", sort:"00" });
+          if (day >= todayStrNow()) add(day, { cat:"periodPred", title:"預計經期（推算）", tab:"period", hsub:"cycle", sort:"00" });
         });
       }
     }
+    Object.keys(visitsById).forEach(function(id){
+      var d = visitsById[id];
+      var who = d.person ? "　" + d.person : "";
+      add(d.date, { cat:"visit", title:(d.dept || "就醫") + who, sub:[d.place, d.reason, d.meds ? "💊" + d.meds : ""].filter(Boolean).join("　"), amount:d.cost, tab:"period", hsub:"visit", sort:"0" });
+      add(d.followUp, { cat:"visit", title:"回診：" + (d.dept || "就醫") + who, tab:"period", hsub:"visit", sort:"0" });
+    });
     Object.keys(plogsById).forEach(function(id){
       var d = plogsById[id];
       var t = (d.symptoms || []).join("、") || (d.medication ? "服藥" : "備註");
-      add(d.date, { cat:"symptom", title:t + (d.medication ? "　💊" + d.medication : ""), sub:[d.time, d.pain || d.pain === 0 ? "疼痛 " + d.pain + "/10" : "", d.note].filter(Boolean).join("　"), tab:"period", sort:"0" + (d.time || "0") });
+      add(d.date, { cat:"symptom", title:t + (d.medication ? "　💊" + d.medication : ""), sub:[d.time, d.pain || d.pain === 0 ? "疼痛 " + d.pain + "/10" : "", d.note].filter(Boolean).join("　"), tab:"period", hsub:"health", sort:"0" + (d.time || "0") });
     });
     Object.keys(plannedById).forEach(function(id){
       var d = plannedById[id];
@@ -4826,7 +5304,7 @@
   }
   function calSignature(){
     var s = String(calYear) + calMonth + JSON.stringify(calHidden) + calSelected;
-    [eventsById, salariesById, leavesById, claimsById, episodesById, plannedById, itemsById, utilitiesById, cyclesById, plogsById].forEach(function(o){
+    [eventsById, salariesById, leavesById, claimsById, episodesById, plannedById, itemsById, utilitiesById, cyclesById, plogsById, visitsById].forEach(function(o){
       var ks = Object.keys(o), t = 0;
       ks.forEach(function(k){ t += Number(o[k].updatedAt) || 0; });
       s += "|" + ks.length + ":" + t;
@@ -4891,12 +5369,12 @@
       var row = document.createElement("div");
       row.className = "cal-row";
       var cat = CAL_CATS.filter(function(c){ return c.key === e.cat; })[0];
-      row.innerHTML = '<div class="bar" style="background:' + calColor(e.cat) + '"></div><div class="cb"><div class="t"><span class="tag">' + cat.name + '</span>' + escapeHtml(e.title) + '</div>' +
+      row.innerHTML = '<div class="bar" style="background:' + (e.color || calColor(e.cat)) + '"></div><div class="cb"><div class="t"><span class="tag">' + cat.name + '</span>' + escapeHtml(e.title) + '</div>' +
         (e.sub ? '<div class="s">' + escapeHtml(e.sub) + '</div>' : "") + '</div>' +
         (e.amount ? '<div class="a num">' + fmt(e.amount) + '</div>' : "");
       row.addEventListener("click", function(){
         if (e.evId){ openEditEvent(e.evId); }
-        else if (e.tab){ switchTab(e.tab); }
+        else if (e.tab){ switchTab(e.tab); if (e.hsub) switchHealthSub(e.hsub); }
       });
       dl.appendChild(row);
     });
@@ -4965,8 +5443,14 @@
           if (p.startDate && p.startDate <= d && d <= (p.endDate || "9999")) document.getElementById("lPeriod").value = id;
         });
       } },
-    { ico:"🧾", name:"薪水", run:function(d){ openAddSalary(); document.getElementById("sDate").value = d; syncPaidWithDate(); } },
-    { ico:"🎁", name:"獎金", run:function(d){ openAddSalary(); document.querySelector('#recordTypeSeg [data-rtype="bonus"]').click(); document.getElementById("sDate").value = d; syncPaidWithDate(); } },
+    { ico:"🧾", name:"薪水", run:function(d){
+        openAddSalary();
+        var pd = new Date(d + "T00:00:00");
+        var pm = new Date(pd.getFullYear(), pd.getMonth() - 1, 1);
+        document.getElementById("sMonth").value = pm.getFullYear() + "-" + String(pm.getMonth() + 1).padStart(2, "0");
+        document.getElementById("sDate").value = d; sPayDateTouched = true; syncPaidWithDate();
+      } },
+    { ico:"🎁", name:"獎金", run:function(d){ openAddSalary(); document.querySelector('#recordTypeSeg [data-rtype="bonus"]').click(); document.getElementById("sDate").value = d; sPayDateTouched = true; syncPaidWithDate(); } },
     { ico:"💡", name:"水電瓦斯", run:function(d){ openAddUtility(); document.getElementById("uYear").value = d.slice(0, 4); document.getElementById("uMonth").value = Number(d.slice(5, 7)); } },
     { ico:"📌", name:"預計大筆支出", run:function(d){ openAddPlanned(); document.getElementById("plDate").value = d; } },
     { ico:"🛡️", name:"保險理賠", run:function(d){ openAddClaim(); document.getElementById("clIncidentDate").value = d; } },
@@ -4979,7 +5463,8 @@
         document.getElementById("fvDate").value = d;
       } },
     { ico:"🌸", name:"經期開始", run:function(d){ openAddCycle(); document.getElementById("pcStart").value = d; } },
-    { ico:"💊", name:"症狀 / 服藥", run:function(d){ openAddPLog(); document.getElementById("plgDate").value = d; } }
+    { ico:"💊", name:"健康紀錄（症狀・服藥）", run:function(d){ openAddPLog(); document.getElementById("plgDate").value = d; } },
+    { ico:"🏥", name:"就醫紀錄", run:function(d){ openAddVisit(); document.getElementById("vsDate").value = d; } }
   ];
   function openCalAddChooser(dateStr){
     var d = dateStr || todayStrNow();
@@ -5183,6 +5668,7 @@
 
   wireSortBtn("plannedSortBtn", "planned", renderPlanned);
   wireSortBtn("periodSortBtn", "period", renderPeriod);
+  wireSortBtn("visitSortBtn", "visit", renderVisits);
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
   wireSortBtn("utilitySortBtn", "utility", renderUtilities);
@@ -5198,6 +5684,7 @@
   renderAccounts();
   renderPlanned();
   renderPeriod();
+  renderVisits();
   render();
   renderSalaries();
   renderUtilities();
