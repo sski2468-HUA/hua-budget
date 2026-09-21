@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2C4A6E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HUA收支">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>HUA生活收支安排</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -352,6 +359,49 @@
   .toast.show{ opacity:1; }
   .status{ text-align:center; color:var(--muted); font-size:12px; margin-top:6px; }
   [hidden]{ display:none !important; }
+
+  header.top{ padding-block:16px 10px; }
+  .top-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .top-actions{ display:flex; gap:6px; flex:0 0 auto; }
+  .icon-btn{
+    border:1px solid var(--line); background:var(--surface); color:var(--brand);
+    border-radius:10px; padding:6px 10px; font-size:12.5px; font-weight:700;
+    cursor:pointer; font-family:inherit; box-shadow:var(--shadow);
+  }
+  .icon-btn:active{ transform:scale(.96); }
+  header.top h1{ color:var(--brand); font-size:20px; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ overscroll-behavior-y:none; -webkit-tap-highlight-color:transparent; padding-block:0 calc(92px + env(safe-area-inset-bottom, 0px)); }
+  button{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  .field input, .field textarea, .field select{ font-size:16px; }
+  header.top{ top:0; padding-top:calc(12px + env(safe-area-inset-top, 0px)); margin-inline:-16px; padding-inline:16px; border-bottom:1px solid var(--line); }
+  header.top p{ display:none; }
+  header.top h1{ font-size:18px; margin:0; }
+  header.top .subtabs{ margin-top:8px; }
+  header.top .status{ margin-top:4px; }
+
+  .tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:25; margin:0; gap:0;
+    border-radius:0; border:none; border-top:1px solid var(--line);
+    background:var(--surface); padding:6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -4px 18px rgba(20,30,40,.08);
+  }
+  .tabs button{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:4px 0; font-size:10.5px; border-radius:10px; min-width:0;
+  }
+  .tabs button .ico{ font-size:20px; line-height:1; filter:grayscale(1); opacity:.55; transition:.15s; }
+  .tabs button.active{ background:transparent; box-shadow:none; color:var(--brand); }
+  .tabs button.active .ico{ filter:none; opacity:1; transform:translateY(-1px) scale(1.08); }
+  .tabs button .lbl{ white-space:nowrap; }
+  .fab{ bottom:calc(84px + env(safe-area-inset-bottom, 0px)); right:16px; }
+  .toast{ bottom:calc(150px + env(safe-area-inset-bottom, 0px)); }
+  .summary .card, .breakdown-strip .chip{ border-radius:16px; }
+  .summary .card.balance{ background:linear-gradient(135deg, var(--surface), var(--surface-2)); }
+  .item, .salary-card, .utility-card, .leave-card, .claim-card, .timeline-card, .hb-card, .episode-card{
+    transition:transform .12s, box-shadow .12s;
+  }
+  .fab{ box-shadow:0 6px 18px rgba(44,74,110,.35); }
 </style>
 </head>
 <body>
@@ -369,15 +419,23 @@
 
 <div class="wrap">
   <header class="top">
-    <h1>HUA 生活收支安排</h1>
-    <p>固定收入、支出、儲蓄總覽 · 資料自動同步</p>
+    <div class="top-row">
+      <div>
+        <h1>HUA 生活收支安排</h1>
+        <p>固定收入、支出、儲蓄總覽 · 資料自動同步</p>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="icon-btn" id="themeBtn" aria-label="切換亮暗">☾</button>
+        <button type="button" class="icon-btn" id="backupBtn" aria-label="匯出備份">⬇ 備份</button>
+      </div>
+    </div>
     <div class="tabs">
-      <button type="button" data-tab="budget" class="active">收支安排<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="salary">薪水紀錄<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="utility">水電瓦斯</button>
-      <button type="button" data-tab="annual">年度計畫<span class="tab-tag">(家)</span></button>
-      <button type="button" data-tab="leave">請假</button>
-      <button type="button" data-tab="other">其他</button>
+      <button type="button" data-tab="budget" class="active"><span class="ico">💰</span><span class="lbl">收支</span></button>
+      <button type="button" data-tab="salary"><span class="ico">🧾</span><span class="lbl">薪水</span></button>
+      <button type="button" data-tab="utility"><span class="ico">💡</span><span class="lbl">水電瓦斯</span></button>
+      <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度</span></button>
+      <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
+      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他</span></button>
     </div>
     <div class="subtabs" id="personFilterTabs" style="margin-top:8px;">
       <button type="button" data-person="hua" class="active">HUA</button>
@@ -385,7 +443,7 @@
       <button type="button" data-person="combined">兩人合計</button>
     </div>
     <div class="status" id="statusLine">載入中…</div>
-    <div class="status" style="margin-top:2px;"><button class="addlink" id="backupBtn" type="button" style="font-size:12px;">⬇ 匯出備份</button><span id="backupHint"></span></div>
+    <div class="status" style="margin-top:2px; font-size:11px;"><span id="backupHint"></span></div>
   </header>
 
   <div data-page="budget" class="active">
@@ -3565,6 +3623,20 @@
     updateBackupHint(); showToast("備份已下載");
   });
   updateBackupHint();
+
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t){
+    document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "dark" ? "☀" : "☾";
+  }
+  var savedTheme = "light";
+  try{ savedTheme = localStorage.getItem("huaTheme") || "light"; }catch(e){}
+  applyTheme(savedTheme);
+  themeBtn.addEventListener("click", function(){
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try{ localStorage.setItem("huaTheme", next); }catch(e){}
+  });
 
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
