@@ -422,6 +422,39 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
+  .cal-head{ display:flex; align-items:center; gap:8px; margin-top:14px; }
+  .cal-title{ flex:1; text-align:center; font-size:18px; font-weight:900; }
+  .cal-nav{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; width:38px; height:34px; cursor:pointer; font-size:13px; }
+  .cal-chips{ display:flex; gap:6px; overflow-x:auto; padding:10px 0 4px; scrollbar-width:none; }
+  .cal-chips::-webkit-scrollbar{ display:none; }
+  .cal-chip{ flex:0 0 auto; border:1px solid var(--line); background:var(--surface); color:var(--muted); border-radius:99px; padding:5px 11px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; }
+  .cal-chip i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .cal-chip.off{ opacity:.4; }
+  .cal-week{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:12px; color:var(--muted); margin:10px 0 4px; font-weight:700; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day{
+    min-height:58px; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:4px 3px; cursor:pointer; overflow:hidden; min-width:0;
+  }
+  .cal-day.other{ opacity:.35; }
+  .cal-day.sel{ outline:2px solid var(--brand); outline-offset:-1px; }
+  .cal-day .n{ font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; border-radius:99px; padding:0 3px; }
+  .cal-day.today .n{ background:var(--brand); color:var(--brand-ink); }
+  .cal-day .dots{ display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+  .cal-day .dots i{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .cal-day .lbls{ display:none; margin-top:3px; }
+  .cal-day .lbls div{ font-size:11px; line-height:1.3; border-radius:5px; padding:1px 4px; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); border-left:3px solid transparent; background:var(--surface-2); }
+  .cal-day .lbls .more{ background:transparent; color:var(--muted); border-left:none; }
+  html[data-view="web"] .cal-day{ min-height:104px; padding:6px; }
+  html[data-view="web"] .cal-day .dots{ display:none; }
+  html[data-view="web"] .cal-day .lbls{ display:block; }
+  .cal-row{ display:flex; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; cursor:pointer; align-items:flex-start; }
+  .cal-row .bar{ width:4px; align-self:stretch; border-radius:99px; flex:0 0 4px; }
+  .cal-row .cb{ flex:1; min-width:0; }
+  .cal-row .t{ font-weight:700; font-size:14.5px; }
+  .cal-row .s{ font-size:12px; color:var(--muted); margin-top:2px; white-space:pre-wrap; }
+  .cal-row .tag{ display:inline-block; font-size:10px; font-weight:700; border-radius:6px; padding:1px 6px; margin-right:5px; background:var(--surface-2); color:var(--muted); vertical-align:middle; }
+  .cal-row .a{ font-weight:700; font-size:14px; white-space:nowrap; }
   .plan-card{
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
     padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
@@ -533,6 +566,7 @@
       <button type="button" data-tab="planned"><span class="ico">📌</span><span class="lbl">預計大筆支出</span></button>
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
       <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、發燒…）</span></button>
+      <button type="button" data-tab="calendar"><span class="ico">🗓️</span><span class="lbl">行事曆</span></button>
     </nav>
     <div class="drawer-foot">
       <div class="drawer-user" id="drawerUser"></div>
@@ -758,6 +792,29 @@
         <button class="sort-btn" id="leaveSortBtn" type="button"></button>
       </div>
       <div id="leaveList"></div>
+    </section>
+  </div>
+
+  <div data-page="calendar">
+    <div class="cal-head">
+      <button type="button" class="cal-nav" id="calPrev" aria-label="上個月">◀</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button type="button" class="cal-nav" id="calNext" aria-label="下個月">▶</button>
+      <button type="button" class="sort-btn" id="calToday" style="margin:0;">今天</button>
+    </div>
+    <div class="cal-chips" id="calChips"></div>
+    <div class="cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <section class="group" style="margin-top:18px;">
+      <div class="ghead">
+        <h2 id="calDayTitle"></h2>
+        <button class="addlink" id="addEventBtn" type="button">＋ 新增行程</button>
+      </div>
+      <div id="calDayList"></div>
+    </section>
+    <section class="group">
+      <div class="ghead"><h2>本月摘要</h2></div>
+      <div id="calSummary"></div>
     </section>
   </div>
 
@@ -1325,6 +1382,25 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="eventSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="eventSheetTitle">新增行程</h3>
+    <div class="field"><label>標題</label><input id="evTitle" type="text" placeholder="例如：牙醫回診、跟朋友吃飯、家長會"></div>
+    <div class="row2">
+      <div class="field"><label>日期</label><input id="evDate" type="date"></div>
+      <div class="field"><label>結束日期（選填）</label><input id="evEndDate" type="date"></div>
+    </div>
+    <div class="field"><label>時間（選填）</label><input id="evTime" type="time"></div>
+    <div class="field"><label>備註</label><textarea id="evNote" placeholder="地點、要帶的東西…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="eventCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="eventDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="eventDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="eventSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="plannedSheetBackdrop" hidden>
   <div class="sheet">
     <h3 id="plannedSheetTitle">新增預計支出</h3>
@@ -1488,6 +1564,15 @@
   var editingPlannedId = null;
   var plannedCol = null;
   var plannedFilter = "all";
+  var eventsById = {};
+  var editingEventId = null;
+  var eventCol = null;
+  var calNow = new Date();
+  var calYear = calNow.getFullYear();
+  var calMonth = calNow.getMonth() + 1;
+  var calSelected = null;
+  var calHidden = { transfer: true };
+  var calSig = "";
   var currentPerson = "hua";
   var PERSON_LABEL = { hua:"HUA", yupas:"YUPAS", combined:"兩人合計" };
   var dbReady = false;
@@ -1590,9 +1675,10 @@
     document.getElementById("addBtn").hidden = (tab === "annual" || tab === "other" || tab === "home");
     document.getElementById("personFilterTabs").hidden = !PERSON_FILTERED_TABS[tab];
     document.getElementById("pageTitle").textContent = TAB_TITLE[tab] || "";
+    if (tab === "calendar") renderCalendar();
     window.scrollTo(0, 0);
   }
-  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他" };
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆" };
   var drawerEl = document.getElementById("drawer");
   var drawerBackdropEl = document.getElementById("drawerBackdrop");
   function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
@@ -2078,6 +2164,7 @@
     else if (currentTab === "utility") openAddUtility();
     else if (currentTab === "leave") openAddLeave();
     else if (currentTab === "planned") openAddPlanned();
+    else if (currentTab === "calendar") openAddEvent(calSelected);
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -3739,7 +3826,13 @@
     acctCol = db.collection("accounts");
     acctHistCol = db.collection("accountHistory");
     plannedCol = db.collection("plannedExpenses");
+    eventCol = db.collection("calendarEvents");
     dbReady = true;
+    eventCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      eventsById = next; if (currentTab === "calendar") renderCalendar();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     plannedCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -3838,7 +3931,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -4053,6 +4146,238 @@
       await logAcctHistory({ type:"delete", accountId:editingAcctId, name:old.name || "", prev:oldBal, balance:0, delta:-oldBal, total:total - oldBal });
       closeAcctSheet(); showToast("已刪除");
     }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
+  var CAL_CATS = [
+    { key:"event", name:"行程", color:"var(--plan)" },
+    { key:"salary", name:"薪水", color:"var(--salary)" },
+    { key:"bonus", name:"獎金", color:"var(--bonus)" },
+    { key:"leave", name:"請假", color:"var(--leave)" },
+    { key:"claim", name:"理賠", color:"var(--claim)" },
+    { key:"fever", name:"發燒", color:"var(--fever)" },
+    { key:"planned", name:"預計支出", color:"var(--fixed)" },
+    { key:"transfer", name:"固定轉帳", color:"var(--savings)" }
+  ];
+  function calColor(key){ for (var i = 0; i < CAL_CATS.length; i++) if (CAL_CATS[i].key === key) return CAL_CATS[i].color; return "var(--muted)"; }
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  function ymdStr(y, m, d){ return y + "-" + pad2(m) + "-" + pad2(d); }
+  function calDaysIn(y, m){ return new Date(y, m, 0).getDate(); }
+  function eachDay(startStr, endStr, fn){
+    if (!startStr) return;
+    var s = new Date(startStr + "T00:00:00"), e = new Date((endStr || startStr) + "T00:00:00");
+    if (isNaN(s) || isNaN(e) || e < s) e = s;
+    for (var i = 0; i < 400 && s <= e; i++){ fn(ymdStr(s.getFullYear(), s.getMonth() + 1, s.getDate())); s.setDate(s.getDate() + 1); }
+  }
+  function buildCalMap(y, m){
+    var prefix = y + "-" + pad2(m) + "-";
+    var map = {};
+    function add(date, entry){
+      if (!date || date.indexOf(prefix) !== 0) return;
+      (map[date] = map[date] || []).push(entry);
+    }
+    Object.keys(eventsById).forEach(function(id){
+      var d = eventsById[id];
+      eachDay(d.date, d.endDate, function(day){
+        add(day, { cat:"event", title:d.title || "(未命名)", sub:[d.time, d.note].filter(Boolean).join("　"), evId:id, sort:d.time || "00:00" });
+      });
+    });
+    Object.keys(salariesById).forEach(function(id){
+      var d = salariesById[id], isBonus = d.recordType === "bonus";
+      add(d.payDate, { cat:isBonus ? "bonus" : "salary", title:(isBonus ? (d.bonusName || "獎金") : "薪水") + "　" + (PERSON_LABEL[d.person] || ""), amount:d.amount, tab:"salary", sort:"01" });
+    });
+    Object.keys(leavesById).forEach(function(id){
+      var d = leavesById[id];
+      add(d.date, { cat:"leave", title:(d.leaveType || "請假") + "　" + (Number(d.hours) || 0) + " hr", sub:d.note || "", tab:"leave", sort:"02" });
+    });
+    Object.keys(claimsById).forEach(function(id){
+      var d = claimsById[id], who = (d.company || "") + " " + (d.diagnosis || "");
+      add(d.incidentDate, { cat:"claim", title:"事故：" + who, tab:"other", sort:"03" });
+      add(d.applyDate, { cat:"claim", title:"申請理賠：" + who, tab:"other", sort:"03" });
+      add(d.payDate, { cat:"claim", title:"理賠入帳：" + who, amount:d.amount, tab:"other", sort:"03" });
+    });
+    Object.keys(episodesById).forEach(function(id){
+      var d = episodesById[id];
+      eachDay(d.startDate, d.endDate || d.startDate, function(day){
+        add(day, { cat:"fever", title:(d.person || "") + " 發燒", sub:d.note || "", tab:"other", sort:"04" });
+      });
+    });
+    Object.keys(plannedById).forEach(function(id){
+      var d = plannedById[id];
+      add(d.date, { cat:"planned", title:(d.item || "") + (d.paid ? "（已付）" : ""), amount:d.amount, sub:d.note || "", tab:"planned", sort:"05" });
+    });
+    if (!calHidden.transfer){
+      var dim = calDaysIn(y, m);
+      Object.keys(itemsById).forEach(function(id){
+        var d = itemsById[id];
+        if (!d.transferDay) return;
+        var day = Math.min(Number(d.transferDay), dim);
+        add(ymdStr(y, m, day), { cat:"transfer", title:d.name || "", amount:d.amount, sub:[PERSON_LABEL[d.person], d.account].filter(Boolean).join(" · "), tab:"budget", sort:"06" });
+      });
+    }
+    return map;
+  }
+  function calSignature(){
+    var s = String(calYear) + calMonth + JSON.stringify(calHidden) + calSelected;
+    [eventsById, salariesById, leavesById, claimsById, episodesById, plannedById, itemsById, utilitiesById].forEach(function(o){
+      var ks = Object.keys(o), t = 0;
+      ks.forEach(function(k){ t += Number(o[k].updatedAt) || 0; });
+      s += "|" + ks.length + ":" + t;
+    });
+    return s;
+  }
+  function renderCalendar(){
+    var todayStr = ymdStr(calNow.getFullYear(), calNow.getMonth() + 1, calNow.getDate());
+    var prefix = calYear + "-" + pad2(calMonth) + "-";
+    if (!calSelected || calSelected.indexOf(prefix) !== 0){
+      calSelected = todayStr.indexOf(prefix) === 0 ? todayStr : prefix + "01";
+    }
+    document.getElementById("calTitle").textContent = calYear + " 年 " + calMonth + " 月";
+    var chips = document.getElementById("calChips");
+    chips.innerHTML = "";
+    CAL_CATS.forEach(function(c){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "cal-chip" + (calHidden[c.key] ? " off" : "");
+      b.innerHTML = '<i style="background:' + c.color + '"></i>' + c.name;
+      b.addEventListener("click", function(){ calHidden[c.key] = !calHidden[c.key]; renderCalendar(); });
+      chips.appendChild(b);
+    });
+    var map = buildCalMap(calYear, calMonth);
+    Object.keys(map).forEach(function(k){ map[k] = map[k].filter(function(e){ return !calHidden[e.cat]; }).sort(function(a, b){ return String(a.sort).localeCompare(String(b.sort)); }); });
+    var grid = document.getElementById("calGrid");
+    grid.innerHTML = "";
+    var first = new Date(calYear, calMonth - 1, 1).getDay();
+    var dim = calDaysIn(calYear, calMonth);
+    var total = Math.ceil((first + dim) / 7) * 7;
+    for (var i = 0; i < total; i++){
+      var dayNum = i - first + 1;
+      var cell = document.createElement("div");
+      if (dayNum < 1 || dayNum > dim){
+        cell.className = "cal-day other";
+        var od = new Date(calYear, calMonth - 1, dayNum);
+        cell.innerHTML = '<span class="n">' + od.getDate() + '</span>';
+        grid.appendChild(cell);
+        continue;
+      }
+      var ds = ymdStr(calYear, calMonth, dayNum);
+      var list = map[ds] || [];
+      cell.className = "cal-day" + (ds === todayStr ? " today" : "") + (ds === calSelected ? " sel" : "");
+      var cats = [];
+      list.forEach(function(e){ if (cats.indexOf(e.cat) < 0) cats.push(e.cat); });
+      var html = '<span class="n num">' + dayNum + '</span>';
+      html += '<div class="dots">' + cats.slice(0, 5).map(function(c){ return '<i style="background:' + calColor(c) + '"></i>'; }).join("") + '</div>';
+      html += '<div class="lbls">' + list.slice(0, 3).map(function(e){ return '<div style="border-left-color:' + calColor(e.cat) + '">' + escapeHtml(e.title) + '</div>'; }).join("") + (list.length > 3 ? '<div class="more">+' + (list.length - 3) + ' 項</div>' : "") + '</div>';
+      cell.innerHTML = html;
+      (function(dstr){ cell.addEventListener("click", function(){ calSelected = dstr; renderCalendar(); }); })(ds);
+      grid.appendChild(cell);
+    }
+    var wd = ["日", "一", "二", "三", "四", "五", "六"][new Date(calSelected + "T00:00:00").getDay()];
+    document.getElementById("calDayTitle").textContent = calSelected.replace(/-/g, "/") + "（" + wd + "）";
+    var dl = document.getElementById("calDayList");
+    dl.innerHTML = "";
+    var dayList = map[calSelected] || [];
+    if (!dayList.length){
+      dl.innerHTML = '<div class="empty">這天沒有紀錄，點右上角「＋ 新增行程」</div>';
+    }
+    dayList.forEach(function(e){
+      var row = document.createElement("div");
+      row.className = "cal-row";
+      var cat = CAL_CATS.filter(function(c){ return c.key === e.cat; })[0];
+      row.innerHTML = '<div class="bar" style="background:' + calColor(e.cat) + '"></div><div class="cb"><div class="t"><span class="tag">' + cat.name + '</span>' + escapeHtml(e.title) + '</div>' +
+        (e.sub ? '<div class="s">' + escapeHtml(e.sub) + '</div>' : "") + '</div>' +
+        (e.amount ? '<div class="a num">' + fmt(e.amount) + '</div>' : "");
+      row.addEventListener("click", function(){
+        if (e.evId){ openEditEvent(e.evId); }
+        else if (e.tab){ switchTab(e.tab); }
+      });
+      dl.appendChild(row);
+    });
+    var sum = document.getElementById("calSummary");
+    sum.innerHTML = "";
+    var counts = {};
+    Object.keys(map).forEach(function(k){ map[k].forEach(function(e){ counts[e.cat] = (counts[e.cat] || 0) + 1; }); });
+    var line = CAL_CATS.filter(function(c){ return counts[c.key]; }).map(function(c){ return c.name + " " + counts[c.key]; }).join("　·　");
+    var util = Object.keys(utilitiesById).map(function(id){ return utilitiesById[id]; }).filter(function(u){ return Number(u.year) === calYear && Number(u.month) === calMonth; })[0];
+    var html = '<div class="cal-row" style="cursor:default;"><div class="cb"><div class="t">本月紀錄</div><div class="s">' + (line || "這個月還沒有紀錄") + '</div></div></div>';
+    if (util){
+      var ut = (Number(util.rent) || 0) + (Number(util.water) || 0) + (Number(util.electric) || 0) + (Number(util.gas) || 0);
+      html += '<div class="cal-row" data-go="utility"><div class="bar" style="background:var(--utility)"></div><div class="cb"><div class="t"><span class="tag">水電瓦斯</span>本月合計</div><div class="s">房租 ' + fmt(util.rent) + '　水 ' + fmt(util.water) + '　電 ' + fmt(util.electric) + '　瓦斯 ' + fmt(util.gas) + '</div></div><div class="a num">' + fmt(ut) + '</div></div>';
+    }
+    sum.innerHTML = html;
+    var goEl = sum.querySelector("[data-go]");
+    if (goEl) goEl.addEventListener("click", function(){ switchTab("utility"); });
+    calSig = calSignature();
+  }
+  setInterval(function(){ if (currentTab === "calendar" && calSignature() !== calSig) renderCalendar(); }, 1200);
+  document.getElementById("calPrev").addEventListener("click", function(){ calMonth--; if (calMonth < 1){ calMonth = 12; calYear--; } calSelected = null; renderCalendar(); });
+  document.getElementById("calNext").addEventListener("click", function(){ calMonth++; if (calMonth > 12){ calMonth = 1; calYear++; } calSelected = null; renderCalendar(); });
+  document.getElementById("calToday").addEventListener("click", function(){ calNow = new Date(); calYear = calNow.getFullYear(); calMonth = calNow.getMonth() + 1; calSelected = null; renderCalendar(); });
+
+  function openAddEvent(dateStr){
+    editingEventId = null;
+    document.getElementById("eventSheetTitle").textContent = "新增行程";
+    document.getElementById("eventDeleteBtn").hidden = true;
+    document.getElementById("eventDuplicateBtn").hidden = true;
+    document.getElementById("evTitle").value = "";
+    document.getElementById("evDate").value = dateStr || "";
+    document.getElementById("evEndDate").value = "";
+    document.getElementById("evTime").value = "";
+    document.getElementById("evNote").value = "";
+    document.getElementById("eventSheetBackdrop").hidden = false;
+  }
+  function openEditEvent(id){
+    var d = eventsById[id]; if (!d) return;
+    editingEventId = id;
+    document.getElementById("eventSheetTitle").textContent = "編輯行程";
+    document.getElementById("eventDeleteBtn").hidden = false;
+    document.getElementById("eventDuplicateBtn").hidden = false;
+    document.getElementById("evTitle").value = d.title || "";
+    document.getElementById("evDate").value = d.date || "";
+    document.getElementById("evEndDate").value = d.endDate || "";
+    document.getElementById("evTime").value = d.time || "";
+    document.getElementById("evNote").value = d.note || "";
+    document.getElementById("eventSheetBackdrop").hidden = false;
+  }
+  function closeEventSheet(){ document.getElementById("eventSheetBackdrop").hidden = true; }
+  document.getElementById("addEventBtn").addEventListener("click", function(){ openAddEvent(calSelected); });
+  document.getElementById("eventCancelBtn").addEventListener("click", closeEventSheet);
+  document.getElementById("eventSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeEventSheet(); });
+  document.getElementById("eventDuplicateBtn").addEventListener("click", function(){
+    editingEventId = null;
+    document.getElementById("eventSheetTitle").textContent = "新增行程";
+    document.getElementById("eventDeleteBtn").hidden = true;
+    document.getElementById("eventDuplicateBtn").hidden = true;
+  });
+  document.getElementById("eventSaveBtn").addEventListener("click", async function(){
+    var title = document.getElementById("evTitle").value.trim();
+    var date = document.getElementById("evDate").value;
+    if (!title){ showToast("請輸入標題"); return; }
+    if (!date){ showToast("請選擇日期"); return; }
+    var data = {
+      title: title, date: date,
+      endDate: document.getElementById("evEndDate").value,
+      time: document.getElementById("evTime").value,
+      note: document.getElementById("evNote").value.trim(),
+      updatedAt: Date.now()
+    };
+    if (data.endDate && data.endDate < date){ showToast("結束日期不能早於開始日期"); return; }
+    if (!dbReady || !eventCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingEventId){
+        await eventCol.doc(editingEventId).set(Object.assign({}, eventsById[editingEventId], data));
+      } else {
+        data.createdAt = Date.now();
+        await eventCol.add(data);
+      }
+      closeEventSheet(); showToast("已儲存");
+      var p = date.split("-"); calYear = Number(p[0]); calMonth = Number(p[1]); calSelected = date;
+      renderCalendar();
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("eventDeleteBtn").addEventListener("click", async function(){
+    if (!editingEventId || !eventCol) return;
+    try{ await eventCol.doc(editingEventId).delete(); closeEventSheet(); showToast("已刪除"); }
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
 
