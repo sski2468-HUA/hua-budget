@@ -406,8 +406,9 @@
 
   .total-pill{ display:inline-flex; gap:4px; background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:16px 28px; font-size:20px; font-weight:800; margin-top:16px; }
   .home-head{ display:flex; justify-content:space-between; align-items:center; margin:22px 0 12px; }
-  .home-head h2{ margin:0; font-size:24px; font-weight:900; }
-  .pill-btn{ border:none; background:var(--brand); color:var(--brand-ink); font-family:inherit; font-size:15px; font-weight:800; padding:10px 20px; border-radius:99px; cursor:pointer; }
+  .home-head h2{ margin:0; font-size:20px; font-weight:900; white-space:nowrap; }
+  .pill-btn{ border:none; background:var(--brand); color:var(--brand-ink); font-family:inherit; font-size:14px; font-weight:800; padding:9px 14px; border-radius:99px; cursor:pointer; white-space:nowrap; }
+  .home-head .sort-btn{ white-space:nowrap; padding:8px 10px; }
   .acct-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px 10px; }
   .acct-cell{ cursor:pointer; padding:4px 2px; min-width:0; }
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -431,6 +432,8 @@
   .legend i{ display:inline-block; width:12px; height:12px; border-radius:4px; margin-right:5px; vertical-align:-1px; }
   .fab{ bottom:calc(24px + env(safe-area-inset-bottom, 0px)); right:18px; }
   .toast{ bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  @media (max-width:700px){ body{ zoom:1.12; } }
 
   :root[data-theme="dark"]{
     --bg:#111111; --surface:#1C1C1E; --surface-2:#2A2A2D; --line:#2E2E31;
