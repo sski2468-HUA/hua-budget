@@ -422,6 +422,29 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
+  :root{ --period:#D6336C; --period-bg:#FBE4EC; }
+  section.group h2 .dot.period{ background:var(--period); }
+  .add-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .add-opt{ display:flex; align-items:center; gap:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:14px; padding:14px 12px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; text-align:left; }
+  .add-opt:active{ transform:scale(.97); }
+  .add-opt .ico{ font-size:20px; }
+  .sym-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .sym-chip{ border:1px solid var(--line); background:var(--bg); color:var(--muted); border-radius:99px; padding:7px 13px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .sym-chip.on{ background:var(--period-bg); color:var(--period); border-color:var(--period); }
+  .cycle-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:8px; box-shadow:var(--shadow); cursor:pointer; border-left:4px solid var(--period); }
+  .cycle-card .row1{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .cycle-card .rg{ font-weight:700; font-size:14.5px; }
+  .cycle-card .ln{ font-weight:700; color:var(--period); font-size:14px; white-space:nowrap; }
+  .cycle-card .meta{ font-size:12px; color:var(--muted); margin-top:3px; white-space:pre-wrap; }
+  .plog-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin-bottom:6px; box-shadow:var(--shadow); cursor:pointer; border-left:4px solid var(--period); }
+  .plog-card .row1{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .plog-card .tm{ font-size:12px; color:var(--muted); }
+  .plog-card .rel{ font-size:10.5px; font-weight:700; background:var(--period-bg); color:var(--period); border-radius:6px; padding:1px 7px; }
+  .plog-card .pain{ font-weight:900; color:var(--period); font-size:14px; }
+  .plog-card .tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .plog-card .tags span{ font-size:12px; background:var(--surface-2); border-radius:6px; padding:2px 8px; }
+  .plog-card .tags .med{ background:var(--savings-bg); color:var(--savings); font-weight:700; }
+  .plog-card .nt{ font-size:12.5px; color:var(--muted); margin-top:5px; white-space:pre-wrap; }
   .cal-head{ display:flex; align-items:center; gap:8px; margin-top:14px; }
   .cal-title{ flex:1; text-align:center; font-size:18px; font-weight:900; }
   .cal-nav{ border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; width:38px; height:34px; cursor:pointer; font-size:13px; }
@@ -455,6 +478,23 @@
   .cal-row .s{ font-size:12px; color:var(--muted); margin-top:2px; white-space:pre-wrap; }
   .cal-row .tag{ display:inline-block; font-size:10px; font-weight:700; border-radius:6px; padding:1px 6px; margin-right:5px; background:var(--surface-2); color:var(--muted); vertical-align:middle; }
   .cal-row .a{ font-weight:700; font-size:14px; white-space:nowrap; }
+  #cmpBox{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); }
+  .cmp-head, .cmp-row{ display:grid; grid-template-columns:.9fr 1fr 1fr 1.1fr; gap:6px; align-items:baseline; padding:7px 0; font-size:12.5px; }
+  .cmp-head{ color:var(--muted); font-weight:700; border-bottom:1px solid var(--line); text-align:right; }
+  .cmp-head span:first-child{ text-align:left; }
+  .cmp-row{ border-bottom:1px dashed var(--line); text-align:right; }
+  .cmp-row:last-of-type{ border-bottom:none; }
+  .cmp-l{ text-align:left; font-weight:700; color:var(--ink); }
+  .cmp-b{ color:var(--muted); }
+  .cmp-d{ font-weight:700; }
+  .cmp-d small{ font-weight:500; font-size:10.5px; }
+  .cmp-d.up{ color:var(--income); }
+  .cmp-d.down{ color:var(--fixed); }
+  .pay-toggle{ margin-left:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); border-radius:99px; padding:2px 10px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; vertical-align:middle; }
+  .pay-toggle.paid{ background:var(--income-bg); color:var(--income); border-color:var(--income); }
+  .pay-toggle.unpaid{ background:var(--fixed-bg); color:var(--fixed); border-color:var(--fixed); }
+  .salary-card.unpaid{ border-style:dashed; border-left-style:solid; }
+  .salary-card.unpaid .net{ opacity:.65; }
   .plan-card{
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
     padding:14px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer;
@@ -511,6 +551,7 @@
   html[data-view="web"] .toast{ bottom:40px; }
 
   :root[data-theme="dark"]{
+    --period:#F06595; --period-bg:#3B1826;
     --bg:#111111; --surface:#1C1C1E; --surface-2:#2A2A2D; --line:#2E2E31;
     --brand:#E8622C; --brand-ink:#FFFFFF;
   }
@@ -565,6 +606,7 @@
       <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度計畫</span></button>
       <button type="button" data-tab="planned"><span class="ico">📌</span><span class="lbl">預計大筆支出</span></button>
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
+      <button type="button" data-tab="period"><span class="ico">🌸</span><span class="lbl">經期紀錄</span></button>
       <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、發燒…）</span></button>
       <button type="button" data-tab="calendar"><span class="ico">🗓️</span><span class="lbl">行事曆</span></button>
     </nav>
@@ -647,8 +689,10 @@
   </div>
 
   <div data-page="salary">
-    <div class="breakdown-strip" style="grid-template-columns:1fr;">
-      <div class="chip"><div class="lbl">累計已記錄薪水筆數</div><div class="val num" id="salaryTotalCount">0</div></div>
+    <div class="breakdown-strip">
+      <div class="chip"><div class="lbl">累計筆數</div><div class="val num" id="salaryTotalCount">0</div></div>
+      <div class="chip"><div class="lbl">已發合計</div><div class="val num" id="salaryPaidTotal" style="color:var(--income)">$0</div></div>
+      <div class="chip"><div class="lbl">未發合計</div><div class="val num" id="salaryUnpaidTotal" style="color:var(--fixed)">$0</div></div>
     </div>
     <div class="field" style="margin-top:12px; margin-bottom:0;">
       <label>依年份篩選</label>
@@ -662,6 +706,14 @@
         <button type="button" data-rfilter="bonus">獎金</button>
       </div>
     </div>
+    <div class="field" style="margin-top:12px; margin-bottom:0;">
+      <label>依發放狀態篩選</label>
+      <div class="subtabs" id="salaryPaidFilterTabs">
+        <button type="button" data-sfilter="all" class="active">全部</button>
+        <button type="button" data-sfilter="paid">已發</button>
+        <button type="button" data-sfilter="unpaid">未發</button>
+      </div>
+    </div>
     <div class="field" id="bonusSubFilterField" style="margin-top:10px; margin-bottom:0;" hidden>
       <label>獎金子分類</label>
       <div class="subtabs" id="bonusSubFilterTabs" style="display:grid; grid-template-columns:repeat(5,1fr); padding:3px;">
@@ -672,6 +724,22 @@
         <button type="button" data-bsub="其他" style="padding:8px 0; font-size:12px;">其他</button>
       </div>
     </div>
+
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead"><h2><span class="dot salary"></span>薪資比較</h2></div>
+      <div class="row2" style="margin-bottom:10px;">
+        <div class="field" style="margin:0;"><label>這一期</label><select id="cmpPick"></select></div>
+        <div class="field" style="margin:0;"><label>比較基準</label>
+          <select id="cmpBase">
+            <option value="prev">上一期</option>
+            <option value="6">前 6 期平均</option>
+            <option value="12">前 12 期平均</option>
+            <option value="all">之前全部平均</option>
+          </select>
+        </div>
+      </div>
+      <div id="cmpBox"></div>
+    </section>
 
     <section class="group" style="margin-top:14px;">
       <div class="ghead">
@@ -795,6 +863,44 @@
     </section>
   </div>
 
+  <div data-page="period">
+    <div class="breakdown-strip">
+      <div class="chip"><div class="lbl">平均週期</div><div class="val num" id="perAvgCycle">-</div></div>
+      <div class="chip"><div class="lbl">平均經期</div><div class="val num" id="perAvgLen">-</div></div>
+      <div class="chip"><div class="lbl">預計下次</div><div class="val num" id="perNext">-</div></div>
+    </div>
+    <div class="section-hint" id="perNextHint" style="margin:8px 0 0; text-align:center;"></div>
+
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead">
+        <h2><span class="dot period"></span>經期紀錄 <span class="count" id="cycleCount"></span></h2>
+        <button class="addlink" id="addCycleBtn" type="button">＋ 記錄經期</button>
+      </div>
+      <div id="cycleList"></div>
+    </section>
+
+    <section class="group">
+      <div class="ghead">
+        <h2><span class="dot period"></span>症狀與服藥 <span class="count" id="plogCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="periodSortBtn" type="button"></button>
+          <button class="addlink" id="addPLogBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>顯示範圍</label>
+        <select id="plogRange">
+          <option value="all">全部</option>
+          <option value="30">近 30 天</option>
+          <option value="90">近 90 天</option>
+          <option value="365">近 1 年</option>
+        </select>
+      </div>
+      <div class="cal-chips" id="plStats" style="flex-wrap:wrap; overflow:visible;"></div>
+      <div id="plogList" style="margin-top:8px;"></div>
+    </section>
+  </div>
+
   <div data-page="calendar">
     <div class="cal-head">
       <button type="button" class="cal-nav" id="calPrev" aria-label="上個月">◀</button>
@@ -808,7 +914,7 @@
     <section class="group" style="margin-top:18px;">
       <div class="ghead">
         <h2 id="calDayTitle"></h2>
-        <button class="addlink" id="addEventBtn" type="button">＋ 新增行程</button>
+        <button class="addlink" id="addEventBtn" type="button">＋ 新增</button>
       </div>
       <div id="calDayList"></div>
     </section>
@@ -1051,12 +1157,29 @@
     <div class="field" id="bonusNameField" hidden><label>獎金名稱</label><input id="sBonusName" type="text" placeholder="例如：端午獎金、中秋獎金、年終獎金、慰勉金"></div>
 
     <div id="salaryOnlySections">
-      <div class="section-label">應發項目</div>
+      <div class="section-label">固定應發項目（每月相同）</div>
       <div class="row2">
-        <div class="field"><label>底薪</label><input id="sBaseSalary" type="number" inputmode="decimal" placeholder="0"></div>
-        <div class="field"><label>效率獎金</label><input id="sBonus" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>本薪</label><input id="sBaseSalary" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>交通津貼</label><input id="sTransport" type="number" inputmode="decimal" placeholder="0"></div>
       </div>
-      <div class="field"><label>應發金額</label><input id="sGrossAmount" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="row2">
+        <div class="field"><label>地區津貼</label><input id="sRegion" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>作業用品代金</label><input id="sSupply" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>伙食津貼</label><input id="sMeal" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="field"><label>住房補貼</label><input id="sHousing" type="number" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="section-label">變動應發項目</div>
+      <div class="field"><label>效率獎金（每月不同）</label><input id="sBonus" type="number" inputmode="decimal" placeholder="0"></div>
+      <div class="section-label">本月其他核發項目</div>
+      <div class="section-hint">不是每月都有的，例如醫療補助費、應稅補發、加班費</div>
+      <div id="sExtraList"></div>
+      <button type="button" class="btn ghost" id="sExtraAddBtn" style="width:100%; margin-bottom:12px;">＋ 新增本月其他核發項目</button>
+      <datalist id="extraNameList">
+        <option value="醫療補助費"><option value="應稅補發"><option value="免稅補發"><option value="臨時加班費"><option value="假日加班費"><option value="其他津貼"><option value="公傷補償墊付款"><option value="久任獎金"><option value="工作獎金"><option value="調任差旅津貼">
+      </datalist>
+      <div class="field"><label>應發金額（上面項目自動加總，可手動修改）</label><input id="sGrossAmount" type="number" inputmode="decimal" placeholder="0"></div>
 
       <div class="section-label">缺勤 / 請假時數</div>
       <div class="row2">
@@ -1094,6 +1217,10 @@
       <div class="line total"><span>建議實發金額</span><span class="v num" id="calcSuggested">$0</span></div>
     </div>
 
+    <div class="field" style="display:flex; align-items:center; gap:10px;">
+      <input id="sPaid" type="checkbox" style="width:22px; height:22px; margin:0;">
+      <label for="sPaid" style="margin:0; font-size:14px; color:var(--ink);">已發放（已入帳）</label>
+    </div>
     <div class="field"><label>備註</label><textarea id="sGeneralNote" placeholder="例如：請假、調薪、獎金說明…"></textarea></div>
 
     <div class="sheet-actions">
@@ -1382,6 +1509,53 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="calAddBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="calAddTitle">新增到這一天</h3>
+    <div class="add-grid" id="calAddGrid"></div>
+    <div class="sheet-actions"><button class="btn ghost" id="calAddCancel" type="button">取消</button></div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="cycleSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="cycleSheetTitle">記錄經期</h3>
+    <div class="row2">
+      <div class="field"><label>開始日期</label><input id="pcStart" type="date"></div>
+      <div class="field"><label>結束日期（進行中可留空）</label><input id="pcEnd" type="date"></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="pcNote" placeholder="經血量、整體狀況…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="cycleCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="cycleDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="cycleDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="cycleSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="plogSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="plogSheetTitle">新增症狀 / 服藥</h3>
+    <div class="row2">
+      <div class="field"><label>日期</label><input id="plgDate" type="date"></div>
+      <div class="field"><label>時間（選填）</label><input id="plgTime" type="time"></div>
+    </div>
+    <div class="field"><label>不舒服的症狀（可複選）</label><div class="sym-chips" id="plgChips"></div></div>
+    <div class="row2">
+      <div class="field"><label>疼痛程度 0–10（選填）</label><input id="plgPain" type="number" min="0" max="10" inputmode="numeric" placeholder="例如：6"></div>
+      <div class="field"><label>服藥</label><input id="plgMed" type="text" list="medList" placeholder="例如：依普芬 400mg"><datalist id="medList"></datalist></div>
+    </div>
+    <div class="field"><label>備註</label><textarea id="plgNote" placeholder="吃藥後的狀況、其他症狀…"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="plogCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="plogDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="plogDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="plogSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="eventSheetBackdrop" hidden>
   <div class="sheet">
     <h3 id="eventSheetTitle">新增行程</h3>
@@ -1564,6 +1738,14 @@
   var editingPlannedId = null;
   var plannedCol = null;
   var plannedFilter = "all";
+  var cyclesById = {};
+  var plogsById = {};
+  var editingCycleId = null;
+  var editingPLogId = null;
+  var cycleCol = null;
+  var plogCol = null;
+  var plgSelected = [];
+  var PL_SYMPTOMS = ["頭痛","腰痠","肚子痛","拉肚子","噁心","疲倦","情緒起伏","胸脹","失眠","食慾變化","經血量多","經血量少"];
   var eventsById = {};
   var editingEventId = null;
   var eventCol = null;
@@ -1639,7 +1821,7 @@
   // desc = newest/largest first (default), asc = oldest/smallest first
   var SORT_DIR = {
     budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
-    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc"
+    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc"
   };
   function wireSortBtn(btnId, key, renderFn){
     var btn = document.getElementById(btnId);
@@ -1678,7 +1860,7 @@
     if (tab === "calendar") renderCalendar();
     window.scrollTo(0, 0);
   }
-  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆" };
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆", period:"經期紀錄" };
   var drawerEl = document.getElementById("drawer");
   var drawerBackdropEl = document.getElementById("drawerBackdrop");
   function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
@@ -1889,6 +2071,18 @@
 
   var salaryTypeFilterValue = "all";
   var bonusSubFilterValue = "all";
+  var salaryPaidFilterValue = "all";
+  function salaryPaid(d){
+    if (typeof d.paid === "boolean") return d.paid;
+    return !!d.payDate && d.payDate <= todayStr();
+  }
+  document.querySelectorAll("#salaryPaidFilterTabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      salaryPaidFilterValue = b.getAttribute("data-sfilter");
+      document.querySelectorAll("#salaryPaidFilterTabs button").forEach(function(x){ x.classList.toggle("active", x === b); });
+      renderSalaries();
+    });
+  });
   var BONUS_NAME_MAP = { "年終":"年終獎金", "中秋":"中秋獎金", "端午":"端午獎金" };
   document.querySelectorAll("#salaryTypeFilterTabs button").forEach(function(b){
     b.addEventListener("click", function(){
@@ -1916,7 +2110,63 @@
     });
   });
 
+  var CMP_METRICS = [
+    { key:"amount", label:"實發金額", good:"up", get:function(d){ return Number(d.amount) || 0; } },
+    { key:"gross", label:"應發金額", good:"up", get:function(d){ return Number(d.grossAmount) || 0; } },
+    { key:"eff", label:"效率獎金", good:"up", get:function(d){ return Number(d.bonus) || 0; } },
+    { key:"extra", label:"其他核發", good:"up", get:function(d){ return (d.extraItems || []).reduce(function(s, x){ return s + (Number(x.amount) || 0); }, 0); } },
+    { key:"absence", label:"缺勤減發", good:"down", get:function(d){ return Number(d.absenceDeduction) || 0; } },
+    { key:"deduct", label:"扣款合計", good:"down", get:function(d){ return (Number(d.laborIns)||0) + (Number(d.healthIns)||0) + (Number(d.welfare)||0) + (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0); } }
+  ];
+  function fmtDiff(n){ n = Math.round(n); return (n > 0 ? "+" : n < 0 ? "-" : "") + Math.abs(n).toLocaleString("en-US"); }
+  function renderSalaryCompare(){
+    var box = document.getElementById("cmpBox");
+    var pickSel = document.getElementById("cmpPick");
+    if (currentPerson === "combined"){
+      pickSel.innerHTML = "";
+      box.innerHTML = '<div class="empty">請先在上方切換成 HUA 或 YUPAS，才能比較薪資</div>';
+      return;
+    }
+    var recs = Object.keys(salariesById).map(function(id){ return Object.assign({}, salariesById[id], { _id:id }); })
+      .filter(function(d){ return (d.person || "hua") === currentPerson && d.recordType !== "bonus" && d.payDate; })
+      .sort(function(a, b){ return b.payDate.localeCompare(a.payDate); });
+    var prevVal = pickSel.value;
+    pickSel.innerHTML = recs.map(function(d){ return '<option value="' + d._id + '">' + d.payDate + (salaryPaid(d) ? "" : "（未發）") + '</option>'; }).join("");
+    if (!recs.length){ box.innerHTML = '<div class="empty">還沒有薪水紀錄可以比較</div>'; return; }
+    var defId = (recs.filter(function(d){ return d.payDate <= todayStr(); })[0] || recs[0])._id;
+    pickSel.value = (cmpPickTouched && recs.some(function(d){ return d._id === prevVal; })) ? prevVal : defId;
+    var idx = recs.findIndex(function(d){ return d._id === pickSel.value; });
+    var cur = recs[idx];
+    var older = recs.slice(idx + 1);
+    var mode = document.getElementById("cmpBase").value;
+    var basis = mode === "prev" ? older.slice(0, 1) : mode === "all" ? older : older.slice(0, Number(mode));
+    if (!basis.length){ box.innerHTML = '<div class="empty">這一期之前沒有紀錄，沒有可比較的對象</div>'; return; }
+    var shortDate = function(s){ return s.slice(2).replace(/-/g, "/"); };
+    var baseLabel = mode === "prev" ? shortDate(basis[0].payDate) : "前" + basis.length + "期均";
+    var rows = "", notes = [];
+    CMP_METRICS.forEach(function(m){
+      var c = m.get(cur);
+      var b = basis.reduce(function(s, d){ return s + m.get(d); }, 0) / basis.length;
+      var diff = c - b;
+      var pct = b ? (diff / b * 100) : null;
+      var cls = Math.round(diff) === 0 ? "" : ((diff > 0) === (m.good === "up") ? "up" : "down");
+      rows += '<div class="cmp-row"><span class="cmp-l">' + m.label + '</span><span class="num cmp-v">' + fmt(c) + '</span><span class="num cmp-v cmp-b">' + fmt(b) + '</span><span class="num cmp-d ' + cls + '">' + fmtDiff(diff) + (pct !== null && Math.round(diff) !== 0 ? '<small> (' + (pct > 0 ? "+" : "") + pct.toFixed(1) + '%)</small>' : "") + '</span></div>';
+      if (m.key !== "amount" && m.key !== "gross") notes.push({ label:m.label, diff:diff });
+    });
+    notes = notes.filter(function(n){ return Math.round(n.diff) !== 0; }).sort(function(a, b){ return Math.abs(b.diff) - Math.abs(a.diff); }).slice(0, 3);
+    var netDiff = CMP_METRICS[0].get(cur) - basis.reduce(function(s, d){ return s + CMP_METRICS[0].get(d); }, 0) / basis.length;
+    var summaryBase = mode === "prev" ? "上一期（" + basis[0].payDate + "）" : baseLabel === "前" + basis.length + "期均" ? "前 " + basis.length + " 期平均" : baseLabel;
+    var summary = "實發" + (Math.round(netDiff) === 0 ? "與" + summaryBase + "相同" : "比" + summaryBase + (netDiff > 0 ? "多 " : "少 ") + Math.abs(Math.round(netDiff)).toLocaleString("en-US")) +
+      (notes.length ? "；主要變動：" + notes.map(function(n){ return n.label + " " + fmtDiff(n.diff); }).join("、") : "");
+    box.innerHTML = '<div class="cmp-head"><span></span><span>' + escapeHtml(shortDate(cur.payDate)) + '</span><span>' + escapeHtml(baseLabel) + '</span><span>差異</span></div>' + rows +
+      '<div class="section-hint" style="margin:8px 2px 0;">' + escapeHtml(summary) + '</div>';
+  }
+  var cmpPickTouched = false;
+  document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
+  document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
+
   function renderSalaries(){
+    renderSalaryCompare();
     var list = document.getElementById("salaryList");
     list.innerHTML = "";
     var allUnfiltered = Object.keys(salariesById).map(function(id){
@@ -1948,9 +2198,16 @@
         return d.bonusName === BONUS_NAME_MAP[bonusSubFilterValue];
       });
     }
+    var paidSum = 0, unpaidSum = 0;
+    all.forEach(function(d){ if (salaryPaid(d)) paidSum += Number(d.amount) || 0; else unpaidSum += Number(d.amount) || 0; });
+    document.getElementById("salaryPaidTotal").textContent = fmt(paidSum);
+    document.getElementById("salaryUnpaidTotal").textContent = fmt(unpaidSum);
+    if (salaryPaidFilterValue !== "all"){
+      all = all.filter(function(d){ return salaryPaidFilterValue === "paid" ? salaryPaid(d) : !salaryPaid(d); });
+    }
     document.getElementById("salaryCount").textContent = all.length ? "(" + all.length + ")" : "";
     var filteredTotal = all.reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
-    var totalLabel = (salaryYearFilterValue === "all" && salaryTypeFilterValue === "all") ? "總額" : "篩選總額";
+    var totalLabel = (salaryYearFilterValue === "all" && salaryTypeFilterValue === "all" && salaryPaidFilterValue === "all") ? "總額" : "篩選總額";
     document.getElementById("salaryFilteredTotal").textContent = totalLabel + " " + fmt(filteredTotal);
 
     if (!all.length){
@@ -1965,12 +2222,14 @@
     all.forEach(function(d){
       var isBonus = d.recordType === "bonus";
       var el = document.createElement("div");
-      el.className = "salary-card" + (isBonus ? " bonus-card" : "");
+      var isPaid = salaryPaid(d);
+      el.className = "salary-card" + (isBonus ? " bonus-card" : "") + (isPaid ? "" : " unpaid");
       var titleLabel = isBonus ? escapeHtml(d.bonusName || "獎金") : escapeHtml(d.payDate || "未填日期");
       var dateLabel = titleLabel +
         (isBonus ? '<span class="bonus-badge">🎁 獎金</span>' : '') +
         (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '') +
-        (d.historical ? '<span class="hist-badge">歷史</span>' : '');
+        (d.historical ? '<span class="hist-badge">歷史</span>' : '') +
+        '<button type="button" class="pay-toggle ' + (isPaid ? "paid" : "unpaid") + '">' + (isPaid ? "✓ 已發" : "○ 未發") + '</button>';
       var html =
         '<div class="row1"><span class="date">' + dateLabel + '</span>' +
           '<span class="net num">' + fmt(d.amount) + '</span></div>';
@@ -1984,6 +2243,8 @@
         var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
         var metaParts = [];
         if (d.grossAmount) metaParts.push("應發 " + fmt(d.grossAmount));
+        if (d.bonus) metaParts.push("效率獎金 " + fmt(d.bonus));
+        (d.extraItems || []).forEach(function(x){ metaParts.push(escapeHtml(x.name || "其他") + " " + fmt(x.amount)); });
         if (deductionTotal) metaParts.push("扣款 " + fmt(deductionTotal));
         if (leaveHours) metaParts.push("請假 " + leaveHours + "hr");
         if (d.rating) metaParts.push("考績 " + escapeHtml(d.rating));
@@ -1999,12 +2260,19 @@
         html += '<div class="note">' + escapeHtml(d.generalNote) + '</div>';
       }
       el.innerHTML = html;
+      el.querySelector(".pay-toggle").addEventListener("click", async function(e){
+        e.stopPropagation();
+        if (!dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return; }
+        try{
+          await salaryCol.doc(d._id).set(Object.assign({}, salariesById[d._id], { paid: !isPaid, updatedAt: Date.now() }));
+        }catch(err){ showToast("更新失敗，請再試一次"); }
+      });
       el.addEventListener("click", function(){ openEditSalary(d); });
       list.appendChild(el);
     });
   }
 
-  var SALARY_NUM_FIELDS = ["sBaseSalary","sBonus","sGrossAmount","sAbsenceHours","sAbsenceDeduction",
+  var SALARY_NUM_FIELDS = ["sBaseSalary","sTransport","sRegion","sSupply","sMeal","sHousing","sBonus","sGrossAmount","sAbsenceHours","sAbsenceDeduction",
     "sLeavePhysio","sLeaveSick","sLeavePersonal","sLaborIns","sHealthIns","sWelfare","sAdvance","sOther","sParking"];
   function numVal(id){ return parseFloat(document.getElementById(id).value) || 0; }
 
@@ -2106,10 +2374,43 @@
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
   }
   var SALARY_PRESET = {
-    sBaseSalary: 50600, sBonus: 9775, sGrossAmount: 78481,
+    sBaseSalary: 47240, sTransport: 1490, sRegion: 2500, sSupply: 4000, sMeal: 3000, sHousing: 5000,
+    sGrossAmount: 63230,
     sLaborIns: 1145, sHealthIns: 990, sWelfare: 253,
     sAdvance: 23620, sOther: 0, sParking: 3000
   };
+  var salaryExtras = [];
+  var GROSS_COMPONENT_IDS = ["sBaseSalary","sTransport","sRegion","sSupply","sMeal","sHousing","sBonus"];
+  function recomputeGross(){
+    var sum = GROSS_COMPONENT_IDS.reduce(function(s, id){ return s + numVal(id); }, 0);
+    salaryExtras.forEach(function(x){ sum += Number(x.amount) || 0; });
+    document.getElementById("sGrossAmount").value = sum || "";
+    updateSalaryCalcBox();
+  }
+  function renderSalaryExtras(){
+    var box = document.getElementById("sExtraList");
+    box.innerHTML = "";
+    salaryExtras.forEach(function(x, i){
+      var row = document.createElement("div");
+      row.className = "row2";
+      row.style.cssText = "grid-template-columns:1.4fr 1fr auto; align-items:end; margin-bottom:8px;";
+      row.innerHTML = '<div class="field" style="margin:0;"><label>項目名稱</label><input type="text" list="extraNameList" placeholder="例如：醫療補助費" value="' + escapeHtml(x.name || "") + '"></div>' +
+        '<div class="field" style="margin:0;"><label>金額</label><input type="number" inputmode="decimal" placeholder="0" value="' + (x.amount === 0 || x.amount ? x.amount : "") + '"></div>' +
+        '<button type="button" class="btn danger" style="flex:none; padding:11px 13px;" aria-label="移除">✕</button>';
+      var ins = row.querySelectorAll("input");
+      ins[0].addEventListener("input", function(){ x.name = ins[0].value; });
+      ins[1].addEventListener("input", function(){ x.amount = ins[1].value === "" ? "" : parseFloat(ins[1].value); recomputeGross(); });
+      row.querySelector("button").addEventListener("click", function(){ salaryExtras.splice(i, 1); renderSalaryExtras(); recomputeGross(); });
+      box.appendChild(row);
+    });
+  }
+  GROSS_COMPONENT_IDS.forEach(function(id){ document.getElementById(id).addEventListener("input", recomputeGross); });
+  document.getElementById("sExtraAddBtn").addEventListener("click", function(){
+    salaryExtras.push({ name: "", amount: "" });
+    renderSalaryExtras();
+    var ins = document.querySelectorAll("#sExtraList input[type=text]");
+    if (ins.length) ins[ins.length - 1].focus();
+  });
   function openAddSalary(){
     editingSalaryId = null;
     document.getElementById("salarySheetTitle").textContent = "新增薪水紀錄";
@@ -2125,9 +2426,21 @@
     });
     document.getElementById("sAmount").value = "";
     document.getElementById("sGeneralNote").value = "";
+    sPaidTouched = false;
+    syncPaidWithDate();
+    salaryExtras = [];
+    renderSalaryExtras();
     updateSalaryCalcBox();
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
+  var sPaidTouched = false;
+  function syncPaidWithDate(){
+    if (sPaidTouched) return;
+    var dt = document.getElementById("sDate").value;
+    document.getElementById("sPaid").checked = !!dt && dt <= todayStr();
+  }
+  document.getElementById("sDate").addEventListener("change", syncPaidWithDate);
+  document.getElementById("sPaid").addEventListener("change", function(){ sPaidTouched = true; });
   function openEditSalary(d){
     editingSalaryId = d._id;
     document.getElementById("salarySheetTitle").textContent = "編輯薪水紀錄";
@@ -2139,6 +2452,13 @@
     document.getElementById("sRating").value = d.rating || "";
     document.getElementById("sBonusName").value = d.bonusName || "";
     document.getElementById("sBaseSalary").value = d.baseSalary || "";
+    document.getElementById("sTransport").value = d.transportAllowance || "";
+    document.getElementById("sRegion").value = d.regionAllowance || "";
+    document.getElementById("sSupply").value = d.supplyAllowance || "";
+    document.getElementById("sMeal").value = d.mealAllowance || "";
+    document.getElementById("sHousing").value = d.housingAllowance || "";
+    salaryExtras = (d.extraItems || []).map(function(x){ return { name: x.name || "", amount: x.amount }; });
+    renderSalaryExtras();
     document.getElementById("sBonus").value = d.bonus || "";
     document.getElementById("sGrossAmount").value = d.grossAmount || "";
     document.getElementById("sAbsenceHours").value = d.absenceHours || "";
@@ -2154,6 +2474,8 @@
     document.getElementById("sParking").value = d.parking || "";
     document.getElementById("sAmount").value = d.amount || "";
     document.getElementById("sGeneralNote").value = d.generalNote || "";
+    sPaidTouched = true;
+    document.getElementById("sPaid").checked = salaryPaid(d);
     updateSalaryCalcBox();
     document.getElementById("salarySheetBackdrop").hidden = false;
   }
@@ -2164,7 +2486,8 @@
     else if (currentTab === "utility") openAddUtility();
     else if (currentTab === "leave") openAddLeave();
     else if (currentTab === "planned") openAddPlanned();
-    else if (currentTab === "calendar") openAddEvent(calSelected);
+    else if (currentTab === "calendar") openCalAddChooser(calSelected);
+    else if (currentTab === "period") openAddPLog();
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -2226,6 +2549,12 @@
       bonusName: isBonus ? document.getElementById("sBonusName").value.trim() : "",
       rating: isBonus ? "" : document.getElementById("sRating").value.trim(),
       baseSalary: isBonus ? 0 : numVal("sBaseSalary"),
+      transportAllowance: isBonus ? 0 : numVal("sTransport"),
+      regionAllowance: isBonus ? 0 : numVal("sRegion"),
+      supplyAllowance: isBonus ? 0 : numVal("sSupply"),
+      mealAllowance: isBonus ? 0 : numVal("sMeal"),
+      housingAllowance: isBonus ? 0 : numVal("sHousing"),
+      extraItems: isBonus ? [] : salaryExtras.filter(function(x){ return (x.name && String(x.name).trim()) || Number(x.amount); }).map(function(x){ return { name: String(x.name || "").trim() || "其他核發", amount: Number(x.amount) || 0 }; }),
       bonus: isBonus ? 0 : numVal("sBonus"),
       grossAmount: isBonus ? 0 : numVal("sGrossAmount"),
       absenceHours: isBonus ? 0 : numVal("sAbsenceHours"),
@@ -2240,6 +2569,7 @@
       other: isBonus ? 0 : numVal("sOther"),
       parking: isBonus ? 0 : numVal("sParking"),
       generalNote: document.getElementById("sGeneralNote").value.trim(),
+      paid: document.getElementById("sPaid").checked,
       historical: false,
       updatedAt: Date.now()
     };
@@ -2265,6 +2595,8 @@
     document.getElementById("salarySheetTitle").textContent = "新增薪水紀錄";
     document.getElementById("salaryDeleteBtn").hidden = true;
     document.getElementById("salaryDuplicateBtn").hidden = true;
+    sPaidTouched = true;
+    document.getElementById("sPaid").checked = false;
     showToast("已複製，請修改後儲存");
   });
 
@@ -3827,7 +4159,19 @@
     acctHistCol = db.collection("accountHistory");
     plannedCol = db.collection("plannedExpenses");
     eventCol = db.collection("calendarEvents");
+    cycleCol = db.collection("periodCycles");
+    plogCol = db.collection("periodLogs");
     dbReady = true;
+    cycleCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      cyclesById = next; renderPeriod(); if (currentTab === "calendar") renderCalendar();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
+    plogCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      plogsById = next; renderPeriod(); if (currentTab === "calendar") renderCalendar();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     eventCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -3931,7 +4275,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById, periodCycles: cyclesById, periodLogs: plogsById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -4149,7 +4493,250 @@
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
 
+  function dayDiff(a, b){ return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000); }
+  function todayStrNow(){ var n = new Date(); return ymdStr(n.getFullYear(), n.getMonth() + 1, n.getDate()); }
+  function addDaysStr(s, n){ var d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return ymdStr(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  function sortedCycles(){
+    return Object.keys(cyclesById).map(function(id){ return Object.assign({ _id:id }, cyclesById[id]); })
+      .filter(function(c){ return c.startDate; })
+      .sort(function(a, b){ return a.startDate.localeCompare(b.startDate); });
+  }
+  function cycleEnd(c){ return c.endDate || (todayStrNow() >= c.startDate ? todayStrNow() : c.startDate); }
+  function periodStats(){
+    var cs = sortedCycles();
+    var intervals = [];
+    for (var i = 1; i < cs.length; i++) intervals.push(dayDiff(cs[i - 1].startDate, cs[i].startDate));
+    var recent = intervals.slice(-6);
+    var avgCycle = recent.length ? Math.round(recent.reduce(function(s, v){ return s + v; }, 0) / recent.length) : null;
+    var lens = cs.filter(function(c){ return c.endDate; }).map(function(c){ return dayDiff(c.startDate, c.endDate) + 1; }).slice(-6);
+    var avgLen = lens.length ? Math.round(lens.reduce(function(s, v){ return s + v; }, 0) / lens.length) : null;
+    var next = null;
+    if (cs.length && avgCycle) next = addDaysStr(cs[cs.length - 1].startDate, avgCycle);
+    return { cycles: cs, avgCycle: avgCycle, avgLen: avgLen, next: next };
+  }
+  function periodRel(dateStr){
+    var cs = sortedCycles(), best = null;
+    cs.forEach(function(c){
+      var s = c.startDate, e = cycleEnd(c), label = null, dist = null;
+      if (dateStr >= s && dateStr <= e){ label = "經期第 " + (dayDiff(s, dateStr) + 1) + " 天"; dist = 0; }
+      else if (dateStr < s && dayDiff(dateStr, s) <= 7){ dist = dayDiff(dateStr, s); label = "經期前 " + dist + " 天"; }
+      else if (dateStr > e && dayDiff(e, dateStr) <= 7){ dist = dayDiff(e, dateStr); label = "經期後 " + dist + " 天"; }
+      if (label && (best === null || dist < best.dist)) best = { label: label, dist: dist };
+    });
+    return best ? best.label : "";
+  }
+  function renderPeriod(){
+    var st = periodStats();
+    document.getElementById("perAvgCycle").textContent = st.avgCycle ? st.avgCycle + " 天" : "-";
+    document.getElementById("perAvgLen").textContent = st.avgLen ? st.avgLen + " 天" : "-";
+    document.getElementById("perNext").textContent = st.next ? st.next.slice(5).replace("-", "/") : "-";
+    var hint = "";
+    if (st.next){
+      var diff = dayDiff(todayStrNow(), st.next);
+      hint = diff > 0 ? "預計還有 " + diff + " 天（以最近幾次週期推算，僅供參考）" : diff === 0 ? "預計就是今天（僅供參考）" : "已比預計晚 " + (-diff) + " 天（僅供參考）";
+    } else if (st.cycles.length === 1){ hint = "再記錄一次經期，就能推算週期與下次日期"; }
+    else if (!st.cycles.length){ hint = "點「＋ 記錄經期」開始記錄"; }
+    document.getElementById("perNextHint").textContent = hint;
+
+    var cl = document.getElementById("cycleList");
+    cl.innerHTML = "";
+    var desc = st.cycles.slice().reverse();
+    document.getElementById("cycleCount").textContent = desc.length ? "(" + desc.length + ")" : "";
+    if (!desc.length){ cl.innerHTML = '<div class="empty">還沒有經期紀錄</div>'; }
+    desc.forEach(function(c, idx){
+      var prev = st.cycles[st.cycles.length - 1 - idx - 1];
+      var el = document.createElement("div");
+      el.className = "cycle-card";
+      var len = dayDiff(c.startDate, cycleEnd(c)) + 1;
+      var meta = [];
+      if (prev) meta.push("距上次開始 " + dayDiff(prev.startDate, c.startDate) + " 天");
+      if (c.note) meta.push(c.note);
+      el.innerHTML = '<div class="row1"><span class="rg num">' + c.startDate.replace(/-/g, "/") + (c.endDate ? " – " + c.endDate.replace(/-/g, "/") : " –（進行中）") + '</span><span class="ln">' + len + ' 天</span></div>' +
+        (meta.length ? '<div class="meta">' + escapeHtml(meta.join("　·　")) + '</div>' : "");
+      el.addEventListener("click", function(){ openEditCycle(c._id); });
+      cl.appendChild(el);
+    });
+
+    var rangeVal = document.getElementById("plogRange").value;
+    var cutoff = rangeVal === "all" ? "" : addDaysStr(todayStrNow(), -Number(rangeVal));
+    var all = Object.keys(plogsById).map(function(id){ return Object.assign({ _id:id }, plogsById[id]); });
+    var shown = all.filter(function(d){ return !cutoff || (d.date || "") >= cutoff; }).sort(function(a, b){
+      var k = ((b.date || "") + (b.time || "")).localeCompare((a.date || "") + (a.time || ""));
+      return SORT_DIR.period === "asc" ? -k : k;
+    });
+    document.getElementById("plogCount").textContent = shown.length ? "(" + shown.length + ")" : "";
+    var counts = {};
+    shown.forEach(function(d){ (d.symptoms || []).forEach(function(s){ counts[s] = (counts[s] || 0) + 1; }); });
+    var stats = document.getElementById("plStats");
+    stats.innerHTML = "";
+    Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; }).forEach(function(s){
+      var sp = document.createElement("span");
+      sp.className = "cal-chip";
+      sp.style.cursor = "default";
+      sp.innerHTML = escapeHtml(s) + ' <b class="num">' + counts[s] + '</b>';
+      stats.appendChild(sp);
+    });
+    var meds = {};
+    all.forEach(function(d){ if (d.medication) meds[d.medication] = 1; });
+    document.getElementById("medList").innerHTML = Object.keys(meds).map(function(m){ return '<option value="' + escapeHtml(m) + '">'; }).join("");
+    var pl = document.getElementById("plogList");
+    pl.innerHTML = "";
+    if (!shown.length){ pl.innerHTML = '<div class="empty">' + (all.length ? "這個範圍沒有紀錄" : "點「＋ 新增」記錄症狀或服藥") + '</div>'; return; }
+    var lastDate = null;
+    shown.forEach(function(d){
+      if (d.date !== lastDate){
+        var sep = document.createElement("div");
+        sep.className = "fever-date-sep";
+        sep.textContent = (d.date || "").replace(/-/g, "/");
+        pl.appendChild(sep);
+        lastDate = d.date;
+      }
+      var rel = periodRel(d.date || "");
+      var el = document.createElement("div");
+      el.className = "plog-card";
+      var tags = (d.symptoms || []).map(function(s){ return '<span>' + escapeHtml(s) + '</span>'; }).join("");
+      if (d.medication) tags += '<span class="med">💊 ' + escapeHtml(d.medication) + '</span>';
+      el.innerHTML = '<div class="row1"><span class="tm num">' + escapeHtml(d.time || "") + (rel ? '　<span class="rel">' + rel + '</span>' : "") + '</span>' +
+        (d.pain || d.pain === 0 ? '<span class="pain num">痛 ' + d.pain + '/10</span>' : "") + '</div>' +
+        (tags ? '<div class="tags">' + tags + '</div>' : "") +
+        (d.note ? '<div class="nt">' + escapeHtml(d.note) + '</div>' : "");
+      el.addEventListener("click", function(){ openEditPLog(d._id); });
+      pl.appendChild(el);
+    });
+  }
+  function openAddCycle(){
+    editingCycleId = null;
+    document.getElementById("cycleSheetTitle").textContent = "記錄經期";
+    document.getElementById("cycleDeleteBtn").hidden = true;
+    document.getElementById("cycleDuplicateBtn").hidden = true;
+    document.getElementById("pcStart").value = todayStrNow();
+    document.getElementById("pcEnd").value = "";
+    document.getElementById("pcNote").value = "";
+    document.getElementById("cycleSheetBackdrop").hidden = false;
+  }
+  function openEditCycle(id){
+    var d = cyclesById[id]; if (!d) return;
+    editingCycleId = id;
+    document.getElementById("cycleSheetTitle").textContent = "編輯經期";
+    document.getElementById("cycleDeleteBtn").hidden = false;
+    document.getElementById("cycleDuplicateBtn").hidden = false;
+    document.getElementById("pcStart").value = d.startDate || "";
+    document.getElementById("pcEnd").value = d.endDate || "";
+    document.getElementById("pcNote").value = d.note || "";
+    document.getElementById("cycleSheetBackdrop").hidden = false;
+  }
+  function closeCycleSheet(){ document.getElementById("cycleSheetBackdrop").hidden = true; }
+  document.getElementById("addCycleBtn").addEventListener("click", openAddCycle);
+  document.getElementById("cycleCancelBtn").addEventListener("click", closeCycleSheet);
+  document.getElementById("cycleSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeCycleSheet(); });
+  document.getElementById("cycleDuplicateBtn").addEventListener("click", function(){
+    editingCycleId = null;
+    document.getElementById("cycleSheetTitle").textContent = "記錄經期";
+    document.getElementById("cycleDeleteBtn").hidden = true;
+    document.getElementById("cycleDuplicateBtn").hidden = true;
+  });
+  document.getElementById("cycleSaveBtn").addEventListener("click", async function(){
+    var start = document.getElementById("pcStart").value, end = document.getElementById("pcEnd").value;
+    if (!start){ showToast("請選擇開始日期"); return; }
+    if (end && end < start){ showToast("結束日期不能早於開始日期"); return; }
+    var data = { startDate: start, endDate: end, note: document.getElementById("pcNote").value.trim(), updatedAt: Date.now() };
+    if (!dbReady || !cycleCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingCycleId){ await cycleCol.doc(editingCycleId).set(Object.assign({}, cyclesById[editingCycleId], data)); }
+      else { data.createdAt = Date.now(); await cycleCol.add(data); }
+      closeCycleSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("cycleDeleteBtn").addEventListener("click", async function(){
+    if (!editingCycleId || !cycleCol) return;
+    try{ await cycleCol.doc(editingCycleId).delete(); closeCycleSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
+  function renderPLogChips(){
+    var box = document.getElementById("plgChips");
+    box.innerHTML = "";
+    var list = PL_SYMPTOMS.slice();
+    plgSelected.forEach(function(s){ if (list.indexOf(s) < 0) list.push(s); });
+    list.forEach(function(s){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "sym-chip" + (plgSelected.indexOf(s) >= 0 ? " on" : "");
+      b.textContent = s;
+      b.addEventListener("click", function(){
+        var i = plgSelected.indexOf(s);
+        if (i >= 0) plgSelected.splice(i, 1); else plgSelected.push(s);
+        renderPLogChips();
+      });
+      box.appendChild(b);
+    });
+  }
+  function fillPLogForm(d){
+    document.getElementById("plgDate").value = d.date || todayStrNow();
+    document.getElementById("plgTime").value = d.time || "";
+    document.getElementById("plgPain").value = d.pain === 0 || d.pain ? d.pain : "";
+    document.getElementById("plgMed").value = d.medication || "";
+    document.getElementById("plgNote").value = d.note || "";
+    plgSelected = (d.symptoms || []).slice();
+    renderPLogChips();
+  }
+  function openAddPLog(){
+    editingPLogId = null;
+    document.getElementById("plogSheetTitle").textContent = "新增症狀 / 服藥";
+    document.getElementById("plogDeleteBtn").hidden = true;
+    document.getElementById("plogDuplicateBtn").hidden = true;
+    fillPLogForm({});
+    document.getElementById("plogSheetBackdrop").hidden = false;
+  }
+  function openEditPLog(id){
+    var d = plogsById[id]; if (!d) return;
+    editingPLogId = id;
+    document.getElementById("plogSheetTitle").textContent = "編輯症狀 / 服藥";
+    document.getElementById("plogDeleteBtn").hidden = false;
+    document.getElementById("plogDuplicateBtn").hidden = false;
+    fillPLogForm(d);
+    document.getElementById("plogSheetBackdrop").hidden = false;
+  }
+  function closePLogSheet(){ document.getElementById("plogSheetBackdrop").hidden = true; }
+  document.getElementById("addPLogBtn").addEventListener("click", openAddPLog);
+  document.getElementById("plogCancelBtn").addEventListener("click", closePLogSheet);
+  document.getElementById("plogSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closePLogSheet(); });
+  document.getElementById("plogDuplicateBtn").addEventListener("click", function(){
+    editingPLogId = null;
+    document.getElementById("plogSheetTitle").textContent = "新增症狀 / 服藥";
+    document.getElementById("plogDeleteBtn").hidden = true;
+    document.getElementById("plogDuplicateBtn").hidden = true;
+  });
+  document.getElementById("plogSaveBtn").addEventListener("click", async function(){
+    var date = document.getElementById("plgDate").value;
+    if (!date){ showToast("請選擇日期"); return; }
+    var med = document.getElementById("plgMed").value.trim();
+    if (!plgSelected.length && !med && !document.getElementById("plgNote").value.trim()){ showToast("請至少選一個症狀、填服藥或備註"); return; }
+    var painStr = document.getElementById("plgPain").value;
+    var pain = painStr === "" ? null : Math.max(0, Math.min(10, parseInt(painStr, 10) || 0));
+    var data = {
+      date: date, time: document.getElementById("plgTime").value,
+      symptoms: plgSelected.slice(), pain: pain, medication: med,
+      note: document.getElementById("plgNote").value.trim(), updatedAt: Date.now()
+    };
+    if (!dbReady || !plogCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingPLogId){ await plogCol.doc(editingPLogId).set(Object.assign({}, plogsById[editingPLogId], data)); }
+      else { data.createdAt = Date.now(); await plogCol.add(data); }
+      closePLogSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("plogDeleteBtn").addEventListener("click", async function(){
+    if (!editingPLogId || !plogCol) return;
+    try{ await plogCol.doc(editingPLogId).delete(); closePLogSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  document.getElementById("plogRange").addEventListener("change", renderPeriod);
+
   var CAL_CATS = [
+    { key:"period", name:"經期", color:"var(--period)" },
+    { key:"periodPred", name:"經期預測", color:"#F2A6C3" },
+    { key:"symptom", name:"症狀/服藥", color:"var(--variable)" },
     { key:"event", name:"行程", color:"var(--plan)" },
     { key:"salary", name:"薪水", color:"var(--salary)" },
     { key:"bonus", name:"獎金", color:"var(--bonus)" },
@@ -4184,7 +4771,7 @@
     });
     Object.keys(salariesById).forEach(function(id){
       var d = salariesById[id], isBonus = d.recordType === "bonus";
-      add(d.payDate, { cat:isBonus ? "bonus" : "salary", title:(isBonus ? (d.bonusName || "獎金") : "薪水") + "　" + (PERSON_LABEL[d.person] || ""), amount:d.amount, tab:"salary", sort:"01" });
+      add(d.payDate, { cat:isBonus ? "bonus" : "salary", title:(isBonus ? (d.bonusName || "獎金") : "薪水") + "　" + (PERSON_LABEL[d.person] || "") + (salaryPaid(d) ? "" : "（未發）"), amount:d.amount, tab:"salary", sort:"01" });
     });
     Object.keys(leavesById).forEach(function(id){
       var d = leavesById[id];
@@ -4201,6 +4788,26 @@
       eachDay(d.startDate, d.endDate || d.startDate, function(day){
         add(day, { cat:"fever", title:(d.person || "") + " 發燒", sub:d.note || "", tab:"other", sort:"04" });
       });
+    });
+    var pst = periodStats();
+    pst.cycles.forEach(function(c){
+      eachDay(c.startDate, cycleEnd(c), function(day){
+        add(day, { cat:"period", title:"經期第 " + (dayDiff(c.startDate, day) + 1) + " 天", sub:day === c.startDate ? (c.note || "") : "", tab:"period", sort:"00" });
+      });
+    });
+    if (pst.next && pst.cycles.length){
+      var lastC = pst.cycles[pst.cycles.length - 1];
+      if (pst.next > lastC.startDate){
+        var plen = pst.avgLen || 5;
+        eachDay(pst.next, addDaysStr(pst.next, plen - 1), function(day){
+          if (day >= todayStrNow()) add(day, { cat:"periodPred", title:"預計經期（推算）", tab:"period", sort:"00" });
+        });
+      }
+    }
+    Object.keys(plogsById).forEach(function(id){
+      var d = plogsById[id];
+      var t = (d.symptoms || []).join("、") || (d.medication ? "服藥" : "備註");
+      add(d.date, { cat:"symptom", title:t + (d.medication ? "　💊" + d.medication : ""), sub:[d.time, d.pain || d.pain === 0 ? "疼痛 " + d.pain + "/10" : "", d.note].filter(Boolean).join("　"), tab:"period", sort:"0" + (d.time || "0") });
     });
     Object.keys(plannedById).forEach(function(id){
       var d = plannedById[id];
@@ -4219,7 +4826,7 @@
   }
   function calSignature(){
     var s = String(calYear) + calMonth + JSON.stringify(calHidden) + calSelected;
-    [eventsById, salariesById, leavesById, claimsById, episodesById, plannedById, itemsById, utilitiesById].forEach(function(o){
+    [eventsById, salariesById, leavesById, claimsById, episodesById, plannedById, itemsById, utilitiesById, cyclesById, plogsById].forEach(function(o){
       var ks = Object.keys(o), t = 0;
       ks.forEach(function(k){ t += Number(o[k].updatedAt) || 0; });
       s += "|" + ks.length + ":" + t;
@@ -4278,7 +4885,7 @@
     dl.innerHTML = "";
     var dayList = map[calSelected] || [];
     if (!dayList.length){
-      dl.innerHTML = '<div class="empty">這天沒有紀錄，點右上角「＋ 新增行程」</div>';
+      dl.innerHTML = '<div class="empty">這天沒有紀錄，點右上角「＋ 新增」選擇要記什麼</div>';
     }
     dayList.forEach(function(e){
       var row = document.createElement("div");
@@ -4340,7 +4947,59 @@
     document.getElementById("eventSheetBackdrop").hidden = false;
   }
   function closeEventSheet(){ document.getElementById("eventSheetBackdrop").hidden = true; }
-  document.getElementById("addEventBtn").addEventListener("click", function(){ openAddEvent(calSelected); });
+  function calEpisodeCovering(d){
+    var found = null;
+    Object.keys(episodesById).forEach(function(id){
+      var e = episodesById[id];
+      if (e.startDate && e.startDate <= d && d <= (e.endDate || e.startDate)) found = id;
+    });
+    return found;
+  }
+  var CAL_ADD_OPTS = [
+    { ico:"🗓️", name:"行程 / 約會", run:function(d){ openAddEvent(d); } },
+    { ico:"🏖️", name:"請假", run:function(d){
+        openAddLeave();
+        document.getElementById("lDate").value = d;
+        Object.keys(periodsById).forEach(function(id){
+          var p = periodsById[id];
+          if (p.startDate && p.startDate <= d && d <= (p.endDate || "9999")) document.getElementById("lPeriod").value = id;
+        });
+      } },
+    { ico:"🧾", name:"薪水", run:function(d){ openAddSalary(); document.getElementById("sDate").value = d; syncPaidWithDate(); } },
+    { ico:"🎁", name:"獎金", run:function(d){ openAddSalary(); document.querySelector('#recordTypeSeg [data-rtype="bonus"]').click(); document.getElementById("sDate").value = d; syncPaidWithDate(); } },
+    { ico:"💡", name:"水電瓦斯", run:function(d){ openAddUtility(); document.getElementById("uYear").value = d.slice(0, 4); document.getElementById("uMonth").value = Number(d.slice(5, 7)); } },
+    { ico:"📌", name:"預計大筆支出", run:function(d){ openAddPlanned(); document.getElementById("plDate").value = d; } },
+    { ico:"🛡️", name:"保險理賠", run:function(d){ openAddClaim(); document.getElementById("clIncidentDate").value = d; } },
+    { ico:"🤒", name:"發燒（新增一次）", run:function(d){ openAddEpisode(); document.getElementById("epStartDate").value = d; } },
+    { ico:"🌡️", name:"體溫量測", run:function(d){
+        var id = calEpisodeCovering(d);
+        if (!id){ showToast("這天沒有對應的發燒紀錄，請先新增「發燒」"); return; }
+        currentFeverEpisode = id;
+        openAddFever();
+        document.getElementById("fvDate").value = d;
+      } },
+    { ico:"🌸", name:"經期開始", run:function(d){ openAddCycle(); document.getElementById("pcStart").value = d; } },
+    { ico:"💊", name:"症狀 / 服藥", run:function(d){ openAddPLog(); document.getElementById("plgDate").value = d; } }
+  ];
+  function openCalAddChooser(dateStr){
+    var d = dateStr || todayStrNow();
+    document.getElementById("calAddTitle").textContent = "新增到 " + d.replace(/-/g, "/");
+    var grid = document.getElementById("calAddGrid");
+    grid.innerHTML = "";
+    CAL_ADD_OPTS.forEach(function(o){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "add-opt";
+      b.innerHTML = '<span class="ico">' + o.ico + '</span><span>' + o.name + '</span>';
+      b.addEventListener("click", function(){ closeCalAdd(); o.run(d); });
+      grid.appendChild(b);
+    });
+    document.getElementById("calAddBackdrop").hidden = false;
+  }
+  function closeCalAdd(){ document.getElementById("calAddBackdrop").hidden = true; }
+  document.getElementById("calAddCancel").addEventListener("click", closeCalAdd);
+  document.getElementById("calAddBackdrop").addEventListener("click", function(e){ if (e.target === this) closeCalAdd(); });
+  document.getElementById("addEventBtn").addEventListener("click", function(){ openCalAddChooser(calSelected); });
   document.getElementById("eventCancelBtn").addEventListener("click", closeEventSheet);
   document.getElementById("eventSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeEventSheet(); });
   document.getElementById("eventDuplicateBtn").addEventListener("click", function(){
@@ -4523,6 +5182,7 @@
   });
 
   wireSortBtn("plannedSortBtn", "planned", renderPlanned);
+  wireSortBtn("periodSortBtn", "period", renderPeriod);
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
   wireSortBtn("utilitySortBtn", "utility", renderUtilities);
@@ -4537,6 +5197,7 @@
 
   renderAccounts();
   renderPlanned();
+  renderPeriod();
   render();
   renderSalaries();
   renderUtilities();
