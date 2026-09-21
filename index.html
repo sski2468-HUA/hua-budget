@@ -410,11 +410,14 @@
   .drawer .tabs{ display:flex; flex-direction:column; gap:4px; background:transparent; border:none; padding:0; margin:0; overflow-y:auto; flex:1; }
   .drawer .tabs button{
     display:flex; flex-direction:row; align-items:center; gap:14px; justify-content:flex-start;
-    padding:8px 14px; font-size:15px; font-weight:600; color:var(--ink); border-radius:12px; text-align:left; flex:none;
+    padding:5px 12px; font-size:14.5px; font-weight:600; color:var(--ink); border-radius:12px; text-align:left; flex:none;
   }
+  .drawer .tabs button .ico{ font-size:18px; width:24px; }
+  .drawer-foot{ padding-top:8px; }
+  .drawer-user{ margin-bottom:6px; }
   .drawer-head{ padding:0 4px 6px; }
   .drawer .tabs{ gap:1px; }
-  .nav-group{ font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.12em; padding:10px 14px 2px; flex:none; }
+  .nav-group{ font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.12em; padding:8px 12px 1px; flex:none; }
   .nav-group:first-child{ padding-top:2px; }
   .drawer .tabs button .ico{ font-size:20px; width:26px; text-align:center; filter:none; opacity:1; }
   .drawer .tabs button.active{ background:var(--brand); color:var(--brand-ink); box-shadow:none; }
@@ -513,6 +516,9 @@
     border-left:4px solid var(--fixed); display:flex; gap:12px; align-items:flex-start;
   }
   .plan-card.paid{ border-left-color:var(--income); opacity:.75; }
+  .plan-card.deferred{ border-left-color:var(--muted); opacity:.6; border-style:dashed; border-left-style:solid; }
+  .plan-card.deferred .amt, .plan-card.deferred .nm{ color:var(--muted); }
+  .defer-toggle.on{ background:var(--surface-2); color:var(--ink); border-color:var(--muted); }
   .plan-card .chk{
     flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:2px solid var(--muted);
     background:transparent; color:var(--brand-ink); font-size:15px; line-height:1; cursor:pointer; padding:0; margin-top:1px;
@@ -624,7 +630,9 @@
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
       <button type="button" data-tab="period"><span class="ico">🌸</span><span class="lbl">健康管理</span></button>
       <div class="nav-group">其他</div>
-      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">理賠・紅包・年資</span></button>
+      <button type="button" data-tab="claim"><span class="ico">🛡️</span><span class="lbl">保險理賠</span></button>
+      <button type="button" data-tab="timeline"><span class="ico">⏳</span><span class="lbl">年資規劃</span></button>
+      <button type="button" data-tab="gift"><span class="ico">🧧</span><span class="lbl">禮尚往來</span></button>
     </nav><div class="drawer-foot">
       <div class="drawer-user" id="drawerUser"></div>
       <div class="drawer-actions">
@@ -1032,12 +1040,13 @@
     <div class="breakdown-strip">
       <div class="chip"><div class="lbl">未支付合計</div><div class="val num" id="plUnpaidTotal" style="color:var(--fixed)">$0</div></div>
       <div class="chip"><div class="lbl">已支付合計</div><div class="val num" id="plPaidTotal" style="color:var(--income)">$0</div></div>
-      <div class="chip"><div class="lbl">筆數</div><div class="val num" id="plCountChip">0</div></div>
+      <div class="chip"><div class="lbl">暫緩合計</div><div class="val num" id="plDeferredTotal" style="color:var(--muted)">$0</div></div>
     </div>
     <div class="subtabs" id="plannedFilterTabs" style="margin-top:12px;">
       <button type="button" data-pfilter="all" class="active">全部</button>
       <button type="button" data-pfilter="unpaid">未支付</button>
       <button type="button" data-pfilter="paid">已支付</button>
+      <button type="button" data-pfilter="deferred">暫緩</button>
     </div>
     <section class="group" style="margin-top:14px;">
       <div class="ghead">
@@ -1055,8 +1064,8 @@
     <div class="subtabs" id="otherFilterTabs" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
       <button type="button" data-osub="claim" class="active">保險理賠</button>
       <button type="button" data-osub="timeline">年資規劃</button>
-      <button type="button" data-osub="redout">紅包紀錄</button>
-      <button type="button" data-osub="redin">收到紅包</button>
+      <button type="button" data-osub="redout">包紅包</button>
+      <button type="button" data-osub="redin">收紅包</button>
     </div>
 
     <div data-osub-page="claim" class="active">
@@ -1701,6 +1710,10 @@
       <input id="plPaid" type="checkbox" style="width:22px; height:22px; margin:0;">
       <label for="plPaid" style="margin:0; font-size:14px; color:var(--ink);">已支付</label>
     </div>
+    <div class="field" style="display:flex; align-items:center; gap:10px;">
+      <input id="plDeferred" type="checkbox" style="width:22px; height:22px; margin:0;">
+      <label for="plDeferred" style="margin:0; font-size:14px; color:var(--ink);">暫緩（先不花，不計入未支付合計）</label>
+    </div>
     <div class="sheet-actions">
       <button class="btn ghost" id="plannedCancelBtn" type="button">取消</button>
       <button class="btn danger" id="plannedDeleteBtn" type="button" hidden>刪除</button>
@@ -1971,16 +1984,36 @@
     document.querySelectorAll(".tabs button").forEach(function(b){
       b.classList.toggle("active", b.getAttribute("data-tab") === tab);
     });
+    var pageKey = OTHER_SUBS[tab] ? "other" : tab;
     document.querySelectorAll("[data-page]").forEach(function(p){
-      p.classList.toggle("active", p.getAttribute("data-page") === tab);
+      p.classList.toggle("active", p.getAttribute("data-page") === pageKey);
     });
-    document.getElementById("addBtn").hidden = (tab === "annual" || tab === "other" || tab === "home");
+    if (OTHER_SUBS[tab]) showOtherSub(tab);
+    document.getElementById("addBtn").hidden = (tab === "annual" || tab === "home" || !!OTHER_SUBS[tab]);
     document.getElementById("personFilterTabs").hidden = !PERSON_FILTERED_TABS[tab];
     document.getElementById("pageTitle").textContent = TAB_TITLE[tab] || "";
     if (tab === "calendar") renderCalendar();
     window.scrollTo(0, 0);
   }
-  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", other:"其他", calendar:"行事曆", period:"健康" };
+  var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", claim:"保險理賠", timeline:"年資規劃", gift:"禮尚往來", calendar:"行事曆", period:"健康" };
+  var OTHER_SUBS = { claim:["claim"], timeline:["timeline"], gift:["redout", "redin"] };
+  function showOtherSub(tab){
+    var subs = OTHER_SUBS[tab];
+    var activeSub = document.querySelector("[data-osub-page].active");
+    var cur = activeSub ? activeSub.getAttribute("data-osub-page") : "";
+    if (subs.indexOf(cur) < 0) cur = subs[0];
+    document.querySelectorAll("[data-osub-page]").forEach(function(p){
+      p.classList.toggle("active", p.getAttribute("data-osub-page") === cur);
+    });
+    document.querySelectorAll("#otherFilterTabs button").forEach(function(b){
+      var k = b.getAttribute("data-osub");
+      b.hidden = subs.indexOf(k) < 0;
+      b.classList.toggle("active", k === cur);
+    });
+    var bar = document.getElementById("otherFilterTabs");
+    bar.hidden = subs.length < 2;
+    bar.style.gridTemplateColumns = "repeat(" + subs.length + ",1fr)";
+  }
   var drawerEl = document.getElementById("drawer");
   var drawerBackdropEl = document.getElementById("drawerBackdrop");
   function openDrawer(){ drawerBackdropEl.hidden = false; drawerEl.classList.add("open"); drawerEl.setAttribute("aria-hidden", "false"); }
@@ -2317,6 +2350,7 @@
   document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
   document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
 
+  var cashSelYm = null;
   function renderSalaryCash(){
     var box = document.getElementById("cashBox");
     var months = {};
@@ -2355,24 +2389,32 @@
     var rangeVal = document.getElementById("cashRange").value;
     if (rangeVal !== "all") keys = keys.slice(0, Number(rangeVal));
     if (!keys.length){ box.innerHTML = '<div class="empty">還沒有薪水紀錄</div>'; return; }
-    var cur = months[thisYm] || { items:[] };
+    var selYm = (cashSelYm && months[cashSelYm]) ? cashSelYm : thisYm;
+    var cur = months[selYm] || { items:[] };
     var got = 0, upcoming = 0;
     cur.items.forEach(function(x){ if (x.pending) upcoming += x.amount; else got += x.amount; });
-    var html = '<div class="calc-box" style="margin-bottom:10px;"><div class="line total"><span>本月（' + Number(thisYm.slice(5)) + '月）已領到</span><span class="v num">' + fmt(got) + '</span></div>';
+    var selLabel = selYm === thisYm ? "本月（" + Number(selYm.slice(5)) + "月）" : selYm.slice(0, 4) + " 年 " + Number(selYm.slice(5)) + " 月";
+    var html = '<div class="calc-box" style="margin-bottom:10px;"><div class="line total"><span>' + selLabel + (selYm > thisYm ? "預計領到" : "已領到") + '</span><span class="v num">' + fmt(selYm > thisYm ? got + upcoming : got) + '</span></div>';
     cur.items.slice().sort(function(a, b){ return a.date.localeCompare(b.date); }).forEach(function(x){
       html += '<div class="line cash-line" data-rec="' + x.id + '" style="cursor:pointer;"><span>　' + x.date.slice(5).replace("-", "/") + '　' + escapeHtml(x.label) + '<small style="color:var(--muted);"> ' + (x.pending ? "預計" : "已領") + '</small></span><span class="v num" style="' + (x.pending ? "opacity:.6;" : "") + '">' + fmt(x.amount) + '</span></div>';
     });
-    if (!cur.items.length) html += '<div class="line"><span style="color:var(--muted);">　本月沒有薪水相關入帳紀錄</span><span></span></div>';
-    if (upcoming) html += '<div class="line"><span style="color:var(--muted);">本月還預計會領</span><span class="v num" style="color:var(--muted);">' + fmt(upcoming) + '</span></div>';
+    if (!cur.items.length) html += '<div class="line"><span style="color:var(--muted);">　這個月沒有薪水相關入帳紀錄</span><span></span></div>';
+    if (upcoming && selYm <= thisYm) html += '<div class="line"><span style="color:var(--muted);">還預計會領</span><span class="v num" style="color:var(--muted);">' + fmt(upcoming) + '</span></div>';
+    if (selYm !== thisYm) html += '<div style="text-align:right; margin-top:6px;"><button type="button" class="sort-btn" id="cashBackBtn" style="margin:0;">↩ 回到本月</button></div>';
     html += '</div>';
     html += '<div class="cmp-head" style="grid-template-columns:.8fr 1fr 1fr 1fr 1.1fr;"><span></span><span>5號入帳</span><span>20號暫支</span><span>獎金</span><span>合計</span></div>';
     keys.forEach(function(ym){
       var m = months[ym];
-      html += '<div class="cmp-row" style="grid-template-columns:.8fr 1fr 1fr 1fr 1.1fr;' + (ym === thisYm ? "background:var(--surface-2); border-radius:8px;" : "") + '"><span class="cmp-l">' + ym.slice(2).replace("-", "/") + (m.pending ? '<small style="color:var(--muted); font-weight:500;"> 預計</small>' : "") + '</span>' +
+      html += '<div class="cmp-row cash-month" data-ym="' + ym + '" style="cursor:pointer; grid-template-columns:.8fr 1fr 1fr 1fr 1.1fr;' + (ym === selYm ? "background:var(--surface-2); border-radius:8px;" : "") + '"><span class="cmp-l">' + ym.slice(2).replace("-", "/") + (m.pending ? '<small style="color:var(--muted); font-weight:500;"> 預計</small>' : "") + '</span>' +
         '<span class="num cmp-v">' + fmt(m.net) + '</span><span class="num cmp-v cmp-b">' + fmt(m.adv) + '</span><span class="num cmp-v cmp-b">' + fmt(m.bonus) + '</span><span class="num cmp-d">' + fmt(m.net + m.adv + m.bonus) + '</span></div>';
     });
-    html += '<div class="section-hint" style="margin:8px 2px 0;">5號入帳＝當月 5 號發的（上個月薪水）實發；20號暫支＝當月 20 號先領、之後從薪水單扣掉的那筆。點上方任一筆可直接修改。實際領到的暫支金額和預設不同時，到該月份的薪水單改「暫支薪資」即可。</div>';
+    html += '<div class="section-hint" style="margin:8px 2px 0;">5號入帳＝當月 5 號發的（上個月薪水）實發；20號暫支＝當月 20 號先領、之後從薪水單扣掉的那筆。點下面任一個月份可看該月明細，點明細裡的某一筆可直接修改。實際領到的暫支金額和預設不同時，到該月份的薪水單改「暫支薪資」即可。</div>';
     box.innerHTML = '<div id="cashInner" style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow);">' + html + '</div>';
+    box.querySelectorAll(".cash-month").forEach(function(el){
+      el.addEventListener("click", function(){ cashSelYm = el.getAttribute("data-ym"); renderSalaryCash(); });
+    });
+    var backBtn = box.querySelector("#cashBackBtn");
+    if (backBtn) backBtn.addEventListener("click", function(){ cashSelYm = null; renderSalaryCash(); });
     box.querySelectorAll(".cash-line").forEach(function(el){
       el.addEventListener("click", function(){
         var rid = el.getAttribute("data-rec");
@@ -5458,9 +5500,9 @@
     });
     Object.keys(claimsById).forEach(function(id){
       var d = claimsById[id], who = (d.company || "") + " " + (d.diagnosis || "");
-      add(d.incidentDate, { cat:"claim", title:"事故：" + who, tab:"other", sort:"03" });
-      add(d.applyDate, { cat:"claim", title:"申請理賠：" + who, tab:"other", sort:"03" });
-      add(d.payDate, { cat:"claim", title:"理賠入帳：" + who, amount:d.amount, tab:"other", sort:"03" });
+      add(d.incidentDate, { cat:"claim", title:"事故：" + who, tab:"claim", sort:"03" });
+      add(d.applyDate, { cat:"claim", title:"申請理賠：" + who, tab:"claim", sort:"03" });
+      add(d.payDate, { cat:"claim", title:"理賠入帳：" + who, amount:d.amount, tab:"claim", sort:"03" });
     });
     Object.keys(episodesById).forEach(function(id){
       var d = episodesById[id];
@@ -5496,7 +5538,7 @@
     });
     Object.keys(plannedById).forEach(function(id){
       var d = plannedById[id];
-      add(d.date, { cat:"planned", title:(d.item || "") + (d.paid ? "（已付）" : ""), amount:d.amount, sub:d.note || "", tab:"planned", sort:"05" });
+      add(d.date, { cat:"planned", title:(d.item || "") + (d.paid ? "（已付）" : d.deferred ? "（暫緩）" : ""), amount:d.amount, sub:d.note || "", tab:"planned", sort:"05" });
     });
     if (!calHidden.transfer){
       var dim = calDaysIn(y, m);
@@ -5737,13 +5779,19 @@
     var list = document.getElementById("plannedList");
     list.innerHTML = "";
     var all = Object.keys(plannedById).map(function(id){ return Object.assign({}, plannedById[id], { _id: id }); });
-    var unpaid = 0, paid = 0;
-    all.forEach(function(d){ if (d.paid) paid += Number(d.amount) || 0; else unpaid += Number(d.amount) || 0; });
+    var unpaid = 0, paid = 0, deferredSum = 0;
+    all.forEach(function(d){
+      var amt = Number(d.amount) || 0;
+      if (d.paid) paid += amt; else if (d.deferred) deferredSum += amt; else unpaid += amt;
+    });
     document.getElementById("plUnpaidTotal").textContent = fmt(unpaid);
     document.getElementById("plPaidTotal").textContent = fmt(paid);
-    document.getElementById("plCountChip").textContent = all.length;
+    document.getElementById("plDeferredTotal").textContent = fmt(deferredSum);
     var shown = all.filter(function(d){
-      return plannedFilter === "all" || (plannedFilter === "paid" ? !!d.paid : !d.paid);
+      if (plannedFilter === "all") return true;
+      if (plannedFilter === "paid") return !!d.paid;
+      if (plannedFilter === "deferred") return !d.paid && !!d.deferred;
+      return !d.paid && !d.deferred;
     }).sort(function(a, b){
       var d = (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0);
       return SORT_DIR.planned === "asc" ? -d : d;
@@ -5758,10 +5806,12 @@
     }
     shown.forEach(function(d){
       var el = document.createElement("div");
-      el.className = "plan-card" + (d.paid ? " paid" : "");
+      var isDef = !d.paid && !!d.deferred;
+      el.className = "plan-card" + (d.paid ? " paid" : "") + (isDef ? " deferred" : "");
       var html = '<button type="button" class="chk" aria-label="切換已支付">' + (d.paid ? "✓" : "") + '</button><div class="pbody">' +
         '<div class="row1"><span class="nm">' + escapeHtml(d.item || "") + '</span><span class="amt num">' + fmt(d.amount) + '</span></div>' +
-        '<div class="dt num">' + escapeHtml(d.date || "") + (d.paid ? " · 已支付" : " · 未支付") + '</div>';
+        '<div class="dt num">' + escapeHtml(d.date || "") + (d.paid ? " · 已支付" : isDef ? " · 暫緩中" : " · 未支付") +
+        (d.paid ? "" : '<button type="button" class="pay-toggle defer-toggle' + (isDef ? " on" : "") + '">' + (isDef ? "▶ 恢復" : "⏸ 暫緩") + '</button>') + '</div>';
       if (d.note) html += '<div class="note">' + escapeHtml(d.note) + '</div>';
       if (d.extra) html += '<div class="extra">' + escapeHtml(d.extra) + '</div>';
       html += '</div>';
@@ -5769,7 +5819,14 @@
       el.querySelector(".chk").addEventListener("click", async function(e){
         e.stopPropagation();
         if (!dbReady || !plannedCol) return;
-        try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { paid: !d.paid, updatedAt: Date.now() })); }
+        try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { paid: !d.paid, deferred: false, updatedAt: Date.now() })); }
+        catch(err){ showToast("更新失敗，請再試一次"); }
+      });
+      var defBtn = el.querySelector(".defer-toggle");
+      if (defBtn) defBtn.addEventListener("click", async function(e){
+        e.stopPropagation();
+        if (!dbReady || !plannedCol) return;
+        try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { deferred: !isDef, updatedAt: Date.now() })); }
         catch(err){ showToast("更新失敗，請再試一次"); }
       });
       el.addEventListener("click", function(){ openEditPlanned(d); });
@@ -5783,6 +5840,7 @@
     document.getElementById("plNote").value = d.note || "";
     document.getElementById("plExtra").value = d.extra || "";
     document.getElementById("plPaid").checked = !!d.paid;
+    document.getElementById("plDeferred").checked = !!d.deferred && !d.paid;
   }
   function openAddPlanned(){
     editingPlannedId = null;
@@ -5810,6 +5868,7 @@
     document.getElementById("plannedDeleteBtn").hidden = true;
     document.getElementById("plannedDuplicateBtn").hidden = true;
     document.getElementById("plPaid").checked = false;
+    document.getElementById("plDeferred").checked = false;
   });
   document.getElementById("plannedSaveBtn").addEventListener("click", async function(){
     var item = document.getElementById("plItem").value.trim();
@@ -5822,6 +5881,7 @@
       note: document.getElementById("plNote").value.trim(),
       extra: document.getElementById("plExtra").value.trim(),
       paid: document.getElementById("plPaid").checked,
+      deferred: !document.getElementById("plPaid").checked && document.getElementById("plDeferred").checked,
       updatedAt: Date.now()
     };
     if (!dbReady || !plannedCol){ showToast("尚未連線，稍後再試"); return; }
