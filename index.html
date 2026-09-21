@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+  (function(){
+    var v = null;
+    try{ v = localStorage.getItem("huaView"); }catch(e){}
+    if (v !== "web" && v !== "phone") v = window.innerWidth >= 900 ? "web" : "phone";
+    document.documentElement.setAttribute("data-view", v);
+  })();
+</script>
 <meta name="theme-color" content="#2C4A6E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -433,7 +441,21 @@
   .fab{ bottom:calc(24px + env(safe-area-inset-bottom, 0px)); right:18px; }
   .toast{ bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
 
-  @media (max-width:700px){ body{ zoom:1.12; } }
+  html[data-view="phone"] body{ zoom:1.12; }
+  html[data-view="phone"] .wrap{ max-width:430px; }
+
+  html[data-view="web"] body{ padding-left:290px; padding-right:24px; }
+  html[data-view="web"] .wrap{ max-width:940px; }
+  html[data-view="web"] .drawer{ transform:none; width:260px; max-width:260px; box-shadow:none; border-right:1px solid var(--line); z-index:6; }
+  html[data-view="web"] .drawer-backdrop{ display:none !important; }
+  html[data-view="web"] #menuBtn, html[data-view="web"] #drawerClose{ visibility:hidden; }
+  html[data-view="web"] header.top{ margin-inline:0; padding-inline:0; }
+  html[data-view="web"] .acct-grid{ grid-template-columns:repeat(4,1fr); }
+  html[data-view="web"] .summary{ gap:14px; }
+  html[data-view="web"] .sheet-backdrop{ align-items:center; }
+  html[data-view="web"] .sheet{ border-radius:20px; max-width:540px; max-height:90vh; }
+  html[data-view="web"] .fab{ right:36px; bottom:32px; }
+  html[data-view="web"] .toast{ bottom:40px; }
 
   :root[data-theme="dark"]{
     --bg:#111111; --surface:#1C1C1E; --surface-2:#2A2A2D; --line:#2E2E31;
@@ -494,6 +516,7 @@
     <div class="drawer-foot">
       <div class="drawer-user" id="drawerUser"></div>
       <div class="drawer-actions">
+        <button type="button" class="icon-btn" id="viewBtn">🖥 網頁模式</button>
         <button type="button" class="icon-btn" id="themeBtn">☾ 亮/暗</button>
         <button type="button" class="icon-btn" id="backupBtn">⬇ 備份</button>
         <button type="button" class="icon-btn" id="logoutBtn">登出</button>
@@ -3953,6 +3976,18 @@
       closeAcctSheet(); showToast("已刪除");
     }
     catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+
+  var viewBtn = document.getElementById("viewBtn");
+  function syncViewBtn(){
+    viewBtn.textContent = document.documentElement.getAttribute("data-view") === "web" ? "📱 切換手機模式" : "🖥 切換網頁模式";
+  }
+  syncViewBtn();
+  viewBtn.addEventListener("click", function(){
+    var next = document.documentElement.getAttribute("data-view") === "web" ? "phone" : "web";
+    document.documentElement.setAttribute("data-view", next);
+    try{ localStorage.setItem("huaView", next); }catch(e){}
+    closeDrawer(); syncViewBtn();
   });
 
   var themeBtn = document.getElementById("themeBtn");
