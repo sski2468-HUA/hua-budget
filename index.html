@@ -410,13 +410,18 @@
   .drawer .tabs{ display:flex; flex-direction:column; gap:4px; background:transparent; border:none; padding:0; margin:0; overflow-y:auto; flex:1; }
   .drawer .tabs button{
     display:flex; flex-direction:row; align-items:center; gap:14px; justify-content:flex-start;
-    padding:14px 14px; font-size:16px; font-weight:600; color:var(--ink); border-radius:14px; text-align:left; flex:none;
+    padding:8px 14px; font-size:15px; font-weight:600; color:var(--ink); border-radius:12px; text-align:left; flex:none;
   }
+  .drawer-head{ padding:0 4px 6px; }
+  .drawer .tabs{ gap:1px; }
+  .nav-group{ font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.12em; padding:10px 14px 2px; flex:none; }
+  .nav-group:first-child{ padding-top:2px; }
   .drawer .tabs button .ico{ font-size:20px; width:26px; text-align:center; filter:none; opacity:1; }
   .drawer .tabs button.active{ background:var(--brand); color:var(--brand-ink); box-shadow:none; }
   .drawer-foot{ border-top:1px solid var(--line); padding-top:12px; }
   .drawer-user{ font-size:13px; color:var(--muted); margin-bottom:10px; word-break:break-all; }
-  .drawer-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .drawer-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .drawer-actions .icon-btn{ padding:6px 9px; font-size:12px; }
 
   .total-pill{ display:inline-flex; gap:4px; background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:16px 28px; font-size:20px; font-weight:800; margin-top:16px; }
   .home-head{ display:flex; justify-content:space-between; align-items:center; margin:22px 0 12px; }
@@ -606,18 +611,21 @@
       <button type="button" class="menu-btn" id="drawerClose" aria-label="關閉選單">✕</button>
     </div>
     <nav class="tabs">
+      <div class="nav-group">總覽</div>
       <button type="button" data-tab="home" class="active"><span class="ico">💵</span><span class="lbl">MY MONEY 帳戶餘額</span></button>
+      <button type="button" data-tab="calendar"><span class="ico">🗓️</span><span class="lbl">行事曆</span></button>
+      <div class="nav-group">財務</div>
       <button type="button" data-tab="budget"><span class="ico">💰</span><span class="lbl">收支安排</span></button>
       <button type="button" data-tab="salary"><span class="ico">🧾</span><span class="lbl">薪水紀錄</span></button>
       <button type="button" data-tab="utility"><span class="ico">💡</span><span class="lbl">水電瓦斯</span></button>
       <button type="button" data-tab="annual"><span class="ico">📅</span><span class="lbl">年度計畫</span></button>
       <button type="button" data-tab="planned"><span class="ico">📌</span><span class="lbl">預計大筆支出</span></button>
+      <div class="nav-group">生活</div>
       <button type="button" data-tab="leave"><span class="ico">🏖️</span><span class="lbl">請假</span></button>
       <button type="button" data-tab="period"><span class="ico">🌸</span><span class="lbl">健康管理</span></button>
-      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">其他（理賠、紅包、年資）</span></button>
-      <button type="button" data-tab="calendar"><span class="ico">🗓️</span><span class="lbl">行事曆</span></button>
-    </nav>
-    <div class="drawer-foot">
+      <div class="nav-group">其他</div>
+      <button type="button" data-tab="other"><span class="ico">📂</span><span class="lbl">理賠・紅包・年資</span></button>
+    </nav><div class="drawer-foot">
       <div class="drawer-user" id="drawerUser"></div>
       <div class="drawer-actions">
         <button type="button" class="icon-btn" id="viewBtn">🖥 網頁模式</button>
@@ -5642,7 +5650,7 @@
 
   var viewBtn = document.getElementById("viewBtn");
   function syncViewBtn(){
-    viewBtn.textContent = document.documentElement.getAttribute("data-view") === "web" ? "📱 切換手機模式" : "🖥 切換網頁模式";
+    viewBtn.textContent = document.documentElement.getAttribute("data-view") === "web" ? "📱 手機版" : "🖥 網頁版";
   }
   syncViewBtn();
   viewBtn.addEventListener("click", function(){
@@ -5655,7 +5663,7 @@
   var themeBtn = document.getElementById("themeBtn");
   function applyTheme(t){
     document.documentElement.setAttribute("data-theme", t);
-    themeBtn.textContent = t === "dark" ? "☀ 亮色" : "☾ 暗色";
+    themeBtn.textContent = t === "dark" ? "☀ 亮" : "☾ 暗";
   }
   var savedTheme = "dark";
   try{ savedTheme = localStorage.getItem("huaTheme") || "dark"; }catch(e){}
