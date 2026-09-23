@@ -1587,8 +1587,14 @@
       <input id="frDropVal" type="number" inputmode="decimal" step="0.1" style="width:80px;" value="1">
       <span>°C</span>
     </label>
+    <label style="display:flex; align-items:center; gap:8px; margin:6px 0 10px;">
+      <input type="checkbox" id="frWinOn" style="width:18px; height:18px;">
+      <span style="flex:1;">只看用藥後幾小時內</span>
+      <input id="frWinVal" type="number" inputmode="decimal" step="0.5" style="width:80px;" value="8">
+      <span>小時</span>
+    </label>
     <div class="field">
-      <label>兩個條件都勾選時</label>
+      <label>體溫條件都勾選時</label>
       <select id="frCombine">
         <option value="any">符合其中一項即可</option>
         <option value="all">需同時符合兩項</option>
@@ -1942,6 +1948,10 @@
   var currentHealthSub = "cycle";
   var visitDeptFilterValue = "all";
   var visitPersonFilterValue = "all";
+  try{
+    visitDeptFilterValue = localStorage.getItem("huaVisitDept") || "all";
+    visitPersonFilterValue = localStorage.getItem("huaVisitPerson") || "all";
+  }catch(e){}
   var settingsById = {};
   var settingsCol = null;
   var PL_SYMPTOMS = ["頭痛","腰痠","肚子痛","拉肚子","噁心","疲倦","情緒起伏","胸脹","失眠","食慾變化","經血量多","經血量少"];
@@ -2022,12 +2032,19 @@
     budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
     claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc", visit:"desc"
   };
+  Object.keys(SORT_DIR).forEach(function(k){
+    try{
+      var v = localStorage.getItem("huaSort_" + k);
+      if (v === "asc" || v === "desc") SORT_DIR[k] = v;
+    }catch(e){}
+  });
   function wireSortBtn(btnId, key, renderFn){
     var btn = document.getElementById(btnId);
     if (!btn) return;
     btn.textContent = SORT_DIR[key] === "asc" ? "舊→新 ↑" : "新→舊 ↓";
     btn.addEventListener("click", function(){
       SORT_DIR[key] = SORT_DIR[key] === "asc" ? "desc" : "asc";
+      try{ localStorage.setItem("huaSort_" + key, SORT_DIR[key]); }catch(e){}
       btn.textContent = SORT_DIR[key] === "asc" ? "舊→新 ↑" : "新→舊 ↓";
       renderFn();
     });
@@ -2098,6 +2115,7 @@
   document.querySelectorAll("#personFilterTabs button").forEach(function(b){
     b.addEventListener("click", function(){
       currentPerson = b.getAttribute("data-person");
+      try{ localStorage.setItem("huaPerson", currentPerson); }catch(e){}
       document.querySelectorAll("#personFilterTabs button").forEach(function(x){
         x.classList.toggle("active", x === b);
       });
@@ -3971,13 +3989,15 @@
 
   // ---- 發燒歷程 ----
   var feverPersonFilterValue = "all";
+  try{ feverPersonFilterValue = localStorage.getItem("huaFeverPerson") || "all"; }catch(e){}
   var currentFeverEpisode = null;
 
   function updateFeverPersonOptions(){
     var episodes = Object.keys(episodesById).map(function(id){ return episodesById[id]; });
+    if (!episodes.length) return;
     var persons = Array.from(new Set(episodes.map(function(d){ return d.person || ""; }).filter(Boolean)));
     var sel = document.getElementById("feverPersonFilter");
-    var current = sel.value || "all";
+    var current = feverPersonFilterValue || "all";
     var html = '<option value="all">全部</option>' +
       persons.map(function(p){ return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>'; }).join("");
     if (sel.innerHTML !== html){
@@ -3990,6 +4010,7 @@
   }
   document.getElementById("feverPersonFilter").addEventListener("change", function(){
     feverPersonFilterValue = this.value;
+    try{ localStorage.setItem("huaFeverPerson", this.value); }catch(e){}
     currentFeverEpisode = null;
     renderEpisodes(); renderFever();
   });
@@ -4163,8 +4184,23 @@
       belowVal: (r.belowVal !== null && r.belowVal !== undefined) ? Number(r.belowVal) : 38,
       dropOn: r.dropOn !== false,
       dropVal: (r.dropVal !== null && r.dropVal !== undefined) ? Number(r.dropVal) : 1,
-      combine: r.combine === "all" ? "all" : "any"
+      combine: r.combine === "all" ? "all" : "any",
+      winOn: r.winOn !== false,
+      winVal: (r.winVal !== null && r.winVal !== undefined) ? Number(r.winVal) : 8
     };
+  }
+  function findRecovery(list, i){
+    var r = getFeverRule();
+    var doseDt = feverDT(list[i]);
+    var inWindow = 0;
+    for (var j = i + 1; j < list.length; j++){
+      var dt = feverDT(list[j]);
+      if (r.winOn && doseDt && dt && (dt - doseDt) / 3600000 > r.winVal) break;
+      inWindow++;
+      if (isRecovered(list[j].temp, list[i].temp)) return { rec:list[j], hrs: (dt && doseDt) ? (dt - doseDt) / 3600000 : null, inWindow:inWindow };
+      if (list[j].medication) break;
+    }
+    return { rec:null, hrs:null, inWindow:inWindow, winOn:r.winOn, winVal:r.winVal };
   }
   function isRecovered(candidateTemp, doseTemp){
     var r = getFeverRule();
@@ -4181,6 +4217,8 @@
     document.getElementById("frDropOn").checked = r.dropOn;
     document.getElementById("frDropVal").value = r.dropVal;
     document.getElementById("frCombine").value = r.combine;
+    document.getElementById("frWinOn").checked = r.winOn;
+    document.getElementById("frWinVal").value = r.winVal;
     document.getElementById("feverRuleSheetBackdrop").hidden = false;
   }
   function closeFeverRuleSheet(){ document.getElementById("feverRuleSheetBackdrop").hidden = true; }
@@ -4196,7 +4234,9 @@
       belowVal: parseFloat(document.getElementById("frBelowVal").value) || 38,
       dropOn: dropOn,
       dropVal: parseFloat(document.getElementById("frDropVal").value) || 1,
-      combine: document.getElementById("frCombine").value
+      combine: document.getElementById("frCombine").value,
+      winOn: document.getElementById("frWinOn").checked,
+      winVal: parseFloat(document.getElementById("frWinVal").value) || 8
     };
     if (!dbReady || !settingsCol){ showToast("尚未連線，稍後再試"); return; }
     try{
@@ -4396,15 +4436,12 @@
     var doseMarkers = points.map(function(p, i){
       if (!p.medication) return "";
       var doseDt = feverDT(p);
-      var recovered = null;
-      for (var j = i + 1; j < points.length; j++){
-        if (isRecovered(points[j].temp, p.temp)){ recovered = points[j]; break; }
-      }
+      var fr = findRecovery(points, i);
       var durText;
-      if (recovered && doseDt){
-        var recDt = feverDT(recovered);
-        var hrs = (recDt - doseDt) / 3600000;
-        durText = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒（降至 " + recovered.temp + "°C，" + recovered.label + "）") : "";
+      if (fr.rec){
+        durText = (fr.hrs !== null ? fr.hrs.toFixed(1) + " 小時後退燒" : "退燒") + "（降至 " + fr.rec.temp + "°C，" + fr.rec.label + "）";
+      } else if (fr.winOn){
+        durText = fr.winVal + " 小時內" + (fr.inWindow ? "未見退燒" : "沒有量測紀錄，無法判斷");
       } else {
         durText = "此次紀錄中尚未看到符合退燒定義的量測";
       }
@@ -4495,12 +4532,12 @@
     withTemp.forEach(function(p, i){
       if (!p.medication) return;
       var doseDt = feverDT(p);
-      var recovered = null;
-      for (var j = i + 1; j < withTemp.length; j++){ if (isRecovered(withTemp[j].temp, p.temp)){ recovered = withTemp[j]; break; } }
+      var fr = findRecovery(withTemp, i);
       var text;
-      if (recovered && doseDt){
-        var hrs = (feverDT(recovered) - doseDt) / 3600000;
-        text = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒至 " + Number(recovered.temp).toFixed(1) + "°C（" + (recovered.date||"").slice(5).replace("-","/") + " " + (recovered.time||"") + "）") : "";
+      if (fr.rec){
+        text = (fr.hrs !== null ? fr.hrs.toFixed(1) + " 小時後退燒至 " : "退燒至 ") + Number(fr.rec.temp).toFixed(1) + "°C（" + (fr.rec.date||"").slice(5).replace("-","/") + " " + (fr.rec.time||"") + "）";
+      } else if (fr.winOn){
+        text = fr.winVal + " 小時內" + (fr.inWindow ? "未見退燒" : "沒有量測紀錄，無法判斷");
       } else {
         text = "紀錄中尚未看到符合退燒定義的量測";
       }
@@ -5741,8 +5778,10 @@
     var deptSel = document.getElementById("visitDeptFilter"), personSel = document.getElementById("visitPersonFilter");
     deptSel.innerHTML = '<option value="all">全部</option>' + Object.keys(depts).map(function(x){ return '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; }).join("");
     personSel.innerHTML = '<option value="all">全部</option>' + Object.keys(persons).map(function(x){ return '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; }).join("");
-    if (!depts[visitDeptFilterValue]) visitDeptFilterValue = "all";
-    if (!persons[visitPersonFilterValue]) visitPersonFilterValue = "all";
+    if (all.length){
+      if (!depts[visitDeptFilterValue]) visitDeptFilterValue = "all";
+      if (!persons[visitPersonFilterValue]) visitPersonFilterValue = "all";
+    }
     deptSel.value = visitDeptFilterValue; personSel.value = visitPersonFilterValue;
     document.getElementById("visitDeptList").innerHTML = ["牙科","婦科","內科 / 感冒","小兒科","眼科","皮膚科","骨科","耳鼻喉科","中醫","健檢"].concat(Object.keys(depts)).map(function(x){ return '<option value="' + escapeHtml(x) + '">'; }).join("");
     document.getElementById("visitPersonList").innerHTML = ["HUA","YUPAS","宸","杉"].concat(Object.keys(persons)).map(function(x){ return '<option value="' + escapeHtml(x) + '">'; }).join("");
@@ -5778,8 +5817,8 @@
       list.appendChild(el);
     });
   }
-  document.getElementById("visitDeptFilter").addEventListener("change", function(){ visitDeptFilterValue = this.value; renderVisits(); });
-  document.getElementById("visitPersonFilter").addEventListener("change", function(){ visitPersonFilterValue = this.value; renderVisits(); });
+  document.getElementById("visitDeptFilter").addEventListener("change", function(){ visitDeptFilterValue = this.value; try{ localStorage.setItem("huaVisitDept", this.value); }catch(e){} renderVisits(); });
+  document.getElementById("visitPersonFilter").addEventListener("change", function(){ visitPersonFilterValue = this.value; try{ localStorage.setItem("huaVisitPerson", this.value); }catch(e){} renderVisits(); });
   function fillVisitForm(d){
     document.getElementById("vsDate").value = d.date || todayStrNow();
     document.getElementById("vsPerson").value = d.person || "";
@@ -6356,6 +6395,16 @@
   renderRedIn();
   renderEpisodes();
   renderFever();
+
+  (function restoreLastPerson(){
+    var p = ""; try{ p = localStorage.getItem("huaPerson") || ""; }catch(e){}
+    var btn = p && document.querySelector('#personFilterTabs button[data-person="' + p + '"]');
+    if (btn && p !== currentPerson){
+      currentPerson = p;
+      document.querySelectorAll("#personFilterTabs button").forEach(function(x){ x.classList.toggle("active", x === btn); });
+      render(); renderSalaries(); renderAnnualFixed(); renderAnnualBonus();
+    }
+  })();
 
   (function restoreLastTab(){
     var lastTab = ""; try{ lastTab = localStorage.getItem("huaLastTab") || ""; }catch(e){}
