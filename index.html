@@ -170,6 +170,7 @@
   section.group h2 .dot.hb{ background:var(--hb); }
   section.group h2 .count{ color:var(--muted); font-weight:500; }
   .addlink{ border:none; background:none; color:var(--brand); font-weight:700; font-size:13px; cursor:pointer; padding:4px 2px; font-family:inherit; }
+  .addlink.pill{ background:var(--brand); color:var(--brand-ink,#fff); border-radius:20px; padding:8px 16px; font-size:13.5px; box-shadow:0 2px 8px rgba(0,0,0,.25); }
   .sort-btn{
     border:1px solid var(--line); background:var(--surface); color:var(--muted);
     border-radius:8px; padding:4px 9px; font-size:12px; font-weight:700; cursor:pointer;
@@ -1003,11 +1004,17 @@
           <h2><span class="dot fever"></span>體溫量測 <span class="count" id="feverCount"></span></h2>
           <div style="display:flex; align-items:center; gap:6px;">
             <button class="sort-btn" id="feverSortBtn" type="button"></button>
-            <button class="addlink" id="addFeverBtn" type="button">＋ 新增量測</button>
+            <button class="addlink pill" id="addFeverBtn" type="button">＋ 新增量測</button>
           </div>
         </div>
         <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
-        <div id="feverMedStatus"></div>
+        <div id="medStatusWrap" hidden>
+          <div class="ghead" style="margin:0 0 6px;">
+            <h2 style="font-size:13px;">用藥提醒</h2>
+            <button type="button" class="sort-btn" id="medStatusToggleBtn" style="margin:0;">▸ 展開</button>
+          </div>
+          <div id="feverMedStatus" hidden></div>
+        </div>
         <div class="breakdown-strip">
           <div class="chip"><div class="lbl">最新體溫</div><div class="val num" id="feverLatest">-</div></div>
           <div class="chip"><div class="lbl">最高溫</div><div class="val num" id="feverMax">-</div></div>
@@ -4286,7 +4293,8 @@
 
   function renderFeverMedStatus(){
     var box = document.getElementById("feverMedStatus");
-    if (!currentFeverEpisode){ box.innerHTML = ""; return; }
+    var wrap = document.getElementById("medStatusWrap");
+    if (!currentFeverEpisode){ box.innerHTML = ""; wrap.hidden = true; return; }
     var nowDt = new Date();
     var byKey = {};
     Object.keys(feverById).forEach(function(id){
@@ -4314,7 +4322,22 @@
       html += '<div class="pill ' + (ok ? "ok" : "wait") + '">' + escapeHtml(key) + '<div class="n">' + status + '</div><div style="font-weight:500; opacity:.85;">上次 ' + lastLabel + '（間隔 ' + hours + ' hr）· 下次可用藥 ' + fmtDoseTime(nextDt) + '</div></div>';
     });
     box.innerHTML = html ? '<div class="med-status">' + html + '</div>' : "";
+    wrap.hidden = !html;
   }
+  (function(){
+    var open = false;
+    try{ open = localStorage.getItem("huaMedStatusOpen") === "1"; }catch(e){}
+    function apply(){
+      document.getElementById("feverMedStatus").hidden = !open;
+      document.getElementById("medStatusToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+    }
+    apply();
+    document.getElementById("medStatusToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaMedStatusOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+  })();
 
   function renderFever(){
     var list = document.getElementById("feverList");
