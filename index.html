@@ -4310,13 +4310,38 @@
         dateLabels += '<line x1="' + xAt(i).toFixed(1) + '" y1="' + padT + '" x2="' + xAt(i).toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--line)" stroke-width="1" stroke-dasharray="2,3"/>';
       }
     });
+    var doseRows = [];
+    var doseMarkers = points.map(function(p, i){
+      if (!p.medication) return "";
+      var doseDt = feverDT(p);
+      var recovered = null;
+      for (var j = i + 1; j < points.length; j++){
+        if (points[j].temp < 38){ recovered = points[j]; break; }
+      }
+      var durText;
+      if (recovered && doseDt){
+        var recDt = feverDT(recovered);
+        var hrs = (recDt - doseDt) / 3600000;
+        durText = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒（" + recovered.label + " " + recovered.temp + "°C）") : "";
+      } else {
+        durText = "此次紀錄中尚未看到退燒";
+      }
+      doseRows.push({ label: p.label, med: p.medication, durText: durText });
+      var mx = xAt(i);
+      return '<line x1="' + mx.toFixed(1) + '" y1="' + padT + '" x2="' + mx.toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--brand)" stroke-width="1.4" stroke-dasharray="3,2" opacity=".75"/>' +
+        '<path d="M' + mx.toFixed(1) + ',' + (padT - 2) + ' l-5,-8 l10,0 z" fill="var(--brand)"><title>💊 ' + escapeHtml(p.medication) + "　" + escapeHtml(p.label) + '　' + escapeHtml(durText) + '</title></path>';
+    }).join("");
+    var legend = doseRows.length ? '<div class="section-hint" style="margin:8px 2px 0; line-height:1.7;">' +
+      doseRows.map(function(r){ return '💊 ' + escapeHtml(r.label) + ' 用' + escapeHtml(r.med) + '　→　' + escapeHtml(r.durText); }).join("<br>") +
+      '</div>' : "";
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
       '<line x1="' + padL + '" y1="' + feverY.toFixed(1) + '" x2="' + (W-padR) + '" y2="' + feverY.toFixed(1) + '" stroke="var(--fever)" stroke-width="1" stroke-dasharray="4,3" opacity=".6"/>' +
       '<text x="' + (W-padR) + '" y="' + (feverY - 4).toFixed(1) + '" font-size="9" fill="var(--fever)" text-anchor="end">38.0</text>' +
       dateLabels +
       '<path d="' + pathD + '" fill="none" stroke="var(--fever)" stroke-width="2"/>' +
       dots +
-      '</svg>';
+      doseMarkers +
+      '</svg>' + legend;
   }
 
   function renderFeverMedStatus(){
@@ -4398,7 +4423,7 @@
     });
     var withTemp = chronological.filter(function(d){ return d.temp !== null && d.temp !== undefined && d.temp !== ""; });
     var points = withTemp.map(function(d){
-      return { temp: Number(d.temp), date: d.date, label: d.date.slice(5) + " " + (d.time||"") };
+      return { temp: Number(d.temp), date: d.date, time: d.time||"", medication: d.medication||"", label: d.date.slice(5) + " " + (d.time||"") };
     });
     document.getElementById("feverChartBox").innerHTML = buildFeverChartSvg(points);
     if (withTemp.length){
