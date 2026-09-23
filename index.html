@@ -1538,10 +1538,16 @@
       <div class="field"><label>時間</label><input id="fvTime" type="time"></div>
       <div class="field"><label>體溫 (°C)</label><input id="fvTemp" type="number" inputmode="decimal" step="0.1" placeholder="例如：38.5"></div>
     </div>
-    <div class="field">
-      <label>用藥</label>
-      <input id="fvMed" type="text" list="fvMedList" placeholder="例如：依普芬、安佳熱">
-      <datalist id="fvMedList"></datalist>
+    <div class="row3" style="grid-template-columns:1fr 110px;">
+      <div class="field">
+        <label>用藥</label>
+        <input id="fvMed" type="text" list="fvMedList" placeholder="例如：依普芬、安佳熱">
+        <datalist id="fvMedList"></datalist>
+      </div>
+      <div class="field">
+        <label>用藥間隔（時）</label>
+        <input id="fvInterval" type="number" inputmode="decimal" step="0.5" min="0" placeholder="預設">
+      </div>
     </div>
     <div id="fvMedHint" class="section-hint" style="margin:-4px 0 10px;"></div>
     <div class="field"><label>備註</label><textarea id="fvNote" placeholder="症狀、看診、其他說明…"></textarea></div>
@@ -1992,6 +1998,7 @@
   var PERSON_FILTERED_TABS = { budget:1, salary:1, annual:1 };
   function switchTab(tab){
     currentTab = tab;
+    try{ localStorage.setItem("huaLastTab", tab); }catch(e){}
     document.querySelectorAll(".tabs button").forEach(function(b){
       b.classList.toggle("active", b.getAttribute("data-tab") === tab);
     });
@@ -4075,28 +4082,47 @@
     }
     return null;
   }
+  function medKey(name){
+    var n = String(name || "").trim();
+    var rule = medRuleFor(n);
+    return rule ? rule.label : n;
+  }
   function feverDT(d){
     if (!d || !d.date) return null;
     var t = d.time && /^\d{2}:\d{2}/.test(d.time) ? d.time : "00:00";
     var dt = new Date(d.date + "T" + t + ":00");
     return isNaN(dt) ? null : dt;
   }
+  function fmtDoseTime(dt){
+    var p2 = function(n){ return (n < 10 ? "0" : "") + n; };
+    return (dt.getMonth() + 1) + "/" + dt.getDate() + " " + p2(dt.getHours()) + ":" + p2(dt.getMinutes());
+  }
   function lastSameMedDose(episodeId, medName, beforeDt, excludeId){
-    var rule = medRuleFor(medName);
-    if (!rule) return null;
+    var key = medKey(medName);
+    if (!key) return null;
     var last = null;
     Object.keys(feverById).forEach(function(id){
       if (id === excludeId) return;
       var f = feverById[id];
       if (f.episodeId !== episodeId || !f.medication) return;
-      if (!medRuleFor(f.medication) || medRuleFor(f.medication).label !== rule.label) return;
+      if (medKey(f.medication) !== key) return;
       var dt = feverDT(f);
       if (!dt) return;
       if (beforeDt && dt > beforeDt) return;
       if (!last || dt > last.dt) last = { dt:dt, rec:f };
     });
-    return last ? { rule:rule, dt:last.dt, rec:last.rec } : null;
+    return last ? { dt:last.dt, rec:last.rec } : null;
   }
+  function medHours(rec, medName){
+    if (rec && rec.interval != null && rec.interval !== "") return parseFloat(rec.interval);
+    var rule = medRuleFor(medName);
+    return rule ? rule.hours : null;
+  }
+  document.getElementById("fvMed").addEventListener("input", function(){
+    var rule = medRuleFor(this.value);
+    document.getElementById("fvInterval").placeholder = rule ? ("預設 " + rule.hours) : "自訂";
+    refreshFeverMedHint();
+  });
   function refreshFeverMedHint(){
     var hint = document.getElementById("fvMedHint");
     var medName = document.getElementById("fvMed").value.trim();
@@ -4104,26 +4130,34 @@
     var d = document.getElementById("fvDate").value, t = document.getElementById("fvTime").value || "00:00";
     var nowDt = d ? new Date(d + "T" + t + ":00") : null;
     if (!medName || !episodeId || !nowDt || isNaN(nowDt)){ hint.textContent = ""; hint.style.color = ""; return; }
-    var rule = medRuleFor(medName);
-    if (!rule){ hint.textContent = "沒有這款藥的間隔資料，請依藥品標示或醫囑判斷用藥間隔。"; hint.style.color = ""; return; }
+    var medLabel = medKey(medName);
     var last = lastSameMedDose(episodeId, medName, nowDt, editingFeverId);
-    if (!last){ hint.textContent = rule.label + "，建議間隔 " + rule.hours + " 小時，這次是這個療程第一次用這款藥。"; hint.style.color = ""; return; }
-    var diffH = (nowDt - last.dt) / 3600000;
-    var nextDt = new Date(last.dt.getTime() + rule.hours * 3600000);
+    if (!last){
+      var rule0 = medRuleFor(medName);
+      hint.textContent = medLabel + "，" + (rule0 ? "建議間隔 " + rule0.hours + " 小時，" : "") + "這次是這個療程第一次用這款藥。可在右側自訂用藥間隔。";
+      hint.style.color = ""; return;
+    }
+    var hours = medHours(last.rec, medName);
     var lastLabel = last.rec.date.slice(5).replace("-", "/") + " " + (last.rec.time || "");
-    if (diffH >= rule.hours){
-      hint.textContent = "✓ 距上次用" + rule.label + "（" + lastLabel + "）已 " + diffH.toFixed(1) + " 小時，可以再用藥。";
+    if (hours == null || isNaN(hours)){
+      hint.textContent = medLabel + "，上次用藥時間 " + lastLabel + "，沒有間隔資料，可在右側自訂用藥間隔以啟用提醒。";
+      hint.style.color = ""; return;
+    }
+    var diffH = (nowDt - last.dt) / 3600000;
+    var nextDt = new Date(last.dt.getTime() + hours * 3600000);
+    if (diffH >= hours){
+      hint.textContent = "✓ 距上次用" + medLabel + "（" + lastLabel + "）已 " + diffH.toFixed(1) + " 小時，可以再用藥。";
       hint.style.color = "var(--income)";
     } else {
       var remainMin = Math.ceil((nextDt - nowDt) / 60000);
       var rh = Math.floor(remainMin / 60), rm = remainMin % 60;
-      hint.textContent = "⚠ 距上次用" + rule.label + "（" + lastLabel + "）才 " + diffH.toFixed(1) + " 小時，建議間隔 " + rule.hours + " 小時，還要等 " + (rh > 0 ? rh + " 小時 " : "") + rm + " 分才能再用同一款藥。";
+      hint.textContent = "⚠ 距上次用" + medLabel + "（" + lastLabel + "）才 " + diffH.toFixed(1) + " 小時，該次間隔 " + hours + " 小時，還要等 " + (rh > 0 ? rh + " 小時 " : "") + rm + " 分，下次可用藥時間約 " + fmtDoseTime(nextDt) + "。";
       hint.style.color = "var(--fixed)";
     }
   }
-  document.getElementById("fvMed").addEventListener("input", refreshFeverMedHint);
   document.getElementById("fvDate").addEventListener("change", refreshFeverMedHint);
   document.getElementById("fvTime").addEventListener("change", refreshFeverMedHint);
+  document.getElementById("fvInterval").addEventListener("input", refreshFeverMedHint);
   function refreshFeverMedList(){
     var meds = {};
     Object.keys(feverById).forEach(function(id){ if (feverById[id].medication) meds[feverById[id].medication] = 1; });
@@ -4143,6 +4177,8 @@
     document.getElementById("fvTime").value = "";
     document.getElementById("fvTemp").value = "";
     document.getElementById("fvMed").value = "";
+    document.getElementById("fvInterval").value = "";
+    document.getElementById("fvInterval").placeholder = "預設";
     document.getElementById("fvNote").value = "";
     refreshFeverMedList();
     refreshFeverMedHint();
@@ -4159,6 +4195,9 @@
     document.getElementById("fvTime").value = d.time || "";
     document.getElementById("fvTemp").value = (d.temp === null || d.temp === undefined) ? "" : d.temp;
     document.getElementById("fvMed").value = d.medication || "";
+    document.getElementById("fvInterval").value = (d.interval === null || d.interval === undefined) ? "" : d.interval;
+    var r = medRuleFor(d.medication);
+    document.getElementById("fvInterval").placeholder = r ? ("預設 " + r.hours) : "自訂";
     document.getElementById("fvNote").value = d.note || "";
     refreshFeverMedList();
     refreshFeverMedHint();
@@ -4176,11 +4215,13 @@
     var ep = episodesById[episodeId];
     if (!ep){ showToast("找不到所屬的發燒次，請重新選擇"); return; }
     var tempStr = document.getElementById("fvTemp").value;
+    var intervalStr = document.getElementById("fvInterval").value;
     var data = {
       person: ep.person, episodeId: episodeId, date: date,
       time: document.getElementById("fvTime").value,
       temp: tempStr === "" ? null : parseFloat(tempStr),
       medication: document.getElementById("fvMed").value.trim(),
+      interval: intervalStr === "" ? null : parseFloat(intervalStr),
       note: document.getElementById("fvNote").value.trim(),
       updatedAt: Date.now()
     };
@@ -4247,28 +4288,30 @@
     var box = document.getElementById("feverMedStatus");
     if (!currentFeverEpisode){ box.innerHTML = ""; return; }
     var nowDt = new Date();
+    var byKey = {};
+    Object.keys(feverById).forEach(function(id){
+      var f = feverById[id];
+      if (f.episodeId !== currentFeverEpisode || !f.medication) return;
+      var dt = feverDT(f);
+      if (!dt) return;
+      var key = medKey(f.medication);
+      if (!byKey[key] || dt > byKey[key].dt) byKey[key] = { dt:dt, rec:f };
+    });
     var html = "";
-    MED_RULES.forEach(function(rule){
-      var last = null;
-      Object.keys(feverById).forEach(function(id){
-        var f = feverById[id];
-        if (f.episodeId !== currentFeverEpisode || !f.medication) return;
-        var r = medRuleFor(f.medication);
-        if (!r || r.label !== rule.label) return;
-        var dt = feverDT(f);
-        if (!dt) return;
-        if (!last || dt > last.dt) last = { dt:dt, rec:f };
-      });
-      if (!last) return;
+    Object.keys(byKey).forEach(function(key){
+      var last = byKey[key];
+      var hours = medHours(last.rec, last.rec.medication);
+      if (hours == null || isNaN(hours)) return;
       var diffH = (nowDt - last.dt) / 3600000;
-      var ok = diffH >= rule.hours;
+      var ok = diffH >= hours;
       var lastLabel = last.rec.date.slice(5).replace("-", "/") + " " + (last.rec.time || "");
+      var nextDt = new Date(last.dt.getTime() + hours * 3600000);
       var status = ok ? "可以再用藥" : (function(){
-        var remainMin = Math.ceil(rule.hours * 60 - diffH * 60);
+        var remainMin = Math.ceil((nextDt - nowDt) / 60000);
         var rh = Math.floor(remainMin / 60), rm = remainMin % 60;
         return "還要等 " + (rh > 0 ? rh + " 小時 " : "") + rm + " 分";
       })();
-      html += '<div class="pill ' + (ok ? "ok" : "wait") + '">' + escapeHtml(rule.label) + '<div class="n">' + status + '</div><div style="font-weight:500; opacity:.85;">上次 ' + lastLabel + '（間隔 ' + rule.hours + ' hr）</div></div>';
+      html += '<div class="pill ' + (ok ? "ok" : "wait") + '">' + escapeHtml(key) + '<div class="n">' + status + '</div><div style="font-weight:500; opacity:.85;">上次 ' + lastLabel + '（間隔 ' + hours + ' hr）· 下次可用藥 ' + fmtDoseTime(nextDt) + '</div></div>';
     });
     box.innerHTML = html ? '<div class="med-status">' + html + '</div>' : "";
   }
@@ -5453,6 +5496,7 @@
 
   function switchHealthSub(name){
     currentHealthSub = name;
+    try{ localStorage.setItem("huaLastHealthSub", name); }catch(e){}
     document.querySelectorAll("#healthSubTabs button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-hsub") === name); });
     document.querySelectorAll("[data-hsub-page]").forEach(function(p){ p.classList.toggle("active", p.getAttribute("data-hsub-page") === name); });
   }
@@ -6082,6 +6126,18 @@
   renderRedIn();
   renderEpisodes();
   renderFever();
+
+  (function restoreLastTab(){
+    var lastTab = ""; try{ lastTab = localStorage.getItem("huaLastTab") || ""; }catch(e){}
+    if (lastTab && lastTab !== "home" && document.querySelector('.tabs button[data-tab="' + lastTab + '"]')){
+      switchTab(lastTab);
+      if (lastTab === "period"){
+        var lastHsub = ""; try{ lastHsub = localStorage.getItem("huaLastHealthSub") || ""; }catch(e){}
+        if (lastHsub && document.querySelector('#healthSubTabs button[data-hsub="' + lastHsub + '"]')) switchHealthSub(lastHsub);
+      }
+    }
+  })();
+
   boot();
 })();
 </script>
