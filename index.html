@@ -1008,7 +1008,10 @@
           </div>
         </div>
         <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
-        <button class="sort-btn" id="exportFeverPdfBtn" type="button" hidden style="margin:0 0 8px;">📄 匯出 PDF（給醫生看）</button>
+        <div style="display:flex; gap:6px; margin:0 0 8px; flex-wrap:wrap;">
+          <button class="sort-btn" id="exportFeverPdfBtn" type="button" hidden style="margin:0;">📄 匯出 PDF（給醫生看）</button>
+          <button class="sort-btn" id="feverRuleBtn" type="button" style="margin:0;">⚙️ 退燒定義</button>
+        </div>
         <div id="medStatusWrap" hidden>
           <div class="ghead" style="margin:0 0 6px;">
             <h2 style="font-size:13px;">用藥提醒</h2>
@@ -1564,6 +1567,36 @@
       <button class="btn danger" id="feverDeleteBtn" type="button" hidden>刪除</button>
       <button class="btn ghost" id="feverDuplicateBtn" type="button" hidden>複製</button>
       <button class="btn primary" id="feverSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="feverRuleSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3>退燒定義設定</h3>
+    <div class="section-hint" style="margin:0 0 12px;">符合下面勾選的條件時，就視為「已退燒」，會用在曲線圖標記和 PDF 匯出報告上。</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="checkbox" id="frBelowOn" style="width:18px; height:18px;">
+      <span style="flex:1;">體溫低於</span>
+      <input id="frBelowVal" type="number" inputmode="decimal" step="0.1" style="width:80px;" value="38">
+      <span>°C</span>
+    </label>
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <input type="checkbox" id="frDropOn" style="width:18px; height:18px;">
+      <span style="flex:1;">比用藥當下下降至少</span>
+      <input id="frDropVal" type="number" inputmode="decimal" step="0.1" style="width:80px;" value="1">
+      <span>°C</span>
+    </label>
+    <div class="field">
+      <label>兩個條件都勾選時</label>
+      <select id="frCombine">
+        <option value="any">符合其中一項即可</option>
+        <option value="all">需同時符合兩項</option>
+      </select>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="frCancelBtn" type="button">取消</button>
+      <button class="btn primary" id="frSaveBtn" type="button">儲存</button>
     </div>
   </div>
 </div>
@@ -4123,6 +4156,54 @@
     var rule = medRuleFor(n);
     return rule ? rule.label : n;
   }
+  function getFeverRule(){
+    var r = (settingsById.feverRule) || {};
+    return {
+      belowOn: !!r.belowOn,
+      belowVal: (r.belowVal !== null && r.belowVal !== undefined) ? Number(r.belowVal) : 38,
+      dropOn: r.dropOn !== false,
+      dropVal: (r.dropVal !== null && r.dropVal !== undefined) ? Number(r.dropVal) : 1,
+      combine: r.combine === "all" ? "all" : "any"
+    };
+  }
+  function isRecovered(candidateTemp, doseTemp){
+    var r = getFeverRule();
+    var checks = [];
+    if (r.belowOn) checks.push(Number(candidateTemp) < r.belowVal);
+    if (r.dropOn) checks.push(Number(candidateTemp) <= Number(doseTemp) - r.dropVal);
+    if (!checks.length) return Number(candidateTemp) < Number(doseTemp);
+    return r.combine === "all" ? checks.every(function(x){ return x; }) : checks.some(function(x){ return x; });
+  }
+  function openFeverRuleSheet(){
+    var r = getFeverRule();
+    document.getElementById("frBelowOn").checked = r.belowOn;
+    document.getElementById("frBelowVal").value = r.belowVal;
+    document.getElementById("frDropOn").checked = r.dropOn;
+    document.getElementById("frDropVal").value = r.dropVal;
+    document.getElementById("frCombine").value = r.combine;
+    document.getElementById("feverRuleSheetBackdrop").hidden = false;
+  }
+  function closeFeverRuleSheet(){ document.getElementById("feverRuleSheetBackdrop").hidden = true; }
+  document.getElementById("feverRuleBtn").addEventListener("click", openFeverRuleSheet);
+  document.getElementById("frCancelBtn").addEventListener("click", closeFeverRuleSheet);
+  document.getElementById("feverRuleSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeFeverRuleSheet(); });
+  document.getElementById("frSaveBtn").addEventListener("click", async function(){
+    var belowOn = document.getElementById("frBelowOn").checked;
+    var dropOn = document.getElementById("frDropOn").checked;
+    if (!belowOn && !dropOn){ showToast("至少要勾選一個條件"); return; }
+    var rule = {
+      belowOn: belowOn,
+      belowVal: parseFloat(document.getElementById("frBelowVal").value) || 38,
+      dropOn: dropOn,
+      dropVal: parseFloat(document.getElementById("frDropVal").value) || 1,
+      combine: document.getElementById("frCombine").value
+    };
+    if (!dbReady || !settingsCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      await settingsCol.doc("feverRule").set(rule);
+      closeFeverRuleSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
   function feverDT(d){
     if (!d || !d.date) return null;
     var t = d.time && /^\d{2}:\d{2}/.test(d.time) ? d.time : "00:00";
@@ -4317,15 +4398,15 @@
       var doseDt = feverDT(p);
       var recovered = null;
       for (var j = i + 1; j < points.length; j++){
-        if (points[j].temp < 38){ recovered = points[j]; break; }
+        if (isRecovered(points[j].temp, p.temp)){ recovered = points[j]; break; }
       }
       var durText;
       if (recovered && doseDt){
         var recDt = feverDT(recovered);
         var hrs = (recDt - doseDt) / 3600000;
-        durText = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒（" + recovered.label + " " + recovered.temp + "°C）") : "";
+        durText = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒（降至 " + recovered.temp + "°C，" + recovered.label + "）") : "";
       } else {
-        durText = "此次紀錄中尚未看到退燒";
+        durText = "此次紀錄中尚未看到符合退燒定義的量測";
       }
       doseRows.push({ label: p.label, med: p.medication, durText: durText });
       var mx = xAt(i);
@@ -4415,13 +4496,13 @@
       if (!p.medication) return;
       var doseDt = feverDT(p);
       var recovered = null;
-      for (var j = i + 1; j < withTemp.length; j++){ if (Number(withTemp[j].temp) < 38){ recovered = withTemp[j]; break; } }
+      for (var j = i + 1; j < withTemp.length; j++){ if (isRecovered(withTemp[j].temp, p.temp)){ recovered = withTemp[j]; break; } }
       var text;
       if (recovered && doseDt){
         var hrs = (feverDT(recovered) - doseDt) / 3600000;
         text = hrs >= 0 ? (hrs.toFixed(1) + " 小時後退燒至 " + Number(recovered.temp).toFixed(1) + "°C（" + (recovered.date||"").slice(5).replace("-","/") + " " + (recovered.time||"") + "）") : "";
       } else {
-        text = "紀錄中尚未看到退燒";
+        text = "紀錄中尚未看到符合退燒定義的量測";
       }
       doseSummary.push('<li>' + escapeHtml((p.date||"").slice(5).replace("-","/") + " " + (p.time||"")) + ' 用「' + escapeHtml(p.medication) + '」→ ' + escapeHtml(text) + '</li>');
     });
@@ -5001,6 +5082,7 @@
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
       settingsById = next;
       renderLeaves();
+      renderFever();
       if (!document.getElementById("plogSheetBackdrop").hidden){ renderPLogChips(); renderSymManage(); }
     }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     cycleCol.onSnapshot(function(snap){
