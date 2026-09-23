@@ -1647,6 +1647,14 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="feverAddChooserBackdrop" hidden>
+  <div class="sheet">
+    <h3>新增</h3>
+    <div class="add-grid" id="feverAddChooserGrid"></div>
+    <div class="sheet-actions"><button class="btn ghost" id="feverAddChooserCancel" type="button">取消</button></div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="calAddBackdrop" hidden>
   <div class="sheet">
     <h3 id="calAddTitle">新增到這一天</h3>
@@ -2845,7 +2853,7 @@
     else if (currentTab === "leave") openAddLeave();
     else if (currentTab === "planned") openAddPlanned();
     else if (currentTab === "calendar") openCalAddChooser(calSelected);
-    else if (currentTab === "period") (currentHealthSub === "cycle" ? openAddCycle : currentHealthSub === "visit" ? openAddVisit : currentHealthSub === "fever" ? openAddEpisode : openAddPLog)();
+    else if (currentTab === "period") (currentHealthSub === "cycle" ? openAddCycle : currentHealthSub === "visit" ? openAddVisit : currentHealthSub === "fever" ? openFeverAddChooser : openAddPLog)();
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -3968,6 +3976,26 @@
     document.getElementById("epNote").value = "";
     document.getElementById("episodeSheetBackdrop").hidden = false;
   }
+  function openFeverAddChooser(){
+    var opts = [
+      { ico:"🤒", name:"新增一次發燒紀錄", run:openAddEpisode },
+      { ico:"🌡️", name:"新增體溫量測", run:openAddFever }
+    ];
+    var grid = document.getElementById("feverAddChooserGrid");
+    grid.innerHTML = "";
+    opts.forEach(function(o){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "add-opt";
+      b.innerHTML = '<span class="ico">' + o.ico + '</span><span>' + o.name + '</span>';
+      b.addEventListener("click", function(){ closeFeverAddChooser(); o.run(); });
+      grid.appendChild(b);
+    });
+    document.getElementById("feverAddChooserBackdrop").hidden = false;
+  }
+  function closeFeverAddChooser(){ document.getElementById("feverAddChooserBackdrop").hidden = true; }
+  document.getElementById("feverAddChooserCancel").addEventListener("click", closeFeverAddChooser);
+  document.getElementById("feverAddChooserBackdrop").addEventListener("click", function(e){ if (e.target === this) closeFeverAddChooser(); });
   function openEditEpisode(d){
     editingEpisodeId = d._id;
     document.getElementById("episodeSheetTitle").textContent = "編輯這次發燒";
