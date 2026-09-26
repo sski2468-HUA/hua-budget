@@ -921,7 +921,7 @@
       <button type="button" data-hsub="cycle" class="active" style="font-size:12.5px;">經期紀錄</button>
       <button type="button" data-hsub="health" style="font-size:12.5px;">健康紀錄</button>
       <button type="button" data-hsub="visit" style="font-size:12.5px;">就醫紀錄</button>
-      <button type="button" data-hsub="fever" style="font-size:12.5px;">發燒歷程</button>
+      <button type="button" data-hsub="fever" style="font-size:12.5px;">病程記錄</button>
     </div>
     <div data-hsub-page="cycle" class="active">
     <div class="breakdown-strip" style="margin-top:12px;">
@@ -949,6 +949,10 @@
           <button class="sort-btn" id="periodSortBtn" type="button"></button>
           <button class="addlink" id="addPLogBtn" type="button">＋ 新增</button>
         </div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>依姓名篩選</label>
+        <select id="plogPersonFilter"><option value="all">全部</option><option value="HUA">HUA</option><option value="宸">宸</option><option value="杉">杉</option><option value="YUPAS">YUPAS</option></select>
       </div>
       <div class="field" style="margin-bottom:10px;">
         <label>顯示範圍</label>
@@ -989,8 +993,8 @@
     <div data-hsub-page="fever">
       <section class="group" style="margin-top:14px;">
         <div class="ghead">
-          <h2><span class="dot fever"></span>發燒次數 <span class="count" id="episodeCount"></span></h2>
-          <button class="addlink" id="addEpisodeBtn" type="button">＋ 新增一次</button>
+          <h2><span class="dot fever"></span>病程記錄 <span class="count" id="episodeCount"></span></h2>
+          <button class="addlink" id="addEpisodeBtn" type="button">＋ 新增人員發燒記錄</button>
         </div>
         <div class="field" style="margin-bottom:10px;">
           <label>依姓名篩選</label>
@@ -1001,10 +1005,10 @@
 
       <section class="group">
         <div class="ghead">
-          <h2><span class="dot fever"></span>體溫量測 <span class="count" id="feverCount"></span></h2>
+          <h2><span class="dot fever"></span>量測體溫/症狀 <span class="count" id="feverCount"></span></h2>
           <div style="display:flex; align-items:center; gap:6px;">
             <button class="sort-btn" id="feverSortBtn" type="button"></button>
-            <button class="addlink pill" id="addFeverBtn" type="button">＋ 新增量測</button>
+            <button class="addlink pill" id="addFeverBtn" type="button">＋ 新增量測體溫/症狀</button>
           </div>
         </div>
         <div class="section-hint" id="feverScopeHint" style="margin:-4px 0 8px;"></div>
@@ -1523,12 +1527,12 @@
 
 <div class="sheet-backdrop" id="episodeSheetBackdrop" hidden>
   <div class="sheet">
-    <h3 id="episodeSheetTitle">新增一次發燒</h3>
+    <h3 id="episodeSheetTitle">新增人員發燒記錄</h3>
     <div class="field"><label>姓名</label><input id="epPerson" type="text" placeholder="例如：杉、宸" list="feverPersonList"></div>
     <datalist id="feverPersonList"></datalist>
     <div class="row2">
       <div class="field"><label>開始日期</label><input id="epStartDate" type="date"></div>
-      <div class="field"><label>結束日期（選填，燒退了再填）</label><input id="epEndDate" type="date"></div>
+      <div class="field"><label>病程結束日（選填，結束了再填）</label><input id="epEndDate" type="date"></div>
     </div>
     <div class="field"><label>備註</label><textarea id="epNote" placeholder="例如：懷疑病因、看診紀錄…"></textarea></div>
     <div class="sheet-actions">
@@ -1542,7 +1546,7 @@
 
 <div class="sheet-backdrop" id="feverSheetBackdrop" hidden>
   <div class="sheet">
-    <h3 id="feverSheetTitle">新增發燒紀錄</h3>
+    <h3 id="feverSheetTitle">新增量測體溫/症狀</h3>
     <div class="section-hint" id="fvEpisodeHint" style="margin:0 0 10px;"></div>
     <div class="row3">
       <div class="field"><label>日期</label><input id="fvDate" type="date"></div>
@@ -1723,6 +1727,9 @@
 <div class="sheet-backdrop" id="plogSheetBackdrop" hidden>
   <div class="sheet">
     <h3 id="plogSheetTitle">新增健康紀錄</h3>
+    <div class="field"><label>誰的紀錄</label>
+      <select id="plgPerson"><option value="HUA">HUA</option><option value="宸">宸</option><option value="杉">杉</option><option value="YUPAS">YUPAS</option></select>
+    </div>
     <div class="row2">
       <div class="field"><label>日期</label><input id="plgDate" type="date"></div>
       <div class="field"><label>時間（選填）</label><input id="plgTime" type="time"></div>
@@ -4022,7 +4029,7 @@
 
   function openAddEpisode(){
     editingEpisodeId = null;
-    document.getElementById("episodeSheetTitle").textContent = "新增一次發燒";
+    document.getElementById("episodeSheetTitle").textContent = "新增人員發燒記錄";
     document.getElementById("episodeDeleteBtn").hidden = true;
     document.getElementById("episodeDuplicateBtn").hidden = true;
     document.getElementById("epPerson").value = feverPersonFilterValue !== "all" ? feverPersonFilterValue : "";
@@ -4033,8 +4040,8 @@
   }
   function openFeverAddChooser(){
     var opts = [
-      { ico:"🤒", name:"新增一次發燒紀錄", run:openAddEpisode },
-      { ico:"🌡️", name:"新增體溫量測", run:openAddFever }
+      { ico:"🤒", name:"新增人員發燒記錄", run:openAddEpisode },
+      { ico:"🌡️", name:"新增量測體溫/症狀", run:openAddFever }
     ];
     var grid = document.getElementById("feverAddChooserGrid");
     grid.innerHTML = "";
@@ -4101,7 +4108,7 @@
   });
   document.getElementById("episodeDuplicateBtn").addEventListener("click", function(){
     editingEpisodeId = null;
-    document.getElementById("episodeSheetTitle").textContent = "新增一次發燒";
+    document.getElementById("episodeSheetTitle").textContent = "新增人員發燒記錄";
     document.getElementById("episodeDeleteBtn").hidden = true;
     document.getElementById("episodeDuplicateBtn").hidden = true;
     showToast("已複製，請修改後儲存");
@@ -4126,7 +4133,7 @@
     if (!all.length){
       var e = document.createElement("div");
       e.className = "empty";
-      e.textContent = "點「＋ 新增一次」開始記錄一次發燒的日期範圍";
+      e.textContent = "點「＋ 新增人員發燒記錄」開始記錄病程";
       list.appendChild(e);
       return;
     }
@@ -4138,7 +4145,7 @@
       var dur = d.endDate ? daysBetween(d.startDate, d.endDate) : null;
       var el = document.createElement("div");
       el.className = "episode-card" + (d._id === currentFeverEpisode ? " selected" : "");
-      var rangeLabel = d.startDate.replace(/-/g,"/") + (d.endDate ? " – " + d.endDate.replace(/-/g,"/") : " – 尚未退燒");
+      var rangeLabel = d.startDate.replace(/-/g,"/") + (d.endDate ? " – " + d.endDate.replace(/-/g,"/") : " – 病程進行中");
       var metaParts = [];
       if (dur) metaParts.push(dur + " 天");
       if (maxTemp !== null) metaParts.push("最高 " + maxTemp.toFixed(1) + "°C");
@@ -4323,15 +4330,15 @@
   }
 
   function openAddFever(){
-    if (!currentFeverEpisode){ showToast("請先在上方選一次發燒紀錄（或新增一次）"); return; }
+    if (!currentFeverEpisode){ showToast("請先在上方選一個病程記錄（或新增人員發燒記錄）"); return; }
     editingFeverId = null;
-    document.getElementById("feverSheetTitle").textContent = "新增體溫量測";
+    document.getElementById("feverSheetTitle").textContent = "新增量測體溫/症狀";
     document.getElementById("feverDeleteBtn").hidden = true;
     document.getElementById("feverDuplicateBtn").hidden = true;
     var ep = episodesById[currentFeverEpisode];
     document.getElementById("fvEpisodeHint").textContent = "所屬發燒：" + (ep ? ep.person + " " + ep.startDate.replace(/-/g,"/") : "");
-    document.getElementById("fvDate").value = ep ? ep.startDate : todayStr();
-    document.getElementById("fvTime").value = "";
+    document.getElementById("fvDate").value = todayStrNow();
+    document.getElementById("fvTime").value = nowTimeStr();
     document.getElementById("fvTemp").value = "";
     document.getElementById("fvMed").value = "";
     document.getElementById("fvInterval").value = "";
@@ -4343,7 +4350,7 @@
   }
   function openEditFever(d){
     editingFeverId = d._id;
-    document.getElementById("feverSheetTitle").textContent = "編輯體溫量測";
+    document.getElementById("feverSheetTitle").textContent = "編輯量測體溫/症狀";
     document.getElementById("feverDeleteBtn").hidden = false;
     document.getElementById("feverDuplicateBtn").hidden = false;
     var ep = episodesById[d.episodeId];
@@ -4400,7 +4407,7 @@
   });
   document.getElementById("feverDuplicateBtn").addEventListener("click", function(){
     editingFeverId = null;
-    document.getElementById("feverSheetTitle").textContent = "新增體溫量測";
+    document.getElementById("feverSheetTitle").textContent = "新增量測體溫/症狀";
     document.getElementById("feverDeleteBtn").hidden = true;
     document.getElementById("feverDuplicateBtn").hidden = true;
     showToast("已複製，請修改後儲存");
@@ -4512,7 +4519,7 @@
   })();
 
   function exportFeverPdf(){
-    if (!currentFeverEpisode){ showToast("請先選擇一次發燒紀錄"); return; }
+    if (!currentFeverEpisode){ showToast("請先選擇一個病程記錄"); return; }
     var ep = episodesById[currentFeverEpisode];
     if (!ep){ showToast("找不到這次發燒的資料"); return; }
     var records = Object.keys(feverById).map(function(id){ return Object.assign({}, feverById[id], { _id:id }); })
@@ -4544,10 +4551,10 @@
       doseSummary.push('<li>' + escapeHtml((p.date||"").slice(5).replace("-","/") + " " + (p.time||"")) + ' 用「' + escapeHtml(p.medication) + '」→ ' + escapeHtml(text) + '</li>');
     });
 
-    var periodLabel = ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 尚未退燒");
+    var periodLabel = ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 病程進行中");
     var days = daysBetween(ep.startDate, ep.endDate || todayStr());
 
-    var html = '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>' + escapeHtml(ep.person) + ' 發燒紀錄 ' + escapeHtml(ep.startDate) + '</title>' +
+    var html = '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>' + escapeHtml(ep.person) + ' 病程記錄 ' + escapeHtml(ep.startDate) + '</title>' +
       '<style>' +
       'body{ font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif; color:#222; padding:24px; max-width:720px; margin:0 auto; background:#fff; }' +
       'h1{ font-size:20px; margin:0 0 4px; } h2{ font-size:15px; margin:22px 0 8px; border-bottom:2px solid #E8622C; padding-bottom:4px; }' +
@@ -4560,7 +4567,7 @@
       '@media print{ .printBtn{ display:none; } }' +
       '</style></head><body>' +
       '<button class="printBtn" onclick="window.print()">列印 / 儲存為 PDF</button>' +
-      '<h1>發燒紀錄 － ' + escapeHtml(ep.person) + '</h1>' +
+      '<h1>病程記錄 － ' + escapeHtml(ep.person) + '</h1>' +
       '<div class="meta">發燒期間：' + escapeHtml(periodLabel) + '（' + days + ' 天）</div>' +
       (ep.note ? '<div class="meta">備註：' + escapeHtml(ep.note) + '</div>' : "") +
       '<div class="stats">' +
@@ -4593,7 +4600,7 @@
     if (currentFeverEpisode){
       all = allUnfiltered.filter(function(d){ return d.episodeId === currentFeverEpisode; });
       var ep = episodesById[currentFeverEpisode];
-      hintEl.textContent = ep ? ("目前顯示：" + ep.person + " " + ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 尚未退燒") + " 這一次") : "";
+      hintEl.textContent = ep ? ("目前顯示：" + ep.person + " " + ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 病程進行中") + " 這一次") : "";
     } else {
       all = feverPersonFilterValue === "all" ? allUnfiltered : allUnfiltered.filter(function(d){
         return d.person === feverPersonFilterValue;
@@ -4629,7 +4636,7 @@
     if (!all.length){
       var e = document.createElement("div");
       e.className = "empty";
-      e.textContent = currentFeverEpisode ? "點「＋ 新增量測」記錄這一次的第一筆體溫" : "選一次發燒紀錄，或新增一次開始記錄";
+      e.textContent = currentFeverEpisode ? "點「＋ 新增量測體溫/症狀」記錄第一筆" : "選一個病程記錄，或新增人員發燒記錄開始記錄";
       list.appendChild(e);
       return;
     }
@@ -5455,6 +5462,7 @@
 
   function dayDiff(a, b){ return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000); }
   function todayStrNow(){ var n = new Date(); return ymdStr(n.getFullYear(), n.getMonth() + 1, n.getDate()); }
+  function nowTimeStr(){ var n = new Date(); return (n.getHours() < 10 ? "0" : "") + n.getHours() + ":" + (n.getMinutes() < 10 ? "0" : "") + n.getMinutes(); }
   function addDaysStr(s, n){ var d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return ymdStr(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
   function sortedCycles(){
     return Object.keys(cyclesById).map(function(id){ return Object.assign({ _id:id }, cyclesById[id]); })
@@ -5520,7 +5528,8 @@
     var rangeVal = document.getElementById("plogRange").value;
     var cutoff = rangeVal === "all" ? "" : addDaysStr(todayStrNow(), -Number(rangeVal));
     var all = Object.keys(plogsById).map(function(id){ return Object.assign({ _id:id }, plogsById[id]); });
-    var shown = all.filter(function(d){ return !cutoff || (d.date || "") >= cutoff; }).sort(function(a, b){
+    var plPerson = document.getElementById("plogPersonFilter").value;
+    var shown = all.filter(function(d){ return (!cutoff || (d.date || "") >= cutoff) && (plPerson === "all" || (d.person || "HUA") === plPerson); }).sort(function(a, b){
       var k = ((b.date || "") + (b.time || "")).localeCompare((a.date || "") + (a.time || ""));
       return SORT_DIR.period === "asc" ? -k : k;
     });
@@ -5556,7 +5565,7 @@
       el.className = "plog-card";
       var tags = (d.symptoms || []).map(function(s){ return '<span>' + escapeHtml(s) + '</span>'; }).join("");
       if (d.medication) tags += '<span class="med">💊 ' + escapeHtml(d.medication) + '</span>';
-      el.innerHTML = '<div class="row1"><span class="tm num">' + escapeHtml(d.time || "") + (rel ? '　<span class="rel">' + rel + '</span>' : "") + '</span>' +
+      el.innerHTML = '<div class="row1"><span class="tm num">' + escapeHtml(d.time || "") + '<span class="hist-badge" style="margin-left:6px;">' + escapeHtml(d.person || "HUA") + '</span>' + (rel ? '　<span class="rel">' + rel + '</span>' : "") + '</span>' +
         (d.pain || d.pain === 0 ? '<span class="pain num">痛 ' + d.pain + '/10</span>' : "") + '</div>' +
         (tags ? '<div class="tags">' + tags + '</div>' : "") +
         (d.note ? '<div class="nt">' + escapeHtml(d.note) + '</div>' : "");
@@ -5698,7 +5707,8 @@
   }
   function fillPLogForm(d){
     document.getElementById("plgDate").value = d.date || todayStrNow();
-    document.getElementById("plgTime").value = d.time || "";
+    document.getElementById("plgPerson").value = d.person || (function(){ var f = document.getElementById("plogPersonFilter").value; return f === "all" ? "HUA" : f; })();
+    document.getElementById("plgTime").value = d.date ? (d.time || "") : nowTimeStr();
     document.getElementById("plgPain").value = d.pain === 0 || d.pain ? d.pain : "";
     document.getElementById("plgMed").value = d.medication || "";
     document.getElementById("plgNote").value = d.note || "";
@@ -5744,6 +5754,7 @@
     var pain = painStr === "" ? null : Math.max(0, Math.min(10, parseInt(painStr, 10) || 0));
     var data = {
       date: date, time: document.getElementById("plgTime").value,
+      person: document.getElementById("plgPerson").value,
       symptoms: plgSelected.slice(), pain: pain, medication: med,
       note: document.getElementById("plgNote").value.trim(), updatedAt: Date.now()
     };
@@ -5760,6 +5771,14 @@
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
   document.getElementById("plogRange").addEventListener("change", renderPeriod);
+  (function(){
+    var sel = document.getElementById("plogPersonFilter");
+    try{ var v = localStorage.getItem("huaPlogPerson"); if (v && sel.querySelector('option[value="' + v + '"]')) sel.value = v; }catch(e){}
+    sel.addEventListener("change", function(){
+      try{ localStorage.setItem("huaPlogPerson", sel.value); }catch(e){}
+      renderPeriod();
+    });
+  })();
 
   function switchHealthSub(name){
     currentHealthSub = name;
@@ -5964,7 +5983,7 @@
     Object.keys(plogsById).forEach(function(id){
       var d = plogsById[id];
       var t = (d.symptoms || []).join("、") || (d.medication ? "服藥" : "備註");
-      add(d.date, { cat:"symptom", title:t + (d.medication ? "　💊" + d.medication : ""), sub:[d.time, d.pain || d.pain === 0 ? "疼痛 " + d.pain + "/10" : "", d.note].filter(Boolean).join("　"), tab:"period", hsub:"health", sort:"0" + (d.time || "0") });
+      add(d.date, { cat:"symptom", title:(d.person || "HUA") + "　" + t + (d.medication ? "　💊" + d.medication : ""), sub:[d.time, d.pain || d.pain === 0 ? "疼痛 " + d.pain + "/10" : "", d.note].filter(Boolean).join("　"), tab:"period", hsub:"health", sort:"0" + (d.time || "0") });
     });
     Object.keys(plannedById).forEach(function(id){
       var d = plannedById[id];
@@ -6134,8 +6153,8 @@
     { ico:"💡", name:"水電瓦斯", run:function(d){ openAddUtility(); document.getElementById("uYear").value = d.slice(0, 4); document.getElementById("uMonth").value = Number(d.slice(5, 7)); } },
     { ico:"📌", name:"預計大筆支出", run:function(d){ openAddPlanned(); document.getElementById("plDate").value = d; } },
     { ico:"🛡️", name:"保險理賠", run:function(d){ openAddClaim(); document.getElementById("clIncidentDate").value = d; } },
-    { ico:"🤒", name:"發燒（新增一次）", run:function(d){ openAddEpisode(); document.getElementById("epStartDate").value = d; } },
-    { ico:"🌡️", name:"體溫量測", run:function(d){
+    { ico:"🤒", name:"病程（新增人員發燒記錄）", run:function(d){ openAddEpisode(); document.getElementById("epStartDate").value = d; } },
+    { ico:"🌡️", name:"量測體溫/症狀", run:function(d){
         var id = calEpisodeCovering(d);
         if (!id){ showToast("這天沒有對應的發燒紀錄，請先新增「發燒」"); return; }
         currentFeverEpisode = id;
