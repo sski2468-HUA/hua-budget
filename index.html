@@ -293,6 +293,13 @@
   .fever-card .meta{ font-size:13.5px; color:var(--muted); }
   .fever-card .note{ font-size:13px; margin-top:1px; }
   .fever-card .med-badge{ display:inline-block; font-size:10px; background:var(--fever-bg); color:var(--fever); border-radius:6px; padding:1px 6px; margin-left:5px; font-weight:700; vertical-align:middle; }
+  .photo-grid{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 8px; }
+  .photo-grid:empty{ margin:0; }
+  .photo-grid .ph{ position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .photo-grid .ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-grid .ph .rm{ position:absolute; top:2px; right:2px; background:rgba(0,0,0,.6); color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:18px; text-align:center; cursor:pointer; padding:0; }
+  .fever-card .photo-strip{ display:flex; gap:4px; margin-top:6px; }
+  .fever-card .photo-strip img{ width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid var(--line); }
   .med-status{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 10px; }
   .med-status .pill{ flex:1; min-width:140px; border-radius:12px; padding:8px 12px; font-size:12.5px; font-weight:700; border:1px solid var(--line); }
   .med-status .pill .n{ font-weight:900; margin-top:2px; font-size:13.5px; }
@@ -1642,6 +1649,12 @@
     </div>
     <div id="fvMedHint" class="section-hint" style="margin:-4px 0 10px;"></div>
     <div class="field"><label>備註</label><textarea id="fvNote" placeholder="症狀、看診、其他說明…"></textarea></div>
+    <div class="field">
+      <label>照片（皮膚、外觀變化等，選填）</label>
+      <div id="fvPhotoPreview" class="photo-grid"></div>
+      <input id="fvPhotoInput" type="file" accept="image/*" capture="environment" multiple>
+      <div class="section-hint" style="margin:4px 0 0;">照片會自動壓縮後存入資料庫，最多 3 張，畫質較低但足以記錄外觀變化。</div>
+    </div>
     <div class="sheet-actions">
       <button class="btn ghost" id="feverCancelBtn" type="button">取消</button>
       <button class="btn danger" id="feverDeleteBtn" type="button" hidden>刪除</button>
@@ -4587,6 +4600,49 @@
     document.getElementById("fvMedList").innerHTML = Object.keys(meds).map(function(m){ return '<option value="' + escapeHtml(m) + '">'; }).join("");
   }
 
+  var fvPhotos = [];
+  function resizeImageFile(file, maxDim, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var w = img.width, h = img.height;
+          var scale = Math.min(1, maxDim / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+          var canvas = document.createElement("canvas");
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = function(){ reject(new Error("image decode failed")); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function(){ reject(new Error("file read failed")); };
+      reader.readAsDataURL(file);
+    });
+  }
+  function renderFvPhotoPreview(){
+    var box = document.getElementById("fvPhotoPreview");
+    box.innerHTML = fvPhotos.map(function(src, i){
+      return '<div class="ph"><img src="' + src + '"><button type="button" class="rm" data-i="' + i + '">✕</button></div>';
+    }).join("");
+    box.querySelectorAll(".rm").forEach(function(btn){
+      btn.addEventListener("click", function(){ fvPhotos.splice(Number(this.getAttribute("data-i")), 1); renderFvPhotoPreview(); });
+    });
+  }
+  document.getElementById("fvPhotoInput").addEventListener("change", async function(){
+    var files = Array.from(this.files || []);
+    this.value = "";
+    for (var i = 0; i < files.length; i++){
+      if (fvPhotos.length >= 3){ showToast("最多 3 張照片"); break; }
+      try{
+        var src = await resizeImageFile(files[i], 900, 0.6);
+        fvPhotos.push(src);
+      }catch(e){ showToast("這張照片處理失敗，請換一張"); }
+    }
+    renderFvPhotoPreview();
+  });
   function openAddFever(){
     if (!currentFeverEpisode){ showToast("請先在上方選一個病程記錄（或新增人員發燒記錄）"); return; }
     editingFeverId = null;
@@ -4602,6 +4658,8 @@
     document.getElementById("fvInterval").value = "";
     document.getElementById("fvInterval").placeholder = "預設";
     document.getElementById("fvNote").value = "";
+    fvPhotos = [];
+    renderFvPhotoPreview();
     refreshFeverMedList();
     refreshFeverMedHint();
     document.getElementById("feverSheetBackdrop").hidden = false;
@@ -4621,6 +4679,8 @@
     var r = medRuleFor(d.medication);
     document.getElementById("fvInterval").placeholder = r ? ("預設 " + r.hours) : "自訂";
     document.getElementById("fvNote").value = d.note || "";
+    fvPhotos = Array.isArray(d.photos) ? d.photos.slice() : [];
+    renderFvPhotoPreview();
     refreshFeverMedList();
     refreshFeverMedHint();
     document.getElementById("feverSheetBackdrop").hidden = false;
@@ -4645,8 +4705,11 @@
       medication: document.getElementById("fvMed").value.trim(),
       interval: intervalStr === "" ? null : parseFloat(intervalStr),
       note: document.getElementById("fvNote").value.trim(),
+      photos: fvPhotos.slice(),
       updatedAt: Date.now()
     };
+    var estSize = fvPhotos.reduce(function(s, p){ return s + p.length; }, 0);
+    if (estSize > 900000){ showToast("照片太大，請刪除一張再存"); return; }
     if (!dbReady || !feverCol){ showToast("尚未連線，稍後再試"); return; }
     try{
       if (editingFeverId){
@@ -4809,6 +4872,17 @@
       doseSummary.push('<li>' + escapeHtml((p.date||"").slice(5).replace("-","/") + " " + (p.time||"")) + ' 用「' + escapeHtml(p.medication) + '」→ ' + escapeHtml(text) + '</li>');
     });
 
+    var photoRows = [];
+    records.forEach(function(d){
+      if (!d.photos || !d.photos.length) return;
+      photoRows.push({ label:(d.date||"").replace(/-/g,"/") + " " + (d.time||""), photos:d.photos });
+    });
+    var photoHtml = photoRows.length ? '<h2>照片紀錄</h2>' + photoRows.map(function(r){
+      return '<div style="margin-bottom:10px;"><div class="meta">' + escapeHtml(r.label) + '</div><div style="display:flex; gap:8px; flex-wrap:wrap;">' +
+        r.photos.map(function(p){ return '<img src="' + p + '" style="width:140px; height:140px; object-fit:cover; border-radius:8px; border:1px solid #ccc;">'; }).join("") +
+        '</div></div>';
+    }).join("") : "";
+
     var periodLabel = ep.startDate.replace(/-/g,"/") + (ep.endDate ? " – " + ep.endDate.replace(/-/g,"/") : " – 病程進行中");
     var days = daysBetween(ep.startDate, ep.endDate || todayStr());
 
@@ -4835,6 +4909,7 @@
       '<h2>體溫與用藥紀錄</h2>' +
       '<table><thead><tr><th>日期</th><th>時間</th><th>體溫(°C)</th><th>用藥</th><th>備註</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
       (doseSummary.length ? '<h2>用藥與退燒時間</h2><ul>' + doseSummary.join("") + '</ul>' : "") +
+      photoHtml +
       '<div class="foot">HUA 生活收支安排 · 匯出時間 ' + new Date().toLocaleString("zh-TW") + '</div>' +
       '</body></html>';
 
@@ -4915,11 +4990,13 @@
       if (d.time) metaParts.push(d.time);
       metaParts.push(escapeHtml(d.person || ""));
       var noteHtml = escapeHtml(d.note || "") + (d.medication ? '<span class="med-badge">' + escapeHtml(d.medication) + '</span>' : '');
+      var photoHtml = (d.photos && d.photos.length) ? '<div class="photo-strip">' + d.photos.map(function(p){ return '<img src="' + p + '">'; }).join("") + '</div>' : '';
       el.innerHTML =
         tempHtml +
         '<div class="body">' +
           '<div class="meta">' + metaParts.join(" · ") + '</div>' +
           (noteHtml ? '<div class="note">' + noteHtml + '</div>' : '') +
+          photoHtml +
         '</div>';
       el.addEventListener("click", function(){ openEditFever(d); });
       list.appendChild(el);
