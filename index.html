@@ -907,6 +907,20 @@
     </div>
     <div class="section-hint" id="leaveRemainHint" style="margin:-8px 0 8px;"></div>
 
+    <div class="calc-box" style="margin-top:14px;">
+      <div class="ghead" style="margin:0;">
+        <h2 style="font-size:14px;">📅 缺勤計算區間（21日–次月20日）</h2>
+        <button class="sort-btn" id="leavePeriodToggleBtn" type="button" style="margin:0;">▸ 展開</button>
+      </div>
+      <div id="leavePeriodBody" hidden>
+        <div class="field" style="margin:10px 0;">
+          <label>薪資月份</label>
+          <input id="leavePeriodMonth" type="month">
+        </div>
+        <div id="leavePeriodContent"></div>
+      </div>
+    </div>
+
     <section class="group" style="margin-top:14px;">
       <div class="ghead">
         <h2><span class="dot leave"></span>請假紀錄 <span class="count" id="leaveCount"></span></h2>
@@ -1257,6 +1271,12 @@
       <div class="field"><label id="sDateLabel">實際發薪日</label><input id="sDate" type="date"></div>
     </div>
     <div class="field" id="ratingField"><label>考績</label><input id="sRating" type="text" placeholder="例如：甲、乙"></div>
+    <div class="field" id="gradeField"><label>職等</label>
+      <div class="row2" style="gap:8px;">
+        <input id="sGradeRank" type="number" inputmode="numeric" placeholder="等，例如 3">
+        <input id="sGradeLevel" type="number" inputmode="numeric" placeholder="級，例如 5">
+      </div>
+    </div>
     <div class="field" id="bonusNameField" hidden><label>獎金名稱</label><input id="sBonusName" type="text" placeholder="例如：端午獎金、中秋獎金、年終獎金、慰勉金"></div>
 
     <div id="salaryOnlySections">
@@ -2617,6 +2637,7 @@
         if (deductionTotal) metaParts.push("扣款 " + fmt(deductionTotal));
         if (leaveHours) metaParts.push("請假 " + leaveHours + "hr");
         if (d.rating) metaParts.push("考績 " + escapeHtml(d.rating));
+        if (d.gradeRank || d.gradeLevel) metaParts.push("職等 " + escapeHtml(d.gradeRank || "-") + "等" + escapeHtml(d.gradeLevel || "-") + "級");
         if (metaParts.length){
           html += '<div class="meta" style="margin-top:6px;">' + metaParts.join(" · ") + '</div>';
         }
@@ -2700,6 +2721,7 @@
     document.getElementById("salaryOnlySections").hidden = isBonus;
     document.getElementById("grossCalcBox").hidden = isBonus;
     document.getElementById("ratingField").hidden = isBonus;
+    document.getElementById("gradeField").hidden = isBonus;
     document.getElementById("bonusNameField").hidden = !isBonus;
     document.getElementById("sMonthField").hidden = isBonus;
     document.getElementById("sDateLabel").textContent = isBonus ? "發放日期" : "實際發薪日";
@@ -2832,6 +2854,8 @@
       var v = (id in tpl && tpl[id] !== undefined) ? tpl[id] : ((id in SALARY_PRESET) ? SALARY_PRESET[id] : "");
       document.getElementById(id).value = v === 0 ? "" : v;
     });
+    document.getElementById("sGradeRank").value = tplRec && tplRec.gradeRank ? tplRec.gradeRank : "";
+    document.getElementById("sGradeLevel").value = tplRec && tplRec.gradeLevel ? tplRec.gradeLevel : "";
     document.getElementById("sGeneralNote").value = "";
     sPaidTouched = false;
     syncPaidWithDate();
@@ -2871,6 +2895,8 @@
     document.getElementById("sDate").value = paidOnDate(d) || todayStr();
     sPayDateTouched = true;
     document.getElementById("sRating").value = d.rating || "";
+    document.getElementById("sGradeRank").value = d.gradeRank || "";
+    document.getElementById("sGradeLevel").value = d.gradeLevel || "";
     document.getElementById("sBonusName").value = d.bonusName || "";
     document.getElementById("sBaseSalary").value = d.baseSalary || "";
     document.getElementById("sTransport").value = d.transportAllowance || "";
@@ -2976,6 +3002,8 @@
       recordType: currentRecordType, person: currentSalaryPerson,
       bonusName: isBonus ? document.getElementById("sBonusName").value.trim() : "",
       rating: isBonus ? "" : document.getElementById("sRating").value.trim(),
+      gradeRank: isBonus ? "" : document.getElementById("sGradeRank").value.trim(),
+      gradeLevel: isBonus ? "" : document.getElementById("sGradeLevel").value.trim(),
       baseSalary: isBonus ? 0 : numVal("sBaseSalary"),
       transportAllowance: isBonus ? 0 : numVal("sTransport"),
       regionAllowance: isBonus ? 0 : numVal("sRegion"),
@@ -4713,6 +4741,54 @@
       .filter(function(d){ return d.date && d.date >= per.start && d.date <= per.end; })
       .sort(function(a, b){ return a.date.localeCompare(b.date); });
   }
+  function currentPayrollMonth(){
+    var n = new Date(), y = n.getFullYear(), m = n.getMonth() + 1;
+    if (n.getDate() >= 21){ m++; if (m > 12){ m = 1; y++; } }
+    return y + "-" + String(m).padStart(2, "0");
+  }
+  function renderLeavePeriodBox(){
+    var monthInput = document.getElementById("leavePeriodMonth");
+    var per = attendancePeriod(monthInput.value);
+    var box = document.getElementById("leavePeriodContent");
+    if (!per){ box.innerHTML = '<div class="section-hint" style="margin:0;">選擇月份後顯示區間</div>'; return; }
+    var list = leavesInPeriod(per);
+    var totalHours = list.reduce(function(s, d){ return s + (Number(d.hours) || 0); }, 0);
+    var rangeLabel = per.start.replace(/-/g, "/") + " – " + per.end.replace(/-/g, "/");
+    var html = '<div class="line"><span style="font-weight:700;">計算區間</span><span class="v num">' + rangeLabel + '</span></div>';
+    if (!list.length){
+      html += '<div class="section-hint" style="margin:6px 0 0;">這個區間沒有請假紀錄</div>';
+    } else {
+      html += '<div class="section-hint" style="margin:6px 0 4px;">共 ' + list.length + ' 筆，合計 ' + totalHours + ' hr</div>';
+      html += list.map(function(d){
+        var col = leaveColor(d.leaveType);
+        return '<div class="line" style="font-size:12.5px;"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + col + ';margin-right:5px;"></span>' +
+          escapeHtml(d.date.slice(5).replace("-", "/")) + '　' + escapeHtml(d.leaveType || "") + (d.note ? '　' + escapeHtml(d.note) : "") + '</span><span class="v num">' + (Number(d.hours) || 0) + ' hr</span></div>';
+      }).join("");
+    }
+    box.innerHTML = html;
+  }
+  (function(){
+    var open = false;
+    try{ open = localStorage.getItem("huaLeavePeriodOpen") === "1"; }catch(e){}
+    var monthInput = document.getElementById("leavePeriodMonth");
+    var savedMonth = ""; try{ savedMonth = localStorage.getItem("huaLeavePeriodMonth") || ""; }catch(e){}
+    monthInput.value = /^\d{4}-\d{2}$/.test(savedMonth) ? savedMonth : currentPayrollMonth();
+    function apply(){
+      document.getElementById("leavePeriodBody").hidden = !open;
+      document.getElementById("leavePeriodToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+      if (open) renderLeavePeriodBox();
+    }
+    apply();
+    document.getElementById("leavePeriodToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaLeavePeriodOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+    monthInput.addEventListener("change", function(){
+      try{ localStorage.setItem("huaLeavePeriodMonth", monthInput.value); }catch(e){}
+      renderLeavePeriodBox();
+    });
+  })();
   function refreshLeaveInfo(){
     var box = document.getElementById("sLeaveInfo");
     var isBonus = currentRecordType === "bonus";
@@ -5010,6 +5086,7 @@
   function renderLeaves(){
     var list = document.getElementById("leaveList");
     list.innerHTML = "";
+    if (!document.getElementById("leavePeriodBody").hidden) renderLeavePeriodBox();
     var periods = getAllPeriods();
     updateLeavePeriodOptions(periods);
     var currentPeriodObj = periods.filter(function(p){ return p._id === currentLeavePeriod; })[0];
