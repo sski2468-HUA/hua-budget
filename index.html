@@ -793,6 +793,62 @@
       </div>
     </section>
 
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead">
+        <h2><span class="dot salary"></span>年終預估</h2>
+        <button type="button" class="sort-btn" id="bnEstToggleBtn" style="margin:0;">▸ 展開</button>
+      </div>
+      <div id="bnEstBody" hidden>
+        <div class="section-hint" style="margin:0 0 10px;">依「考核辦法」及「年終獎金及酬勞發給辦法」試算，僅供參考，實際以公司公告為準。</div>
+        <div class="row2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;"><label>年度</label><input id="bnYear" type="number" inputmode="numeric" placeholder="例如 2026"></div>
+          <div class="field" style="margin:0;"><label>負責人</label>
+            <select id="bnPerson"><option value="hua">HUA</option><option value="yupas">YUPAS</option></select>
+          </div>
+        </div>
+        <div class="row2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;"><label>月本薪</label><input id="bnBase" type="number" inputmode="decimal"></div>
+          <div class="field" style="margin:0;"><label>獎勵標準月數</label><input id="bnStdMonths" type="number" inputmode="decimal" step="0.1" value="3"></div>
+        </div>
+        <div class="field" style="margin-bottom:10px;"><label>考績等第</label>
+          <select id="bnRating">
+            <option value="130">優（130%）</option>
+            <option value="115">良（115%）</option>
+            <option value="100" selected>甲（100%）</option>
+            <option value="80">乙（80%）</option>
+            <option value="40">丙（40%）</option>
+          </select>
+        </div>
+        <div class="calc-box">
+          <div class="line"><span>換算請假日數</span><span class="v num" id="bnLeaveDays">0</span></div>
+          <div class="line"><span>平日出勤獎勵比率</span><span class="v num" id="bnAttendRatio">100%</span></div>
+        </div>
+        <div class="section-hint" id="bnLeaveHint" style="margin:6px 2px 10px;"></div>
+        <div class="section-label" style="margin-top:4px;">獎懲加減發（次數）</div>
+        <div class="row3" style="margin-bottom:6px;">
+          <div class="field" style="margin:0;"><label>嘉獎</label><input id="bnMerit1" type="number" inputmode="numeric" value="0"></div>
+          <div class="field" style="margin:0;"><label>小功</label><input id="bnMerit2" type="number" inputmode="numeric" value="0"></div>
+          <div class="field" style="margin:0;"><label>大功</label><input id="bnMerit3" type="number" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="row3" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;"><label>申誡</label><input id="bnDemerit1" type="number" inputmode="numeric" value="0"></div>
+          <div class="field" style="margin:0;"><label>小過</label><input id="bnDemerit2" type="number" inputmode="numeric" value="0"></div>
+          <div class="field" style="margin:0;"><label>大過</label><input id="bnDemerit3" type="number" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="section-label" style="margin-top:4px;">其他加項（節慶獎金、購股獎勵等）</div>
+        <div id="bnExtraList" style="margin-bottom:6px;"></div>
+        <button type="button" class="btn ghost" id="bnExtraAddBtn" style="width:100%; margin-bottom:10px;">＋ 新增一項</button>
+        <div class="calc-box">
+          <div class="line"><span>保底（月本薪 × 1）</span><span class="v num" id="bnBaseLine">$0</span></div>
+          <div class="line"><span>考績獎勵</span><span class="v num" id="bnRatingLine">$0</span></div>
+          <div class="line"><span>平日出勤獎勵</span><span class="v num" id="bnAttendLine">$0</span></div>
+          <div class="line"><span>獎懲加減發</span><span class="v num" id="bnMeritLine">$0</span></div>
+          <div class="line"><span>其他加項</span><span class="v num" id="bnExtraLine">$0</span></div>
+          <div class="line total"><span>預估年終總額</span><span class="v num" id="bnTotalLine">$0</span></div>
+        </div>
+      </div>
+    </section>
+
     <section class="group" style="margin-top:14px;">
       <div class="ghead">
         <h2><span class="dot salary"></span>薪水紀錄 <span class="count" id="salaryCount"></span></h2>
@@ -2461,6 +2517,180 @@
   var cmpPickTouched = false;
   document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
   document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
+
+  // ---- 年終預估 ----
+  var BONUS_ATTEND_TABLE = [
+    [1/32,115],[1/8,112],[1/4,109],[3/8,106],[1/2,103],[1,100],[2,96],[3,92],[4,86],[5,82],
+    [6,78],[7,73],[8,69],[9,65],[10,60],[11,56],[12,51],[13,47],[14,42],[15,38],
+    [16,33],[17,29],[18,24],[19,20],[20,16],[21,11],[22,7],[23,2]
+  ];
+  function bonusAttendRatio(days){
+    if (days < 0) days = 0;
+    for (var i = 0; i < BONUS_ATTEND_TABLE.length; i++){ if (days < BONUS_ATTEND_TABLE[i][0]) return BONUS_ATTEND_TABLE[i][1]; }
+    return 0;
+  }
+  function computeBonusAttend(year, person){
+    var sickDays = 0, personalDays = 0, absentDays = 0, lateCount = 0, familyDays = 0, physioDays = 0, prenatalDays = 0, comfortDays = 0, otherIgnored = 0;
+    if (year){
+      Object.keys(leavesById).forEach(function(id){
+        var d = leavesById[id];
+        if (!d.date || d.date.slice(0, 4) !== String(year)) return;
+        if ((d.person || "hua") !== person) return;
+        var name = d.leaveType || "";
+        var days = (Number(d.hours) || 0) / 8;
+        if (name.indexOf("病假") >= 0) sickDays += days;
+        else if (name.indexOf("生理") >= 0) physioDays += days;
+        else if (name.indexOf("家庭照顧") >= 0) familyDays += days;
+        else if (name.indexOf("安胎") >= 0) prenatalDays += days;
+        else if (name.indexOf("舒心") >= 0 || name.indexOf("公傷") >= 0 || name.indexOf("撫育") >= 0) comfortDays += days;
+        else if (name === "事假" || name.indexOf("事假") >= 0) personalDays += days;
+        else if (name.indexOf("曠職") >= 0) absentDays += days;
+        else if (name.indexOf("遲到") >= 0) lateCount += 1;
+        else otherIgnored += days;
+      });
+    }
+    var sickTier1 = Math.min(sickDays, 5);
+    var sickTier2 = Math.max(0, Math.min(sickDays, 10) - 5);
+    var sickTier3 = Math.max(0, sickDays - 10);
+
+    var groupADays = personalDays * 1 + absentDays * (1/8) + lateCount * 5 + sickTier3 * (1/2);
+    var groupBDays = prenatalDays * (1/64) + comfortDays * (1/32) + familyDays * (1/32) + physioDays * (1/16) + sickTier1 * (1/16) + sickTier2 * (1/8);
+
+    var ratioA = bonusAttendRatio(groupADays);
+    var finalRatio, finalDays;
+    if (ratioA > 100 && groupBDays > 0){
+      var combined = groupADays + groupBDays;
+      var ratioCombined = bonusAttendRatio(combined);
+      finalRatio = ratioCombined > 100 ? ratioCombined : 100;
+      finalDays = combined;
+    } else {
+      finalRatio = ratioA;
+      finalDays = groupADays;
+    }
+    var parts = [];
+    if (personalDays) parts.push("事假 " + personalDays.toFixed(1) + " 天");
+    if (sickDays) parts.push("病假 " + sickDays.toFixed(1) + " 天（換算 " + (sickTier1*(1/16)+sickTier2*(1/8)+sickTier3*(1/2)).toFixed(3) + " 天）");
+    if (physioDays) parts.push("生理假 " + physioDays.toFixed(1) + " 天");
+    if (familyDays) parts.push("家庭照顧假 " + familyDays.toFixed(1) + " 天");
+    if (prenatalDays) parts.push("安胎假 " + prenatalDays.toFixed(1) + " 天");
+    if (comfortDays) parts.push("舒心/公傷/撫育假 " + comfortDays.toFixed(1) + " 天");
+    if (absentDays) parts.push("曠職 " + absentDays.toFixed(1) + " 天");
+    if (lateCount) parts.push("遲到 " + lateCount + " 次");
+    var hint = "依「年終獎金及酬勞發給辦法」各假別換算係數計算：事假/病假逾十日/曠職/遲到為主要項目，若其換算後比率高於100%，再併計生理假/家庭照顧假/安胎假/舒心公傷撫育假及病假未逾十日部份。" +
+      (parts.length ? "（本年度：" + parts.join("、") + "）" : "（本年度沒有相關請假紀錄）") +
+      (otherIgnored ? "　其餘假別（特休/換休等）不列入計算。" : "");
+    return { finalRatio:finalRatio, finalDays:finalDays, groupADays:groupADays, groupBDays:groupBDays, hint:hint };
+  }
+  var bnExtras = [];
+  function renderBnExtraList(){
+    var box = document.getElementById("bnExtraList");
+    box.innerHTML = "";
+    bnExtras.forEach(function(x, i){
+      var row = document.createElement("div");
+      row.className = "row2";
+      row.style.cssText = "gap:8px; margin-bottom:6px;";
+      row.innerHTML = '<input type="text" placeholder="名稱，例如：節慶獎金" value="' + escapeHtml(x.name || "") + '" data-i="' + i + '" data-f="name">' +
+        '<input type="number" inputmode="decimal" placeholder="金額" value="' + (x.amount || "") + '" data-i="' + i + '" data-f="amount" style="max-width:110px;">' +
+        '<button type="button" class="btn ghost" data-i="' + i + '" data-f="del" style="flex:0 0 auto; padding:10px 12px;">✕</button>';
+      box.appendChild(row);
+    });
+    box.querySelectorAll("input").forEach(function(inp){
+      inp.addEventListener("input", function(){
+        var i = Number(this.getAttribute("data-i")), f = this.getAttribute("data-f");
+        bnExtras[i][f] = f === "amount" ? Number(this.value) || 0 : this.value;
+        renderBnEstimate();
+      });
+    });
+    box.querySelectorAll('button[data-f="del"]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        bnExtras.splice(Number(this.getAttribute("data-i")), 1);
+        renderBnExtraList(); renderBnEstimate();
+      });
+    });
+  }
+  document.getElementById("bnExtraAddBtn").addEventListener("click", function(){
+    bnExtras.push({ name:"", amount:0 });
+    renderBnExtraList(); renderBnEstimate();
+  });
+  function bnAutoFillBase(){
+    var year = document.getElementById("bnYear").value;
+    var person = document.getElementById("bnPerson").value;
+    if (document.getElementById("bnBase").value || !year) return;
+    var recs = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === person && d.payDate && d.payDate.slice(0,4) <= String(year) && d.baseSalary; })
+      .sort(function(a,b){ return b.payDate.localeCompare(a.payDate); });
+    if (recs.length) document.getElementById("bnBase").value = recs[0].baseSalary;
+  }
+  function renderBnEstimate(){
+    bnAutoFillBase();
+    var year = document.getElementById("bnYear").value;
+    var person = document.getElementById("bnPerson").value;
+    var base = Number(document.getElementById("bnBase").value) || 0;
+    var stdMonths = Number(document.getElementById("bnStdMonths").value) || 0;
+    var ratingRatio = Number(document.getElementById("bnRating").value) || 0;
+
+    var bn = computeBonusAttend(year, person);
+    var attendRatio = bn.finalRatio;
+    document.getElementById("bnLeaveDays").textContent = bn.finalDays.toFixed(3);
+    document.getElementById("bnAttendRatio").textContent = attendRatio + "%";
+    document.getElementById("bnLeaveHint").textContent = bn.hint;
+
+    var multiplier = (stdMonths - 1) / 3;
+    var ratingLine = base * multiplier * (ratingRatio / 100);
+    var attendLine = base * multiplier * (attendRatio / 100);
+    var dailyWage = base / 30;
+    var meritCount = Number(document.getElementById("bnMerit1").value||0) * 3 + Number(document.getElementById("bnMerit2").value||0) * 10 + Number(document.getElementById("bnMerit3").value||0) * 30;
+    var demeritCount = Number(document.getElementById("bnDemerit1").value||0) * 3 + Number(document.getElementById("bnDemerit2").value||0) * 10 + Number(document.getElementById("bnDemerit3").value||0) * 30;
+    var meritLine = dailyWage * (meritCount - demeritCount);
+    var extraLine = bnExtras.reduce(function(s, x){ return s + (Number(x.amount) || 0); }, 0);
+    var total = base + ratingLine + attendLine + meritLine + extraLine;
+
+    document.getElementById("bnBaseLine").textContent = fmt(base);
+    document.getElementById("bnRatingLine").textContent = fmt(ratingLine);
+    document.getElementById("bnAttendLine").textContent = fmt(attendLine);
+    document.getElementById("bnMeritLine").textContent = fmtSigned(meritLine);
+    document.getElementById("bnExtraLine").textContent = fmt(extraLine);
+    document.getElementById("bnTotalLine").textContent = fmt(total);
+
+    try{
+      localStorage.setItem("huaBnEst", JSON.stringify({
+        year:year, person:person, base:base, stdMonths:stdMonths, rating:ratingRatio,
+        merit:[document.getElementById("bnMerit1").value,document.getElementById("bnMerit2").value,document.getElementById("bnMerit3").value],
+        demerit:[document.getElementById("bnDemerit1").value,document.getElementById("bnDemerit2").value,document.getElementById("bnDemerit3").value],
+        extras:bnExtras
+      }));
+    }catch(e){}
+  }
+  (function(){
+    var open = false;
+    try{ open = localStorage.getItem("huaBnEstOpen") === "1"; }catch(e){}
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem("huaBnEst") || "{}") || {}; }catch(e){}
+    document.getElementById("bnYear").value = saved.year || new Date().getFullYear();
+    document.getElementById("bnPerson").value = saved.person || "hua";
+    if (saved.base) document.getElementById("bnBase").value = saved.base;
+    if (saved.stdMonths) document.getElementById("bnStdMonths").value = saved.stdMonths;
+    if (saved.rating) document.getElementById("bnRating").value = saved.rating;
+    if (saved.merit){ document.getElementById("bnMerit1").value = saved.merit[0]||0; document.getElementById("bnMerit2").value = saved.merit[1]||0; document.getElementById("bnMerit3").value = saved.merit[2]||0; }
+    if (saved.demerit){ document.getElementById("bnDemerit1").value = saved.demerit[0]||0; document.getElementById("bnDemerit2").value = saved.demerit[1]||0; document.getElementById("bnDemerit3").value = saved.demerit[2]||0; }
+    bnExtras = Array.isArray(saved.extras) ? saved.extras : [];
+    renderBnExtraList();
+    function apply(){
+      document.getElementById("bnEstBody").hidden = !open;
+      document.getElementById("bnEstToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+      if (open) renderBnEstimate();
+    }
+    apply();
+    document.getElementById("bnEstToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaBnEstOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+    ["bnYear","bnPerson","bnBase","bnStdMonths","bnRating","bnMerit1","bnMerit2","bnMerit3","bnDemerit1","bnDemerit2","bnDemerit3"].forEach(function(id){
+      document.getElementById(id).addEventListener("input", renderBnEstimate);
+      document.getElementById(id).addEventListener("change", renderBnEstimate);
+    });
+  })();
 
   var cashSelYm = null;
   function renderSalaryCash(){
