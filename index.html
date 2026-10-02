@@ -1402,8 +1402,9 @@
       <div class="line"><span>＋ 暫支薪資（上月已先領）</span><span class="v pos num" id="calcAdvance">$0</span></div>
       <div class="line total"><span>本月薪資總額</span><span class="v num" id="calcTotal">$0</span></div>
     </div>
-    <div class="row2">
-      <div class="field"><label>本月薪資總額 (NT$)（實發＋暫支，會自動算，可手動改）</label><input id="sAmount" type="number" inputmode="decimal" placeholder="0"></div>
+    <div class="row2" style="align-items:flex-end;">
+      <div class="field" style="margin:0;"><label>本月薪資總額 (NT$)（實發＋暫支，會自動算，可手動改）</label><input id="sAmount" type="number" inputmode="decimal" placeholder="0"></div>
+      <button type="button" class="btn ghost" id="sAmountRecalcBtn" style="flex:0 0 auto; padding:10px 14px;">↻ 自動計算</button>
     </div>
 
     <div class="field" style="display:flex; align-items:center; gap:10px;">
@@ -3189,6 +3190,11 @@
   document.getElementById("salaryCancelBtn").addEventListener("click", closeSalarySheet);
   document.getElementById("salarySheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeSalarySheet(); });
   document.getElementById("sAmount").addEventListener("input", function(){ sAmountTouched = true; updateSalaryCalcBox(); });
+  document.getElementById("sAmountRecalcBtn").addEventListener("click", function(){
+    sAmountTouched = false;
+    updateSalaryCalcBox();
+    showToast("已重新自動計算");
+  });
   SALARY_NUM_FIELDS.forEach(function(id){
     document.getElementById(id).addEventListener("input", updateSalaryCalcBox);
   });
