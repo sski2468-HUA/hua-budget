@@ -802,6 +802,16 @@
 
     <section class="group" style="margin-top:16px;">
       <div class="ghead">
+        <h2><span class="dot salary"></span>底薪變動</h2>
+        <button type="button" class="sort-btn" id="baseHistToggleBtn" style="margin:0;">▸ 展開</button>
+      </div>
+      <div id="baseHistBody" hidden>
+        <div id="baseHistBox"></div>
+      </div>
+    </section>
+
+    <section class="group" style="margin-top:16px;">
+      <div class="ghead">
         <h2><span class="dot salary"></span>年終預估</h2>
         <button type="button" class="sort-btn" id="bnEstToggleBtn" style="margin:0;">▸ 展開</button>
       </div>
@@ -2532,6 +2542,85 @@
   document.getElementById("cmpPick").addEventListener("change", function(){ cmpPickTouched = true; renderSalaryCompare(); });
   document.getElementById("cmpBase").addEventListener("change", renderSalaryCompare);
 
+  // ---- 底薪變動 ----
+  function baseHistSeries(person){
+    var recs = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === person && d.payDate && Number(d.baseSalary) > 0; })
+      .sort(function(a, b){ return a.payDate.localeCompare(b.payDate); });
+    var pts = recs.map(function(d){ return { ym: d.payDate.slice(0, 7), v: Number(d.baseSalary) }; });
+    var changes = [];
+    for (var i = 1; i < pts.length; i++){
+      if (pts[i].v !== pts[i - 1].v) changes.push({ ym: pts[i].ym, from: pts[i - 1].v, to: pts[i].v });
+    }
+    return { pts: pts, changes: changes };
+  }
+  function baseHistChart(pts){
+    if (pts.length < 2) return "";
+    var W = 600, H = 150, padL = 44, padR = 12, padT = 12, padB = 22;
+    var vals = pts.map(function(p){ return p.v; });
+    var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+    if (minV === maxV){ minV -= 1000; maxV += 1000; }
+    var n = pts.length;
+    function xAt(i){ return padL + (W - padL - padR) * i / (n - 1); }
+    function yAt(v){ return padT + (H - padT - padB) * (1 - (v - minV) / (maxV - minV)); }
+    var d = "";
+    pts.forEach(function(p, i){
+      var x = xAt(i).toFixed(1), y = yAt(p.v).toFixed(1);
+      d += (i === 0 ? "M" : "H" + x + " V") + (i === 0 ? x + "," + y : y);
+    });
+    var dots = pts.map(function(p, i){
+      if (i > 0 && p.v === pts[i - 1].v) return "";
+      return '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(p.v).toFixed(1) + '" r="3.2" fill="var(--brand)"><title>' + p.ym + " " + fmt(p.v) + '</title></circle>';
+    }).join("");
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="' + (padL - 4) + '" y="' + (padT + 8) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + maxV.toLocaleString("en-US") + '</text>' +
+      '<text x="' + (padL - 4) + '" y="' + (H - padB) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + minV.toLocaleString("en-US") + '</text>' +
+      '<text x="' + padL + '" y="' + (H - 6) + '" font-size="9" fill="var(--muted)">' + pts[0].ym.replace("-", "/") + '</text>' +
+      '<text x="' + (W - padR) + '" y="' + (H - 6) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + pts[n - 1].ym.replace("-", "/") + '</text>' +
+      '<path d="' + d + '" fill="none" stroke="var(--brand)" stroke-width="2"/>' + dots + '</svg>';
+  }
+  function renderBaseHistory(){
+    var box = document.getElementById("baseHistBox");
+    var persons = currentPerson === "combined" ? ["hua", "yupas"] : [currentPerson];
+    var html = "";
+    persons.forEach(function(p){
+      var s = baseHistSeries(p);
+      if (persons.length > 1) html += '<div class="section-hint" style="margin:8px 0 4px; font-weight:700;">' + escapeHtml(PERSON_LABEL[p] || p) + '</div>';
+      if (!s.pts.length){ html += '<div class="empty">還沒有填寫本薪的薪水紀錄</div>'; return; }
+      var first = s.pts[0], last = s.pts[s.pts.length - 1];
+      var diff = last.v - first.v, pct = first.v ? diff / first.v * 100 : 0;
+      html += '<div class="calc-box">' +
+        '<div class="line"><span>最早紀錄（' + first.ym.replace("-", "/") + '）</span><span class="v num">' + fmt(first.v) + '</span></div>' +
+        '<div class="line"><span>目前（' + last.ym.replace("-", "/") + '）</span><span class="v num">' + fmt(last.v) + '</span></div>' +
+        '<div class="line total"><span>累計差異（調薪 ' + s.changes.length + ' 次）</span><span class="v num">' + fmtSigned(diff) + (diff ? ' (' + (pct > 0 ? "+" : "") + pct.toFixed(1) + '%)' : "") + '</span></div></div>';
+      html += '<div class="chart-box" style="margin-top:10px;">' + baseHistChart(s.pts) + '</div>';
+      if (s.changes.length){
+        html += s.changes.slice().reverse().map(function(c){
+          var df = c.to - c.from, pc = c.from ? df / c.from * 100 : 0;
+          return '<div class="line" style="font-size:13px; padding:6px 2px;"><span>' + c.ym.replace("-", "/") + '　' + fmt(c.from) + ' → ' + fmt(c.to) + '</span><span class="num" style="color:' + (df > 0 ? "var(--income)" : "var(--fixed)") + ';">' + fmtSigned(df) + ' (' + (pc > 0 ? "+" : "") + pc.toFixed(1) + '%)</span></div>';
+        }).join("");
+      } else {
+        html += '<div class="section-hint" style="margin:8px 2px 0;">目前紀錄中底薪都沒有變動</div>';
+      }
+    });
+    box.innerHTML = html;
+  }
+  (function(){
+    var open = false;
+    try{ open = localStorage.getItem("huaBaseHistOpen") === "1"; }catch(e){}
+    function apply(){
+      document.getElementById("baseHistBody").hidden = !open;
+      document.getElementById("baseHistToggleBtn").textContent = open ? "▾ 收合" : "▸ 展開";
+      if (open) renderBaseHistory();
+    }
+    apply();
+    document.getElementById("baseHistToggleBtn").addEventListener("click", function(){
+      open = !open;
+      try{ localStorage.setItem("huaBaseHistOpen", open ? "1" : "0"); }catch(e){}
+      apply();
+    });
+  })();
+
   // ---- 年終預估 ----
   var BONUS_ATTEND_TABLE = [
     [1/32,115],[1/8,112],[1/4,109],[3/8,106],[1/2,103],[1,100],[2,96],[3,92],[4,86],[5,82],
@@ -2796,6 +2885,7 @@
   function renderSalaries(){
     renderSalaryCash();
     renderSalaryCompare();
+    if (!document.getElementById("baseHistBody").hidden) renderBaseHistory();
     var list = document.getElementById("salaryList");
     list.innerHTML = "";
     var allUnfiltered = Object.keys(salariesById).map(function(id){
