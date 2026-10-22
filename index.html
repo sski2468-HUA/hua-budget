@@ -1093,6 +1093,7 @@
       <div class="ghead">
         <h2><span class="dot period"></span>生長記錄 <span class="count" id="weightCount"></span></h2>
         <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="weightDobBtn" type="button" style="margin:0;">🎂 生日</button>
           <button class="sort-btn" id="weightSortBtn" type="button"></button>
           <button class="addlink" id="addWeightBtn" type="button">＋ 新增</button>
         </div>
@@ -1128,11 +1129,7 @@
         </div>
       </div>
       <div class="chart-box" id="weightChartBox" style="margin-top:10px;"></div>
-      <div style="display:flex; gap:6px; margin:10px 0 6px;">
-        <button type="button" class="btn ghost" id="weightDobBtn" style="flex:1; padding:9px 10px; font-size:13px;">🎂 設定孩子生日</button>
-        <a class="btn ghost" href="https://health99.hpa.gov.tw/health99/HC/D/115/ChildGrowthCurve" target="_blank" rel="noopener" style="flex:1; padding:9px 10px; font-size:13px; text-align:center; text-decoration:none;">📈 國健署生長百分位</a>
-      </div>
-      <div id="weightList" style="margin-top:6px;"></div>
+      <div id="weightList" style="margin-top:12px;"></div>
     </section>
     </div>
 
@@ -6542,7 +6539,10 @@
   function buildWeightChart(all, metric, cutoff){
     var today = todayStrNow();
     var pts = all.filter(function(d){ return wNum(d[metric.key]) !== null && (!cutoff || d.date >= cutoff); });
-    if (!pts.length) return '<div class="chart-empty">這個指標還沒有數值</div>';
+    if (!pts.length){
+      var hasAny = all.some(function(d){ return wNum(d[metric.key]) !== null; });
+      return '<div class="chart-empty">' + (cutoff && hasAny ? "這個範圍內沒有資料，請把「顯示範圍」改成「全部」" : "這個指標還沒有數值") + '</div>';
+    }
     var ticks = all.filter(function(d){ return /施打/.test(d.note || "") && d.date <= today && (!cutoff || d.date >= cutoff); });
     var W = 600, H = 200, padL = 40, padR = 12, padT = 14, padB = 30;
     var times = pts.map(function(d){ return new Date(d.date + "T00:00:00").getTime(); });
@@ -6662,7 +6662,15 @@
       document.getElementById("weightLatestHint").textContent = "";
     }
     var axisAge = document.getElementById("weightAxis").value === "age";
-    document.getElementById("weightChartBox").innerHTML = axisAge ? buildGrowthAgeChart(metric) : buildWeightChart(all, metric, cutoff);
+    function chartFor(m){ return axisAge ? buildGrowthAgeChart(m) : buildWeightChart(all, m, cutoff); }
+    function metricByKey(k){ return WEIGHT_METRICS.filter(function(m){ return m.key === k; })[0]; }
+    if (metricKey === "both"){
+      document.getElementById("weightChartBox").innerHTML =
+        '<div class="section-hint" style="margin:0 4px 2px; font-weight:700;">體重 (kg)</div>' + chartFor(metricByKey("weight")) +
+        '<div class="section-hint" style="margin:10px 4px 2px; font-weight:700;">身高 (cm)</div>' + chartFor(metricByKey("height"));
+    } else {
+      document.getElementById("weightChartBox").innerHTML = chartFor(metric);
+    }
     document.getElementById("weightRange").disabled = axisAge;
     var myDob = growthDobs()[person];
     var devs = {};
@@ -6702,7 +6710,7 @@
   }
   (function(){
     var metricSel = document.getElementById("weightMetric");
-    metricSel.innerHTML = WEIGHT_METRICS.map(function(m){ return '<option value="' + m.key + '">' + m.label + '</option>'; }).join("");
+    metricSel.innerHTML = '<option value="both">體重＋身高（並列）</option>' + WEIGHT_METRICS.map(function(m){ return '<option value="' + m.key + '">' + m.label + '</option>'; }).join("");
     [["weightPersonFilter","huaWeightPerson"],["weightMetric","huaWeightMetric"],["weightRange","huaWeightRange"],["weightAxis","huaWeightAxis"]].forEach(function(p){
       var sel = document.getElementById(p[0]);
       try{ var v = localStorage.getItem(p[1]); if (v && sel.querySelector('option[value="' + v + '"]')) sel.value = v; }catch(e){}
