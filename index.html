@@ -293,6 +293,16 @@
   .fever-card .meta{ font-size:13.5px; color:var(--muted); }
   .fever-card .note{ font-size:13px; margin-top:1px; }
   .fever-card .med-badge{ display:inline-block; font-size:10px; background:var(--fever-bg); color:var(--fever); border-radius:6px; padding:1px 6px; margin-left:5px; font-weight:700; vertical-align:middle; }
+  .wt-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin-bottom:6px; box-shadow:var(--shadow); cursor:pointer; border-left:4px solid var(--savings); display:flex; gap:12px; align-items:flex-start; }
+  .wt-card.plan{ opacity:.6; border-left-style:dashed; }
+  .wt-card .big{ font-weight:900; font-size:20px; min-width:78px; color:var(--savings); }
+  .wt-card .big small{ font-size:11px; font-weight:600; color:var(--muted); }
+  .wt-card .big.na{ font-size:13px; color:var(--muted); font-weight:600; }
+  .wt-card .body{ flex:1; min-width:0; }
+  .wt-card .dt{ font-size:13px; color:var(--muted); }
+  .wt-card .chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+  .wt-card .chips span{ font-size:12px; background:var(--surface-2); border-radius:6px; padding:2px 8px; }
+  .wt-card .nt{ font-size:12.5px; margin-top:5px; white-space:pre-wrap; }
   .photo-grid{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 8px; }
   .photo-grid:empty{ margin:0; }
   .photo-grid .ph{ position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
@@ -1004,11 +1014,12 @@
   </div>
 
   <div data-page="period">
-    <div class="subtabs" id="healthSubTabs" style="margin-top:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:4px;">
-      <button type="button" data-hsub="cycle" class="active" style="font-size:12.5px;">經期紀錄</button>
-      <button type="button" data-hsub="health" style="font-size:12.5px;">健康紀錄</button>
-      <button type="button" data-hsub="visit" style="font-size:12.5px;">就醫紀錄</button>
-      <button type="button" data-hsub="fever" style="font-size:12.5px;">病程記錄</button>
+    <div class="subtabs" id="healthSubTabs" style="margin-top:12px; display:grid; grid-template-columns:repeat(5,1fr); gap:4px;">
+      <button type="button" data-hsub="cycle" class="active" style="font-size:12px; padding-left:2px; padding-right:2px;">經期紀錄</button>
+      <button type="button" data-hsub="health" style="font-size:12px; padding-left:2px; padding-right:2px;">健康紀錄</button>
+      <button type="button" data-hsub="weight" style="font-size:12px; padding-left:2px; padding-right:2px;">生長記錄</button>
+      <button type="button" data-hsub="visit" style="font-size:12px; padding-left:2px; padding-right:2px;">就醫紀錄</button>
+      <button type="button" data-hsub="fever" style="font-size:12px; padding-left:2px; padding-right:2px;">病程記錄</button>
     </div>
     <div data-hsub-page="cycle" class="active">
     <div class="breakdown-strip" style="margin-top:12px;">
@@ -1074,6 +1085,54 @@
         <div class="chip"><div class="lbl">下次回診</div><div class="val num" id="visitNextFollow">-</div></div>
       </div>
       <div id="visitList" style="margin-top:10px;"></div>
+    </section>
+    </div>
+
+    <div data-hsub-page="weight">
+    <section class="group" style="margin-top:14px;">
+      <div class="ghead">
+        <h2><span class="dot period"></span>生長記錄 <span class="count" id="weightCount"></span></h2>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="sort-btn" id="weightSortBtn" type="button"></button>
+          <button class="addlink" id="addWeightBtn" type="button">＋ 新增</button>
+        </div>
+      </div>
+      <div class="row2" style="margin-bottom:10px;">
+        <div class="field" style="margin:0;"><label>誰的紀錄</label>
+          <select id="weightPersonFilter"><option value="HUA">HUA</option><option value="宸">宸</option><option value="杉">杉</option><option value="YUPAS">YUPAS</option></select>
+        </div>
+        <div class="field" style="margin:0;"><label>圖表指標</label>
+          <select id="weightMetric"></select>
+        </div>
+      </div>
+      <div class="breakdown-strip">
+        <div class="chip"><div class="lbl">最新體重</div><div class="val num" id="weightLatest">-</div></div>
+        <div class="chip"><div class="lbl">較第一筆</div><div class="val num" id="weightFromFirst">-</div></div>
+        <div class="chip"><div class="lbl">較上一筆</div><div class="val num" id="weightFromPrev">-</div></div>
+      </div>
+      <div class="section-hint" id="weightLatestHint" style="margin:6px 2px 0;"></div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="field" style="margin:0;"><label>圖表橫軸</label>
+          <select id="weightAxis">
+            <option value="date">依日期（單人）</option>
+            <option value="age">依年齡（宸／杉對照）</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;"><label>顯示範圍（依日期時）</label>
+          <select id="weightRange">
+            <option value="all">全部</option>
+            <option value="90">近 90 天</option>
+            <option value="180">近 半年</option>
+            <option value="365">近 1 年</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-box" id="weightChartBox" style="margin-top:10px;"></div>
+      <div style="display:flex; gap:6px; margin:10px 0 6px;">
+        <button type="button" class="btn ghost" id="weightDobBtn" style="flex:1; padding:9px 10px; font-size:13px;">🎂 設定孩子生日</button>
+        <a class="btn ghost" href="https://health99.hpa.gov.tw/health99/HC/D/115/ChildGrowthCurve" target="_blank" rel="noopener" style="flex:1; padding:9px 10px; font-size:13px; text-align:center; text-decoration:none;">📈 國健署生長百分位</a>
+      </div>
+      <div id="weightList" style="margin-top:6px;"></div>
     </section>
     </div>
 
@@ -1791,6 +1850,65 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="weightSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3 id="weightSheetTitle">新增生長紀錄</h3>
+    <div class="row2">
+      <div class="field"><label>日期</label><input id="wgDate" type="date"></div>
+      <div class="field"><label>誰的紀錄</label>
+        <select id="wgPerson"><option value="HUA">HUA</option><option value="宸">宸</option><option value="杉">杉</option><option value="YUPAS">YUPAS</option></select>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>體重 (kg)</label><input id="wgWeight" type="number" inputmode="decimal" step="0.01"></div>
+      <div class="field"><label>身高 (cm)</label><input id="wgHeight" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>頭圍 (cm)</label><input id="wgHead" type="number" inputmode="decimal" step="0.1"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>BMI</label><input id="wgBmi" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>體脂肪 (%)</label><input id="wgBodyFat" type="number" inputmode="decimal" step="0.1"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>肌肉量 (kg)</label><input id="wgMuscle" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>骨量 (kg)</label><input id="wgBone" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>內臟脂肪</label><input id="wgVisceral" type="number" inputmode="decimal" step="0.5"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>基礎代謝</label><input id="wgBmr" type="number" inputmode="decimal"></div>
+      <div class="field"><label>體年齡</label><input id="wgBodyAge" type="number" inputmode="decimal"></div>
+      <div class="field"><label>水分 (%)</label><input id="wgWater" type="number" inputmode="decimal" step="0.1"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>皮下脂肪率</label><input id="wgSubcut" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>骨骼肌率</label><input id="wgSkeletal" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="field"><label>年齡</label><input id="wgAge" type="number" inputmode="decimal"></div>
+    </div>
+    <div class="field"><label>量測儀器</label><input id="wgDevice" type="text" list="wgDeviceList" placeholder="例如：家裡體脂機"><datalist id="wgDeviceList"></datalist></div>
+    <div class="field"><label>備註（施打藥物、回診等）</label><textarea id="wgNote" placeholder="例如：3-施打胰妥讚0.5MG (星期四)"></textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="weightCancelBtn" type="button">取消</button>
+      <button class="btn danger" id="weightDeleteBtn" type="button" hidden>刪除</button>
+      <button class="btn ghost" id="weightDuplicateBtn" type="button" hidden>複製</button>
+      <button class="btn primary" id="weightSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="dobSheetBackdrop" hidden>
+  <div class="sheet">
+    <h3>設定孩子生日</h3>
+    <div class="section-hint" style="margin:0 0 10px;">設定後，生長記錄會顯示孩子當時幾歲幾個月，並可用「依年齡」圖表對照宸、杉在同樣年紀的成長。</div>
+    <div class="row2">
+      <div class="field"><label>宸 生日</label><input id="dobChen" type="date"></div>
+      <div class="field"><label>杉 生日</label><input id="dobShan" type="date"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="dobCancelBtn" type="button">取消</button>
+      <button class="btn primary" id="dobSaveBtn" type="button">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="feverAddChooserBackdrop" hidden>
   <div class="sheet">
     <h3>新增</h3>
@@ -2052,6 +2170,9 @@
   var visitsById = {};
   var editingVisitId = null;
   var visitCol = null;
+  var weightsById = {};
+  var editingWeightId = null;
+  var weightCol = null;
   var currentHealthSub = "cycle";
   var visitDeptFilterValue = "all";
   var visitPersonFilterValue = "all";
@@ -2137,7 +2258,7 @@
   // desc = newest/largest first (default), asc = oldest/smallest first
   var SORT_DIR = {
     budget:"asc", salary:"desc", utility:"desc", annualFixed:"desc", annualBonus:"desc",
-    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc", visit:"desc"
+    claim:"desc", timeline:"asc", leave:"asc", redOut:"desc", redIn:"desc", fever:"asc", planned:"asc", period:"desc", visit:"desc", weight:"desc"
   };
   Object.keys(SORT_DIR).forEach(function(k){
     try{
@@ -3272,7 +3393,7 @@
     else if (currentTab === "leave") openAddLeave();
     else if (currentTab === "planned") openAddPlanned();
     else if (currentTab === "calendar") openCalAddChooser(calSelected);
-    else if (currentTab === "period") (currentHealthSub === "cycle" ? openAddCycle : currentHealthSub === "visit" ? openAddVisit : currentHealthSub === "fever" ? openFeverAddChooser : openAddPLog)();
+    else if (currentTab === "period") (currentHealthSub === "cycle" ? openAddCycle : currentHealthSub === "visit" ? openAddVisit : currentHealthSub === "fever" ? openFeverAddChooser : currentHealthSub === "weight" ? openAddWeight : openAddPLog)();
     else openAdd();
   });
   document.getElementById("cancelBtn").addEventListener("click", closeSheet);
@@ -5595,7 +5716,14 @@
     plogCol = db.collection("periodLogs");
     settingsCol = db.collection("appSettings");
     visitCol = db.collection("medicalVisits");
+    weightCol = db.collection("weightLogs");
     dbReady = true;
+    weightCol.onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
+      weightsById = next; renderWeight();
+      seedState.w = true; trySeedGrowth();
+    }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     visitCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
@@ -5607,6 +5735,8 @@
       settingsById = next;
       renderLeaves();
       renderFever();
+      renderWeight();
+      seedState.s = true; trySeedGrowth();
       if (!document.getElementById("plogSheetBackdrop").hidden){ renderPLogChips(); renderSymManage(); }
     }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     cycleCol.onSnapshot(function(snap){
@@ -5722,7 +5852,7 @@
       leaves: leavesById, leavePeriods: periodsById,
       insuranceClaims: claimsById, lifeTimeline: timelineById,
       redEnvelopesOut: redOutById, redEnvelopesIn: redInById,
-      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById, periodCycles: cyclesById, periodLogs: plogsById, appSettings: settingsById, medicalVisits: visitsById
+      feverLogs: feverById, feverEpisodes: episodesById, accounts: accountsById, accountHistory: accountHistById, plannedExpenses: plannedById, calendarEvents: eventsById, periodCycles: cyclesById, periodLogs: plogsById, appSettings: settingsById, medicalVisits: visitsById, weightLogs: weightsById
     };
     var d = new Date();
     var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
@@ -6382,6 +6512,444 @@
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
 
+  // ---- 體重管理 ----
+  var WEIGHT_METRICS = [
+    { key:"weight", label:"體重 (kg)", dec:1 }, { key:"height", label:"身高 (cm)", dec:1 }, { key:"head", label:"頭圍 (cm)", dec:1 },
+    { key:"bmi", label:"BMI", dec:1 }, { key:"bodyFat", label:"體脂肪 (%)", dec:1 },
+    { key:"muscle", label:"肌肉量 (kg)", dec:1 }, { key:"visceral", label:"內臟脂肪", dec:1 }, { key:"bmr", label:"基礎代謝", dec:0 },
+    { key:"water", label:"水分 (%)", dec:1 }, { key:"subcut", label:"皮下脂肪率 (%)", dec:1 }, { key:"skeletal", label:"骨骼肌率 (%)", dec:1 },
+    { key:"bodyAge", label:"體年齡", dec:0 }, { key:"bone", label:"骨量 (kg)", dec:1 }
+  ];
+  var WG_FIELDS = { weight:"wgWeight", height:"wgHeight", head:"wgHead", bmi:"wgBmi", bodyFat:"wgBodyFat", muscle:"wgMuscle", bone:"wgBone", visceral:"wgVisceral", bmr:"wgBmr", bodyAge:"wgBodyAge", water:"wgWater", subcut:"wgSubcut", skeletal:"wgSkeletal", age:"wgAge" };
+  function wNum(v){
+    if (v === null || v === undefined) return null;
+    var s = String(v).trim();
+    if (s === "" || s === "-") return null;
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+  function wWeekday(dateStr){
+    var d = new Date(dateStr + "T00:00:00");
+    return isNaN(d) ? "" : "週" + "日一二三四五六".charAt(d.getDay());
+  }
+  function weightHasData(d){ return Object.keys(WG_FIELDS).some(function(k){ return k !== "age" && wNum(d[k]) !== null; }); }
+  function weightRecords(person){
+    return Object.keys(weightsById).map(function(id){ return Object.assign({ _id:id }, weightsById[id]); })
+      .filter(function(d){ return (d.person || "HUA") === person && d.date; })
+      .sort(function(a, b){ return a.date.localeCompare(b.date); });
+  }
+  function weightDelta(n, dec){ return (n > 0 ? "+" : n < 0 ? "-" : "") + Math.abs(n).toFixed(dec === undefined ? 1 : dec); }
+  function buildWeightChart(all, metric, cutoff){
+    var today = todayStrNow();
+    var pts = all.filter(function(d){ return wNum(d[metric.key]) !== null && (!cutoff || d.date >= cutoff); });
+    if (!pts.length) return '<div class="chart-empty">這個指標還沒有數值</div>';
+    var ticks = all.filter(function(d){ return /施打/.test(d.note || "") && d.date <= today && (!cutoff || d.date >= cutoff); });
+    var W = 600, H = 200, padL = 40, padR = 12, padT = 14, padB = 30;
+    var times = pts.map(function(d){ return new Date(d.date + "T00:00:00").getTime(); });
+    var allT = times.concat(ticks.map(function(d){ return new Date(d.date + "T00:00:00").getTime(); }));
+    var tMin = Math.min.apply(null, allT), tMax = Math.max.apply(null, allT);
+    var vals = pts.map(function(d){ return wNum(d[metric.key]); });
+    var vMin = Math.min.apply(null, vals), vMax = Math.max.apply(null, vals);
+    var padV = (vMax - vMin) * 0.12 || 1;
+    vMin -= padV; vMax += padV;
+    function xAt(t){ return tMax === tMin ? padL + (W - padL - padR) / 2 : padL + (W - padL - padR) * (t - tMin) / (tMax - tMin); }
+    function yAt(v){ return padT + (H - padT - padB) * (1 - (v - vMin) / (vMax - vMin)); }
+    var path = pts.map(function(d, i){ return (i === 0 ? "M" : "L") + xAt(times[i]).toFixed(1) + "," + yAt(vals[i]).toFixed(1); }).join(" ");
+    var dots = pts.map(function(d, i){
+      return '<circle cx="' + xAt(times[i]).toFixed(1) + '" cy="' + yAt(vals[i]).toFixed(1) + '" r="3.4" fill="var(--savings)"><title>' + escapeHtml(d.date.replace(/-/g, "/")) + "　" + vals[i].toFixed(metric.dec) + '</title></circle>';
+    }).join("");
+    var tickHtml = ticks.map(function(d){
+      var x = xAt(new Date(d.date + "T00:00:00").getTime()).toFixed(1);
+      var line = (d.note || "").split("\n")[0];
+      return '<line x1="' + x + '" y1="' + (H - padB) + '" x2="' + x + '" y2="' + (H - padB + 7) + '" stroke="var(--brand)" stroke-width="2"><title>' + escapeHtml(d.date.replace(/-/g, "/") + "　" + line) + '</title></line>';
+    }).join("");
+    var firstD = new Date(tMin), lastD = new Date(tMax);
+    function lbl(dt){ return dt.getFullYear() + "/" + (dt.getMonth() + 1) + "/" + dt.getDate(); }
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="' + (padL - 4) + '" y="' + (padT + 8) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + (vMax).toFixed(metric.dec) + '</text>' +
+      '<text x="' + (padL - 4) + '" y="' + (H - padB) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + (vMin).toFixed(metric.dec) + '</text>' +
+      '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="var(--line)"/>' +
+      '<text x="' + padL + '" y="' + (H - 6) + '" font-size="9" fill="var(--muted)">' + lbl(firstD) + '</text>' +
+      '<text x="' + (W - padR) + '" y="' + (H - 6) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + lbl(lastD) + '</text>' +
+      '<path d="' + path + '" fill="none" stroke="var(--savings)" stroke-width="2"/>' + dots + tickHtml + '</svg>' +
+      (ticks.length ? '<div class="section-hint" style="margin:2px 4px 0;"><span style="color:var(--brand);">▌</span> 橘色短線＝備註有「施打」的日期</div>' : "");
+  }
+  var GROWTH_COLORS = { "宸":"#2F80ED", "杉":"#E0368F" };
+  function growthDobs(){
+    var g = settingsById.growthProfiles;
+    return (g && g.dobs) ? g.dobs : {};
+  }
+  function ageParts(dob, dateStr){
+    if (!dob || !dateStr) return null;
+    var a = new Date(dob + "T00:00:00"), b = new Date(dateStr + "T00:00:00");
+    if (isNaN(a) || isNaN(b) || b < a) return null;
+    var months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+    var anchor = new Date(a.getFullYear(), a.getMonth() + months, a.getDate());
+    if (anchor > b){ months--; anchor = new Date(a.getFullYear(), a.getMonth() + months, a.getDate()); }
+    var days = Math.round((b - anchor) / 86400000);
+    return { y: Math.floor(months / 12), m: months % 12, d: days, years: (b - a) / 86400000 / 365.25 };
+  }
+  function ageText(p){
+    if (!p) return "";
+    if (p.y > 0) return p.y + "歲" + (p.m ? p.m + "個月" : "");
+    if (p.m > 0) return p.m + "個月" + (p.d ? p.d + "天" : "");
+    return p.d + "天";
+  }
+  function buildGrowthAgeChart(metric){
+    if (["weight", "height", "head"].indexOf(metric.key) < 0) return '<div class="chart-empty">「依年齡」對照圖只支援體重、身高、頭圍，請換圖表指標</div>';
+    var dobs = growthDobs();
+    var series = [];
+    Object.keys(dobs).forEach(function(name){
+      if (!dobs[name]) return;
+      var pts = weightRecords(name).map(function(d){
+        var v = wNum(d[metric.key]), ap = ageParts(dobs[name], d.date);
+        return v !== null && ap ? { x: ap.years, v: v, date: d.date, ageLabel: ageText(ap) } : null;
+      }).filter(Boolean);
+      if (pts.length) series.push({ name: name, pts: pts, color: GROWTH_COLORS[name] || "var(--brand)" });
+    });
+    if (!series.length) return '<div class="chart-empty">還沒有資料，請先「設定孩子生日」並匯入或新增孩子的紀錄</div>';
+    var W = 600, H = 230, padL = 40, padR = 14, padT = 14, padB = 28;
+    var xMax = 0, vMin = Infinity, vMax = -Infinity;
+    series.forEach(function(s){ s.pts.forEach(function(p){ if (p.x > xMax) xMax = p.x; if (p.v < vMin) vMin = p.v; if (p.v > vMax) vMax = p.v; }); });
+    xMax = Math.max(1, Math.ceil(xMax));
+    var padV = (vMax - vMin) * 0.08 || 1; vMin = Math.max(0, vMin - padV); vMax += padV;
+    function xAt(x){ return padL + (W - padL - padR) * x / xMax; }
+    function yAt(v){ return padT + (H - padT - padB) * (1 - (v - vMin) / (vMax - vMin)); }
+    var grid = "";
+    for (var i = 0; i <= xMax; i++){
+      grid += '<line x1="' + xAt(i).toFixed(1) + '" y1="' + padT + '" x2="' + xAt(i).toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--line)" stroke-dasharray="2,3"/>' +
+        '<text x="' + xAt(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="9" fill="var(--muted)" text-anchor="middle">' + i + '歲</text>';
+    }
+    var body = series.map(function(s){
+      var d = s.pts.map(function(p, i){ return (i ? "L" : "M") + xAt(p.x).toFixed(1) + "," + yAt(p.v).toFixed(1); }).join(" ");
+      var dots = s.pts.map(function(p){ return '<circle cx="' + xAt(p.x).toFixed(1) + '" cy="' + yAt(p.v).toFixed(1) + '" r="3" fill="' + s.color + '"><title>' + escapeHtml(s.name + "　" + p.ageLabel + "　" + p.v.toFixed(metric.dec)) + '</title></circle>'; }).join("");
+      return '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2"/>' + dots;
+    }).join("");
+    var legend = '<div class="section-hint" style="margin:2px 4px 0;">' + series.map(function(s){ return '<span style="color:' + s.color + ';">●</span> ' + escapeHtml(s.name); }).join("　") + '　（橫軸為孩子的年齡）</div>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<text x="' + (padL - 4) + '" y="' + (padT + 8) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + vMax.toFixed(metric.dec) + '</text>' +
+      '<text x="' + (padL - 4) + '" y="' + (H - padB) + '" font-size="9" fill="var(--muted)" text-anchor="end">' + vMin.toFixed(metric.dec) + '</text>' +
+      grid + body + '</svg>' + legend;
+  }
+  function renderWeight(){
+    var personSel = document.getElementById("weightPersonFilter");
+    var person = personSel.value;
+    var metricKey = document.getElementById("weightMetric").value || "weight";
+    var metric = WEIGHT_METRICS.filter(function(m){ return m.key === metricKey; })[0] || WEIGHT_METRICS[0];
+    var rangeVal = document.getElementById("weightRange").value;
+    var cutoff = rangeVal === "all" ? "" : addDaysStr(todayStrNow(), -Number(rangeVal));
+    var all = weightRecords(person);
+    var withW = all.filter(function(d){ return wNum(d.weight) !== null; });
+    document.getElementById("weightCount").textContent = all.length ? "(" + all.length + ")" : "";
+    var latestEl = document.getElementById("weightLatest"), firstEl = document.getElementById("weightFromFirst"), prevEl = document.getElementById("weightFromPrev");
+    function setDelta(el, n){
+      el.textContent = weightDelta(n) + " kg";
+      el.style.color = n < 0 ? "var(--income)" : n > 0 ? "var(--fixed)" : "";
+    }
+    if (withW.length){
+      var last = withW[withW.length - 1], first = withW[0];
+      latestEl.textContent = wNum(last.weight).toFixed(1) + " kg";
+      setDelta(firstEl, wNum(last.weight) - wNum(first.weight));
+      if (withW.length > 1) setDelta(prevEl, wNum(last.weight) - wNum(withW[withW.length - 2].weight)); else { prevEl.textContent = "-"; prevEl.style.color = ""; }
+      var hintTxt = "最新量測 " + last.date.replace(/-/g, "/") + "；第一筆 " + first.date.replace(/-/g, "/") + " " + wNum(first.weight).toFixed(1) + " kg";
+      var lastH = all.filter(function(d){ return wNum(d.height) !== null; }).pop();
+      var lastHd = all.filter(function(d){ return wNum(d.head) !== null; }).pop();
+      if (lastH) hintTxt += "；最新身高 " + wNum(lastH.height).toFixed(1) + " cm";
+      if (lastHd) hintTxt += "；最新頭圍 " + wNum(lastHd.head).toFixed(1) + " cm";
+      document.getElementById("weightLatestHint").textContent = hintTxt;
+    } else {
+      latestEl.textContent = "-"; firstEl.textContent = "-"; prevEl.textContent = "-"; firstEl.style.color = ""; prevEl.style.color = "";
+      document.getElementById("weightLatestHint").textContent = "";
+    }
+    var axisAge = document.getElementById("weightAxis").value === "age";
+    document.getElementById("weightChartBox").innerHTML = axisAge ? buildGrowthAgeChart(metric) : buildWeightChart(all, metric, cutoff);
+    document.getElementById("weightRange").disabled = axisAge;
+    var myDob = growthDobs()[person];
+    var devs = {};
+    Object.keys(weightsById).forEach(function(id){ if (weightsById[id].device) devs[weightsById[id].device] = 1; });
+    document.getElementById("wgDeviceList").innerHTML = Object.keys(devs).map(function(x){ return '<option value="' + escapeHtml(x) + '">'; }).join("");
+
+    var list = document.getElementById("weightList");
+    list.innerHTML = "";
+    if (!all.length){ list.innerHTML = '<div class="empty">還沒有紀錄，點「＋ 新增」開始記錄</div>'; return; }
+    var shown = all.slice().sort(function(a, b){
+      var k = b.date.localeCompare(a.date);
+      return SORT_DIR.weight === "asc" ? -k : k;
+    });
+    var today = todayStrNow();
+    shown.forEach(function(d){
+      var hasData = weightHasData(d);
+      var el = document.createElement("div");
+      el.className = "wt-card" + (!hasData && d.date > today ? " plan" : "");
+      var w = wNum(d.weight);
+      var hgt = wNum(d.height);
+      var wDec = (myDob && w !== null && w < 30) ? 2 : 1;
+      var big = w !== null ? '<div class="big num">' + w.toFixed(wDec) + ' <small>kg</small></div>' : (hgt !== null ? '<div class="big num">' + hgt.toFixed(1) + ' <small>cm</small></div>' : '<div class="big na">' + (d.date > today ? "預定" : "無量測") + '</div>');
+      var chips = [];
+      if (w !== null && hgt !== null) chips.push('<span>身高 ' + hgt.toFixed(1) + 'cm</span>');
+      [["頭圍","head",1,"cm"],["BMI","bmi",1],["體脂","bodyFat",1,"%"],["肌肉","muscle",1,"kg"],["內臟脂肪","visceral",1],["基代","bmr",0],["水分","water",1,"%"],["體年齡","bodyAge",0]].forEach(function(c){
+        var v = wNum(d[c[1]]);
+        if (v !== null) chips.push('<span>' + c[0] + ' ' + v.toFixed(c[2]) + (c[3] || "") + '</span>');
+      });
+      if (d.device) chips.push('<span>' + escapeHtml(d.device) + '</span>');
+      var agePart = myDob ? ageText(ageParts(myDob, d.date)) : "";
+      el.innerHTML = big + '<div class="body"><div class="dt num">' + escapeHtml(d.date.replace(/-/g, "/")) + "　" + wWeekday(d.date) + (agePart ? "　" + agePart : "") + '</div>' +
+        (chips.length ? '<div class="chips">' + chips.join("") + '</div>' : "") +
+        (d.note ? '<div class="nt">' + escapeHtml(d.note) + '</div>' : "") + '</div>';
+      el.addEventListener("click", function(){ openEditWeight(d._id); });
+      list.appendChild(el);
+    });
+  }
+  (function(){
+    var metricSel = document.getElementById("weightMetric");
+    metricSel.innerHTML = WEIGHT_METRICS.map(function(m){ return '<option value="' + m.key + '">' + m.label + '</option>'; }).join("");
+    [["weightPersonFilter","huaWeightPerson"],["weightMetric","huaWeightMetric"],["weightRange","huaWeightRange"],["weightAxis","huaWeightAxis"]].forEach(function(p){
+      var sel = document.getElementById(p[0]);
+      try{ var v = localStorage.getItem(p[1]); if (v && sel.querySelector('option[value="' + v + '"]')) sel.value = v; }catch(e){}
+      sel.addEventListener("change", function(){ try{ localStorage.setItem(p[1], sel.value); }catch(e){} renderWeight(); });
+    });
+  })();
+  function fillWeightForm(d){
+    document.getElementById("wgDate").value = d.date || todayStrNow();
+    document.getElementById("wgPerson").value = d.person || document.getElementById("weightPersonFilter").value || "HUA";
+    Object.keys(WG_FIELDS).forEach(function(k){ var v = wNum(d[k]); document.getElementById(WG_FIELDS[k]).value = v === null ? "" : v; });
+    document.getElementById("wgDevice").value = d.device || "";
+    document.getElementById("wgNote").value = d.note || "";
+  }
+  function openAddWeight(){
+    editingWeightId = null;
+    document.getElementById("weightSheetTitle").textContent = "新增生長紀錄";
+    document.getElementById("weightDeleteBtn").hidden = true;
+    document.getElementById("weightDuplicateBtn").hidden = true;
+    fillWeightForm({});
+    document.getElementById("weightSheetBackdrop").hidden = false;
+  }
+  function openEditWeight(id){
+    var d = weightsById[id]; if (!d) return;
+    editingWeightId = id;
+    document.getElementById("weightSheetTitle").textContent = "編輯生長紀錄";
+    document.getElementById("weightDeleteBtn").hidden = false;
+    document.getElementById("weightDuplicateBtn").hidden = false;
+    fillWeightForm(d);
+    document.getElementById("weightSheetBackdrop").hidden = false;
+  }
+  function closeWeightSheet(){ document.getElementById("weightSheetBackdrop").hidden = true; }
+  document.getElementById("addWeightBtn").addEventListener("click", openAddWeight);
+  document.getElementById("weightCancelBtn").addEventListener("click", closeWeightSheet);
+  document.getElementById("weightSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeWeightSheet(); });
+  document.getElementById("weightDuplicateBtn").addEventListener("click", function(){
+    editingWeightId = null;
+    document.getElementById("weightSheetTitle").textContent = "新增生長紀錄";
+    document.getElementById("weightDeleteBtn").hidden = true;
+    document.getElementById("weightDuplicateBtn").hidden = true;
+  });
+  document.getElementById("weightSaveBtn").addEventListener("click", async function(){
+    var date = document.getElementById("wgDate").value;
+    if (!date){ showToast("請選擇日期"); return; }
+    var data = { date: date, person: document.getElementById("wgPerson").value, device: document.getElementById("wgDevice").value.trim(), note: document.getElementById("wgNote").value.trim(), updatedAt: Date.now() };
+    Object.keys(WG_FIELDS).forEach(function(k){ data[k] = wNum(document.getElementById(WG_FIELDS[k]).value); });
+    if (!weightHasData(data) && !data.note){ showToast("請至少填一項數值或備註"); return; }
+    if (!dbReady || !weightCol){ showToast("尚未連線，稍後再試"); return; }
+    try{
+      if (editingWeightId){ await weightCol.doc(editingWeightId).set(Object.assign({}, weightsById[editingWeightId], data)); }
+      else { data.createdAt = Date.now(); await weightCol.add(data); }
+      closeWeightSheet(); showToast("已儲存");
+    }catch(err){ showToast("儲存失敗，請再試一次"); }
+  });
+  document.getElementById("weightDeleteBtn").addEventListener("click", async function(){
+    if (!editingWeightId || !weightCol) return;
+    try{ await weightCol.doc(editingWeightId).delete(); closeWeightSheet(); showToast("已刪除"); }
+    catch(err){ showToast("刪除失敗，請再試一次"); }
+  });
+  function parseCsvText(text){
+    var rows = [], row = [], cur = "", inQ = false;
+    text = String(text).replace(/^﻿/, "");
+    for (var i = 0; i < text.length; i++){
+      var c = text.charAt(i);
+      if (inQ){
+        if (c === '"'){ if (text.charAt(i + 1) === '"'){ cur += '"'; i++; } else inQ = false; }
+        else cur += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ","){ row.push(cur); cur = ""; }
+      else if (c === "\n" || c === "\r"){
+        if (c === "\r" && text.charAt(i + 1) === "\n") i++;
+        row.push(cur); cur = ""; rows.push(row); row = [];
+      } else cur += c;
+    }
+    if (cur !== "" || row.length){ row.push(cur); rows.push(row); }
+    return rows;
+  }
+  function weightRowsToRecords(rows, person){
+    var out = [];
+    rows.forEach(function(r){
+      var m = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(String(r[0] || "").trim());
+      if (!m) return;
+      var rec = {
+        date: m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0"), person: person,
+        weight: wNum(r[2]), bmi: wNum(r[3]), bodyFat: wNum(r[4]), muscle: wNum(r[5]), bone: wNum(r[6]), visceral: wNum(r[7]),
+        bmr: wNum(r[8]), bodyAge: wNum(r[9]), water: wNum(r[10]), subcut: wNum(r[11]), skeletal: wNum(r[12]), age: wNum(r[13]),
+        note: (String(r[14] || "").trim() === "-" ? "" : String(r[14] || "").trim()),
+        device: (String(r[15] || "").trim() === "-" ? "" : String(r[15] || "").trim())
+      };
+      if (!weightHasData(rec) && !rec.note) return;
+      out.push(rec);
+    });
+    return out;
+  }
+  function dateFromAge(dobStr, ageStr){
+    var dp = String(dobStr).split("-").map(Number);
+    if (/^0+$/.test(ageStr)) return dobStr;
+    var m = /^(?:(\d+)y)?(?:(\d+)m)?(?:(\d+)d)?$/.exec(ageStr);
+    if (!m || (!m[1] && !m[2] && !m[3])) return "";
+    var dt = new Date(dp[0], dp[1] - 1 + (Number(m[1]) || 0) * 12 + (Number(m[2]) || 0), dp[2] + (Number(m[3]) || 0));
+    return ymdStr(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+  }
+  function parseChildGrowthCsv(rows){
+    var blocks = [];
+    (rows[0] || []).forEach(function(cell, c){
+      var m = /(\S+)\s+(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(String(cell || "").trim());
+      if (m) blocks.push({ c: c, name: m[1], dob: m[2] + "-" + m[3].padStart(2, "0") + "-" + m[4].padStart(2, "0"), recs: [] });
+    });
+    if (!blocks.length) return null;
+    var hIdx = -1;
+    for (var h = 0; h < rows.length; h++){ if (String(rows[h][0] || "").trim() === "年齡"){ hIdx = h; break; } }
+    if (hIdx < 0) return null;
+    for (var i = hIdx + 1; i < rows.length; i++){
+      var r = rows[i];
+      if (!blocks.some(function(b){ return String(r[b.c] || "").trim() !== ""; })) break;
+      blocks.forEach(function(b){
+        var ageStr = String(r[b.c] || "").trim();
+        if (!ageStr) return;
+        var date = dateFromAge(b.dob, ageStr);
+        if (!date) return;
+        var w = wNum(r[b.c + 1]);
+        if (w !== null && w >= 100) w = w / 1000;
+        var rec = { date: date, person: b.name, weight: w, height: wNum(r[b.c + 2]), head: wNum(r[b.c + 3]), note: /^0+$/.test(ageStr) ? "出生" : "", device: "" };
+        if (rec.weight === null && rec.height === null && rec.head === null) return;
+        b.recs.push(rec);
+      });
+    }
+    return blocks;
+  }
+  document.getElementById("weightDobBtn").addEventListener("click", function(){
+    var dobs = growthDobs();
+    document.getElementById("dobChen").value = dobs["宸"] || "";
+    document.getElementById("dobShan").value = dobs["杉"] || "";
+    document.getElementById("dobSheetBackdrop").hidden = false;
+  });
+  function closeDobSheet(){ document.getElementById("dobSheetBackdrop").hidden = true; }
+  document.getElementById("dobCancelBtn").addEventListener("click", closeDobSheet);
+  document.getElementById("dobSheetBackdrop").addEventListener("click", function(e){ if (e.target === this) closeDobSheet(); });
+  document.getElementById("dobSaveBtn").addEventListener("click", async function(){
+    if (!dbReady || !settingsCol){ showToast("尚未連線，稍後再試"); return; }
+    var dobs = { "宸": document.getElementById("dobChen").value, "杉": document.getElementById("dobShan").value };
+    try{
+      await settingsCol.doc("growthProfiles").set({ dobs: dobs, updatedAt: Date.now() });
+      settingsById.growthProfiles = { dobs: dobs };
+      closeDobSheet(); renderWeight(); showToast("已儲存");
+    }catch(e){ showToast("儲存失敗，請再試一次"); }
+  });
+  var SEED_KIDS_CSV = `宸 2020/7/7(37+1),,,,,杉 2022/08/20(36+2),,,
+,,,2020/7/7,,,,,2022/08/20
+年齡,體重,身高,頭圍,,年齡,體重,身高,頭圍
+0,3690,55,35.5,,0,2630,50,33.5
+1m6d,4.7,57,36.8,,1m3d,3.8,54,35.4
+2m4d,5.7,60.5,38.1,,2m6d,5.1,57,37.7
+4m6d,7.5,67,41.3,,4m8d,6.6,63,40.5
+5m2d,8.1,69,42,,6m1d,7.4,67.5,42.6
+6m21d,9.3,72.5,43.5,,6m10d,7.4,68,42.6
+8m17d,10.2,75,45.3,,10m15d,8.7,74,45.3
+1y0m16d,10.6,80.5,47,,1y1m1d,9.2,78,46.6
+1y3m5d,12.1,85.5,47.4,,1y3m22d,10.5,81,46.8
+1y4m2d,12.2,87.5,48.6,,1y4m26d,10.5,82,47.1
+1y6m21d,13.1,89.5,48.7,,1y6m23d,10.7,85,47.8
+1y9m11d,13.6,90.6,49.3,,1y10m0d,11.5,87.5,48
+2y3m19d,16.4,97,50,,2y2m18d,12.4,92.5,48.5
+2y11m28d,17.6,103,,,2y4m22d,12.5,93.1,48.6
+3y1m22d,18.3,104.4,,,3y,13.5,97,
+3y2m11d,18,105.6,,,3y5m13d,13.9,99,
+3y4m24d,20,107,,,,,,
+3y5m29d,19.1,107.3,,,,,,
+3y7m22d,19.4,108.9,,,,,,
+4y4m26d,20.9,115,,,,,,
+5y2m3d,22,121,,,,,,
+5y6m26d,23,122.3,,,,,,`;
+  var SEED_ADULT_CSV = `日期,星期,體重,BMI,體脂肪,MUSCLE,BONE,"內臟脂肪
+V-FAT",基礎代謝,體年齡,WATER,皮下脂肪率,骨骼肌率,年齡,備註,量測儀器
+2024/5/7, 週二,85.1,30.2,40.5,-,-,11.5,1598.0,58.0,-,36.4,22.1,35,,公司Inbody
+2024/8/14, 週三,87.0,30.8,37.4,-,-,11.5,1653.0,56.0,-,35.4,24.2,35,,公司Inbody
+2025/5/6, 週二,88.3,31.3,40.0,-,-,13.0,1650.0,59.0,-,37.0,22.5,36,,公司Inbody
+2025/8/8, 週五,88.4,31.3,38.4,-,-,12.5,1666.0,58.0,-,36.2,23.7,36,,公司Inbody
+2026/4/27, 週一,91.5,32.4,39.5,-,-,14.0,1704.0,61.0,-,37.6,23.1,37,,公司Inbody
+2026/9/1, 週二,89.8,31.8,39.3,-,-,13.5,1679.0,60.0,-,37.0,23.1,37,,公司inbody
+2026/7/7, 週二,-,-,-,-,-,-,-,-,-,-,-,37,"看長庚新陳代謝科，7/8抽血
+0.25*4 + 0.5*2
+4785(自費)-(補助1222-2999)=3264",
+2026/7/14, 週二,92.9,33.3,47.1,46.0,3.1,10.5,1589.0,52.0,42.4,-,-,37,1-施打胰妥讚0.25MG (星期二),家裡體脂機
+2026/7/23, 週四,92.0,33.0,46.8,45.8,3.1,10.5,1580.0,52.0,42.6,,,37,1-施打胰妥讚0.25MG (星期四),家裡體脂機
+2026/7/30, 週四,91.9,33.0,46.8,45.8,3.1,10.5,1577.0,52.0,42.4,,,37,1-施打胰妥讚0.25MG (星期四),家裡體脂機
+2026/8/6, 週四,91.4,32.8,46.5,45.8,3.1,10.5,1576.0,52.0,42.8,,,37,1-施打胰妥讚0.25MG (星期四),家裡體脂機
+2026/8/7, 週五,91.5,32.8,46.6,45.8,3.1,10.5,1575.0,52.0,42.7,,,37,-,家裡體脂機
+2026/8/13, 週四,90.2,32.3,46.5,45.2,3.1,10.0,1554.0,52.0,42.3,,,37,1-施打胰妥讚0.5MG (星期四),家裡體脂機
+2026/8/18, 週二,90.4,32.4,46.6,45.2,3.1,10.0,1554.0,52.0,42.2,,,37,"回診長庚新陳代謝科
+4785(自費)-(補助1222-2999)=3264",家裡體脂機
+2026/8/20, 週四,90.5,32.5,46.0,45.8,3.1,10.5,1570.0,52.0,43.1,,,37,1-施打胰妥讚0.5MG (星期四),家裡體脂機
+2026/8/27, 週四,,,,,,,,,,,,37,2-施打胰妥讚0.5MG (星期四),
+2026/9/3, 週四,89.8,32.2,45.8,45.6,3.1,10.0,1561.0,52.0,43.1,,,37,2-施打胰妥讚0.5MG (星期四),家裡體脂機
+2026/9/10, 週四,,,,,,,,,,,,37,2-施打胰妥讚0.5MG (星期四),
+2026/9/13, 週日,88.9,31.9,45.8,45.1,3.1,10.0,1544.0,52.0,42.6,,,,-,家裡體脂機
+2026/9/17, 週四,,,,,,,,,,,,37,2-施打胰妥讚0.5MG (星期四),
+2026/9/22, 週二,89.8,32.2,45.5,45.8,3.1,10.0,1567.0,52.0,43.5,,,37,"回診長庚新陳代謝科(下午)
+4785(自費)-(補助1222-2999)=3264
+
+整體減重表現：截至 2026 年 9 月 22 日最新回診紀錄，體重維持在 89.8 kg，較療程前高點減少 3.1 kg (-3.3%)，反映藥物對食慾控制與血糖/代謝調節發揮了持續且顯著的作用",
+2026/9/24, 週四,,,,,,,,,,,,,3-施打胰妥讚0.5MG (星期四),
+2026/10/1, 週四,,,,,,,,,,,,,3-施打胰妥讚0.5MG (星期四),
+2026/10/8, 週四,,,,,,,,,,,,,3-施打胰妥讚0.5MG (星期四),
+2026/10/13, 週二,88.1,31.6,45.0,45.4,3.1,10.0,1545.0,53.0,43.5,,,,,家裡體脂機
+2026/10/15, 週四,86.0,30.8,44.2,44.9,3.0,9.5,1521.0,53.0,43.4,,,,3-施打胰妥讚0.5MG (星期四),家裡體脂機
+2026/10/20, 週二,,,,,,,,,,,,,"回診長庚新陳代謝科(下午)
+4486(自費)-(補助1222-2999)=3264",
+2026/10/22, 週四,87.0,31.2,44.2,45.4,3.1,9.5,1540.0,53.0,44.1,,,,4-施打胰妥讚1.0MG (星期四),
+2026/10/29, 週四,,,,,,,,,,,,,4-施打胰妥讚1.0MG (星期四),
+2026/11/5, 週四,,,,,,,,,,,,,4-施打胰妥讚1.0MG (星期四),
+2026/11/12, 週四,,,,,,,,,,,,,4-施打胰妥讚1.0MG (星期四),
+2026/11/17, 週二,,,,,,,,,,,,,"回診長庚新陳代謝科(下午)
+4486(自費)-(補助1222-2999)=3264",
+2026/11/19, 週四,,,,,,,,,,,,,5-施打胰妥讚1.0MG (星期四),
+2026/11/26, 週四,,,,,,,,,,,,,5-施打胰妥讚1.0MG (星期四),
+2026/12/3, 週四,,,,,,,,,,,,,5-施打胰妥讚1.0MG (星期四),
+2026/12/10, 週四,,,,,,,,,,,,,5-施打胰妥讚1.0MG (星期四),`;
+  var seedState = { w:false, s:false, done:false };
+  function trySeedGrowth(){
+    if (seedState.done || !seedState.w || !seedState.s) return;
+    seedState.done = true;
+    runGrowthSeed();
+  }
+  async function runGrowthSeed(){
+    if (settingsById.seedGrowthV1 || !weightCol || !settingsCol) return;
+    try{
+      var toAdd = [], newDobs = {};
+      (parseChildGrowthCsv(parseCsvText(SEED_KIDS_CSV)) || []).forEach(function(b){ newDobs[b.name] = b.dob; toAdd = toAdd.concat(b.recs); });
+      toAdd = toAdd.concat(weightRowsToRecords(parseCsvText(SEED_ADULT_CSV), "HUA"));
+      var have = {};
+      Object.keys(weightsById).forEach(function(id){ var d = weightsById[id]; have[(d.person || "HUA") + "|" + d.date] = 1; });
+      var fresh = toAdd.filter(function(r){ return !have[r.person + "|" + r.date]; });
+      var ok = 0;
+      for (var i = 0; i < fresh.length; i++){
+        try{ await weightCol.add(Object.assign({ createdAt: Date.now(), updatedAt: Date.now() }, fresh[i])); ok++; }catch(e){}
+      }
+      var dobs = Object.assign({}, newDobs, growthDobs());
+      await settingsCol.doc("growthProfiles").set({ dobs: dobs, updatedAt: Date.now() });
+      settingsById.growthProfiles = { dobs: dobs };
+      if (ok === fresh.length){
+        await settingsCol.doc("seedGrowthV1").set({ at: Date.now(), added: ok });
+        settingsById.seedGrowthV1 = { added: ok };
+      }
+      if (ok) showToast("已匯入孩子生長與體重資料 " + ok + " 筆");
+      renderWeight();
+    }catch(e){}
+  }
   var CAL_CATS = [
     { key:"visit", name:"就醫", color:"var(--utility)" },
     { key:"period", name:"經期", color:"var(--period)" },
@@ -6866,6 +7434,7 @@
   wireSortBtn("plannedSortBtn", "planned", renderPlanned);
   wireSortBtn("periodSortBtn", "period", renderPeriod);
   wireSortBtn("visitSortBtn", "visit", renderVisits);
+  wireSortBtn("weightSortBtn", "weight", renderWeight);
   wireSortBtn("budgetSortBtn", "budget", render);
   wireSortBtn("salarySortBtn", "salary", renderSalaries);
   wireSortBtn("utilitySortBtn", "utility", renderUtilities);
@@ -6882,6 +7451,7 @@
   renderPlanned();
   renderPeriod();
   renderVisits();
+  renderWeight();
   render();
   renderSalaries();
   renderUtilities();
