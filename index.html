@@ -7473,6 +7473,29 @@ V-FAT",基礎代謝,體年齡,WATER,皮下脂肪率,骨骼肌率,年齡,備註,�
   renderEpisodes();
   renderFever();
 
+  (function guardSheetDiscard(){
+    function mark(e){
+      var bd = e.target && e.target.closest ? e.target.closest(".sheet-backdrop") : null;
+      if (bd) bd.dataset.dirty = "1";
+    }
+    document.addEventListener("input", mark, true);
+    document.addEventListener("change", mark, true);
+    document.addEventListener("click", function(e){
+      var bd = e.target;
+      if (!bd || !bd.classList || !bd.classList.contains("sheet-backdrop") || bd.dataset.dirty !== "1") return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (window.confirm("剛輸入的內容還沒儲存，要放棄並關閉嗎？")){
+        bd.dataset.dirty = "0";
+        bd.hidden = true;
+      }
+    }, true);
+    var obs = new MutationObserver(function(list){
+      list.forEach(function(m){ m.target.dataset.dirty = "0"; });
+    });
+    document.querySelectorAll(".sheet-backdrop").forEach(function(bd){ obs.observe(bd, { attributes: true, attributeFilter: ["hidden"] }); });
+  })();
+
   (function restoreLastPerson(){
     var p = ""; try{ p = localStorage.getItem("huaPerson") || ""; }catch(e){}
     var btn = p && document.querySelector('#personFilterTabs button[data-person="' + p + '"]');
