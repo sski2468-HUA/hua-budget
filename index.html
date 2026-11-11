@@ -459,6 +459,22 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
+  .acct-list{ display:flex; flex-direction:column; gap:8px; }
+  .acct-row{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:11px 14px 10px; cursor:pointer; box-shadow:var(--shadow); }
+  .acct-row:active{ opacity:.65; }
+  .acct-row .top{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+  .acct-row .nm{ font-size:16px; font-weight:800; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acct-row .bal{ font-size:20px; font-weight:900; white-space:nowrap; }
+  .acct-row .bal.neg{ color:var(--fixed); }
+  .acct-row .sub{ display:flex; justify-content:space-between; gap:10px; margin-top:3px; font-size:12px; color:var(--muted); }
+  .acct-row .sub .chg.up{ color:var(--income); font-weight:700; }
+  .acct-row .sub .chg.down{ color:var(--fixed); font-weight:700; }
+  .acct-row .note{ font-size:12px; color:var(--muted); margin-top:3px; white-space:pre-wrap; }
+  .acct-row .bar{ height:4px; border-radius:3px; background:var(--surface-2); margin-top:8px; overflow:hidden; }
+  .acct-row .bar i{ display:block; height:100%; border-radius:3px; }
+  .acct-row .mv{ display:flex; gap:6px; margin-top:8px; }
+  .acct-row .mv button{ border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; width:40px; height:30px; font-size:14px; cursor:pointer; }
+  .acct-row .mv button:disabled{ opacity:.3; }
   :root{ --period:#D6336C; --period-bg:#FBE4EC; }
   section.group h2 .dot.period{ background:var(--period); }
   .add-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -677,9 +693,7 @@
         <button type="button" class="pill-btn" id="addAcctBtn">＋ Add</button>
       </div>
     </div>
-    <div class="acct-grid" id="acctGrid"></div>
-    <div class="home-divider"></div>
-    <div class="donut-card" id="acctChart"></div>
+    <div class="acct-list" id="acctGrid"></div>
     <div class="section-hint" id="acctUpdated" style="text-align:center; margin-top:10px;"></div>
 
     <section class="group" style="margin-top:22px;">
@@ -5759,7 +5773,7 @@
     acctHistCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
-      accountHistById = next; renderAcctHistory();
+      accountHistById = next; renderAccounts();
     }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     acctCol.onSnapshot(function(snap){
       var next = {};
@@ -5900,16 +5914,33 @@
     var grid = document.getElementById("acctGrid");
     grid.innerHTML = "";
     if (!list.length){
-      grid.style.display = "block";
       grid.innerHTML = '<div class="empty">還沒有帳戶，點右上角「＋ Add」新增</div>';
     } else {
-      grid.style.display = "";
+      var lastChange = {};
+      Object.keys(accountHistById).forEach(function(hid){
+        var h = accountHistById[hid];
+        if (!h.accountId || h.type === "delete") return;
+        if (!lastChange[h.accountId] || (h.at || 0) > (lastChange[h.accountId].at || 0)) lastChange[h.accountId] = h;
+      });
+      var posTotal = list.reduce(function(s, a){ return s + Math.max(0, Number(a.balance) || 0); }, 0);
       list.forEach(function(a, idx){
+        var bal = Number(a.balance) || 0;
         var el = document.createElement("div");
-        el.className = "acct-cell";
-        var html = '<div class="n">' + escapeHtml(a.name || "") + '</div><div class="v num">' + Math.round(Number(a.balance) || 0).toLocaleString("en-US") + '</div>';
+        el.className = "acct-row";
+        var lc = lastChange[a._id];
+        var chg = "";
+        if (lc && lc.type === "update"){
+          var dl = Number(lc.delta) || 0;
+          chg = '<span class="chg ' + (dl >= 0 ? "up" : "down") + '">' + (dl >= 0 ? "+" : "-") + Math.abs(Math.round(dl)).toLocaleString("en-US") + '</span> · ';
+        }
+        var when = a.updatedAt ? fmtTs(a.updatedAt) + " 更新" : "";
+        var pct = posTotal > 0 && bal > 0 ? Math.round(bal / posTotal * 100) : 0;
+        var html = '<div class="top"><div class="nm">' + escapeHtml(a.name || "") + '</div><div class="bal num' + (bal < 0 ? " neg" : "") + '">' + Math.round(bal).toLocaleString("en-US") + '</div></div>' +
+          '<div class="sub"><span>' + chg + escapeHtml(when) + '</span><span>' + (pct ? "占 " + pct + "%" : "") + '</span></div>' +
+          (a.note ? '<div class="note">' + escapeHtml(a.note) + '</div>' : "") +
+          (pct ? '<div class="bar"><i style="width:' + pct + '%; background:' + ACCT_COLORS[idx % ACCT_COLORS.length] + ';"></i></div>' : "");
         if (acctSortMode){
-          html += '<div class="mv"><button type="button" data-mv="-1"' + (idx === 0 ? " disabled" : "") + '>◀</button><button type="button" data-mv="1"' + (idx === list.length - 1 ? " disabled" : "") + '>▶</button></div>';
+          html += '<div class="mv"><button type="button" data-mv="-1"' + (idx === 0 ? " disabled" : "") + '>▲</button><button type="button" data-mv="1"' + (idx === list.length - 1 ? " disabled" : "") + '>▼</button></div>';
         }
         el.innerHTML = html;
         if (acctSortMode){
@@ -5921,22 +5952,6 @@
         }
         grid.appendChild(el);
       });
-    }
-    var chart = document.getElementById("acctChart");
-    var pos = list.filter(function(a){ return (Number(a.balance) || 0) > 0; });
-    var posTotal = pos.reduce(function(s, a){ return s + Number(a.balance); }, 0);
-    if (!pos.length){ chart.hidden = true; }
-    else {
-      chart.hidden = false;
-      var R = 72, C = 2 * Math.PI * R, offset = 0, svg = '<svg viewBox="0 0 200 200"><g transform="rotate(-90 100 100)">', legend = "";
-      pos.forEach(function(a, i){
-        var frac = Number(a.balance) / posTotal, len = frac * C, color = ACCT_COLORS[i % ACCT_COLORS.length];
-        svg += '<circle cx="100" cy="100" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="42" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-offset) + '"><title>' + escapeHtml(a.name || "") + '</title></circle>';
-        offset += len;
-        legend += '<span><i style="background:' + color + '"></i>' + escapeHtml(a.name || "") + ' ' + Math.round(Number(a.balance)).toLocaleString("en-US") + '</span>';
-      });
-      svg += '</g></svg><div class="legend">' + legend + '</div>';
-      chart.innerHTML = svg;
     }
     var latest = list.reduce(function(m, a){ return Math.max(m, a.updatedAt || 0); }, 0);
     document.getElementById("acctUpdated").textContent = latest ? "最近更新：" + new Date(latest).toLocaleString("zh-TW", { hour12:false }) : "";
@@ -6014,7 +6029,11 @@
     document.getElementById("acBalance").value = d.balance === 0 || d.balance ? d.balance : "";
     document.getElementById("acNote").value = d.note || "";
     document.getElementById("acctSheetBackdrop").hidden = false;
+    setTimeout(function(){ var b = document.getElementById("acBalance"); b.focus(); b.select(); }, 60);
   }
+  document.getElementById("acBalance").addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); document.getElementById("acctSaveBtn").click(); }
+  });
   function closeAcctSheet(){ document.getElementById("acctSheetBackdrop").hidden = true; }
   document.getElementById("addAcctBtn").addEventListener("click", openAddAcct);
   document.getElementById("acctCancelBtn").addEventListener("click", closeAcctSheet);
