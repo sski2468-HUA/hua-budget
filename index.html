@@ -466,6 +466,8 @@
   .rec-table tr.row{ cursor:pointer; }
   .rec-table tr.row:active td{ opacity:.6; }
   .rec-table tr.plan td{ opacity:.55; }
+  .rec-table .photo-strip{ display:flex; gap:4px; flex-wrap:nowrap; }
+  .rec-table .photo-strip img{ width:44px; height:44px; max-width:44px; border-radius:8px; object-fit:cover; border:1px solid var(--line); display:block; flex:0 0 auto; }
   .rec-table tr.sel td{ background:var(--fever-bg); }
   .rec-table tr.sel td.d{ background:var(--fever-bg); }
   .rec-table td.d{ white-space:nowrap; font-weight:800; position:sticky; left:0; background:var(--surface); line-height:1.35; }
@@ -5228,7 +5230,7 @@
         { c:"d", h: recDateCell(d.date, "") },
         { c:"nw", h: escapeHtml(d.time || "") },
         { c:"nc", h: t === null ? "" : '<b style="color:' + (t >= 38 ? "var(--fever)" : "var(--income)") + ';font-size:15px;">' + t.toFixed(1) + '</b>' },
-        { h: d.medication ? '💊 ' + escapeHtml(d.medication) : "" },
+        { c:"nw", h: d.medication ? '💊 ' + escapeHtml(d.medication) : "" },
         { c:"nt", h: escapeHtml(d.note || "") },
         { h: photoHtml },
         { c:"nw", h: escapeHtml(d.person || "") }
