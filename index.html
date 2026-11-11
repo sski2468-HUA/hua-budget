@@ -490,8 +490,12 @@
   .acct-row .note{ font-size:12px; color:var(--muted); margin-top:3px; white-space:pre-wrap; }
   .acct-row .bar{ height:4px; border-radius:3px; background:var(--surface-2); margin-top:8px; overflow:hidden; }
   .acct-row .bar i{ display:block; height:100%; border-radius:3px; }
+  .acct-row input{ border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:10px; font-family:inherit; }
+  .acct-row .qs{ display:flex; gap:8px; margin-top:8px; }
+  .acct-row .qs input{ flex:1; min-width:0; box-sizing:border-box; padding:8px 10px; font-size:15px; }
+  .acct-row .qs button{ flex:0 0 auto; border:none; background:var(--brand); color:var(--brand-ink,#fff); border-radius:10px; padding:0 16px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; }
   .acct-row .qa{ margin-top:10px; }
-  .acct-row .qa input{ width:100%; box-sizing:border-box; font-size:18px; }
+  .acct-row .qa input{ width:100%; box-sizing:border-box; font-size:16px; padding:9px 11px; }
   .acct-row .qb{ display:flex; gap:8px; margin-top:8px; }
   .acct-row .qb button{ flex:1; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:10px 6px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; }
   .acct-row .qb .out{ color:var(--fixed); border-color:var(--fixed); }
@@ -5903,6 +5907,22 @@
     }catch(e){ showToast("排序儲存失敗，請再試一次"); }
   }
   var acctOpenId = null, acctQuickVal = "", acctFocusQuick = false;
+  async function setAcctBalance(id, valStr){
+    var nb = parseFloat(valStr);
+    if (valStr === "" || isNaN(nb)){ showToast("請輸入新的餘額"); return; }
+    var a = accountsById[id];
+    if (!a || !dbReady || !acctCol){ showToast("尚未連線，稍後再試"); return; }
+    var prev = Number(a.balance) || 0, total = currentTotal();
+    nb = Math.round(nb * 100) / 100;
+    if (nb === prev){ showToast("餘額沒有變動"); return; }
+    try{
+      await acctCol.doc(id).set(Object.assign({}, a, { balance: nb, updatedAt: Date.now() }));
+      await logAcctHistory({ type:"update", accountId:id, name:a.name || "", prev:prev, balance:nb, delta:nb - prev, total:total - prev + nb });
+      acctOpenId = null; acctQuickVal = "";
+      showToast((a.name || "") + "：" + Math.round(prev).toLocaleString("en-US") + " → " + Math.round(nb).toLocaleString("en-US"));
+      renderAccounts();
+    }catch(e){ showToast("儲存失敗，請再試一次"); }
+  }
   async function quickAdjust(id, valStr, sign){
     var amt = parseFloat(valStr);
     if (!valStr || isNaN(amt) || amt === 0){ showToast("請輸入金額"); return; }
@@ -5949,6 +5969,7 @@
         var html = '<div class="top"><div class="nm">' + escapeHtml(a.name || "") + '</div><div class="bal num' + (bal < 0 ? " neg" : "") + '">' + Math.round(bal).toLocaleString("en-US") + '</div></div>' +
           '<div class="sub"><span>' + chg + escapeHtml(when) + '</span><span>' + (pct ? "占 " + pct + "%" : "") + '</span></div>' +
           (a.note ? '<div class="note">' + escapeHtml(a.note) + '</div>' : "") +
+          (acctSortMode ? "" : '<div class="qs"><input type="number" inputmode="decimal" placeholder="輸入新餘額，按 Enter 更新"><button type="button">更新</button></div>') +
           (pct ? '<div class="bar"><i style="width:' + pct + '%; background:' + ACCT_COLORS[idx % ACCT_COLORS.length] + ';"></i></div>' : "");
         var open = !acctSortMode && acctOpenId === a._id;
         if (acctSortMode){
@@ -5963,6 +5984,13 @@
             b.addEventListener("click", function(e){ e.stopPropagation(); moveAcct(a._id, Number(b.getAttribute("data-mv"))); });
           });
         } else {
+          var qs = el.querySelector(".qs");
+          if (qs){
+            qs.addEventListener("click", function(e){ e.stopPropagation(); });
+            var qsi = qs.querySelector("input");
+            qsi.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); setAcctBalance(a._id, qsi.value); } });
+            qs.querySelector("button").addEventListener("click", function(){ setAcctBalance(a._id, qsi.value); });
+          }
           el.addEventListener("click", function(){
             acctOpenId = acctOpenId === a._id ? null : a._id;
             acctQuickVal = "";
