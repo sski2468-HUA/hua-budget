@@ -459,6 +459,24 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
+  .rec-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
+  .rec-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  .rec-table th{ background:var(--surface-2); text-align:left; padding:8px 10px; font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap; }
+  .rec-table td{ padding:9px 10px; border-top:1px solid var(--line); vertical-align:top; }
+  .rec-table tr.row{ cursor:pointer; }
+  .rec-table tr.row:active td{ opacity:.6; }
+  .rec-table tr.plan td{ opacity:.55; }
+  .rec-table tr.sel td{ background:var(--fever-bg); }
+  .rec-table tr.sel td.d{ background:var(--fever-bg); }
+  .rec-table td.d{ white-space:nowrap; font-weight:800; position:sticky; left:0; background:var(--surface); line-height:1.35; }
+  .rec-table th:first-child{ position:sticky; left:0; z-index:1; }
+  .rec-table th.nc{ text-align:right; }
+  .rec-table td.d small{ display:block; font-weight:500; color:var(--muted); font-size:11.5px; }
+  .rec-table td.d .rel{ color:var(--period); font-weight:700; }
+  .rec-table td.nc{ text-align:right; white-space:nowrap; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .rec-table td.nw{ white-space:nowrap; color:var(--muted); }
+  .rec-table td.nt{ min-width:150px; white-space:pre-wrap; color:var(--muted); }
+  .rec-table td.big{ font-weight:900; font-size:15px; color:var(--savings); }
   .acct-list{ display:flex; flex-direction:column; gap:8px; }
   .acct-row{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:11px 14px 10px; cursor:pointer; box-shadow:var(--shadow); }
   .acct-row:active{ opacity:.65; }
@@ -472,6 +490,13 @@
   .acct-row .note{ font-size:12px; color:var(--muted); margin-top:3px; white-space:pre-wrap; }
   .acct-row .bar{ height:4px; border-radius:3px; background:var(--surface-2); margin-top:8px; overflow:hidden; }
   .acct-row .bar i{ display:block; height:100%; border-radius:3px; }
+  .acct-row .qa{ margin-top:10px; }
+  .acct-row .qa input{ width:100%; box-sizing:border-box; font-size:18px; }
+  .acct-row .qb{ display:flex; gap:8px; margin-top:8px; }
+  .acct-row .qb button{ flex:1; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:10px; padding:10px 6px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .acct-row .qb .out{ color:var(--fixed); border-color:var(--fixed); }
+  .acct-row .qb .in{ color:var(--income); border-color:var(--income); }
+  .acct-row .qb .ed{ flex:0 0 auto; padding:10px 12px; font-weight:600; color:var(--muted); }
   .acct-row .mv{ display:flex; gap:6px; margin-top:8px; }
   .acct-row .mv button{ border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; width:40px; height:30px; font-size:14px; cursor:pointer; }
   .acct-row .mv button:disabled{ opacity:.3; }
@@ -572,6 +597,11 @@
   .plan-card .dt{ font-size:12px; color:var(--muted); margin-top:2px; }
   .plan-card .note{ margin-top:8px; font-size:13px; background:var(--surface-2); border-radius:10px; padding:8px 10px; white-space:pre-wrap; }
   .plan-card .extra{ margin-top:6px; font-size:12.5px; color:var(--muted); background:transparent; border:1px dashed var(--line); border-radius:10px; padding:8px 10px; white-space:pre-wrap; }
+  .rec-table .chk{ width:26px; height:26px; border-radius:50%; border:2px solid var(--muted); background:transparent; color:var(--brand-ink); font-size:15px; line-height:1; cursor:pointer; padding:0; }
+  .rec-table .chk.on{ background:var(--income); border-color:var(--income); }
+  .rec-table .pay-toggle{ margin-left:0; white-space:nowrap; }
+  .rec-table .defer-toggle{ margin-top:4px; }
+  .rec-table tr.plan td.big{ text-decoration:line-through; }
   .acct-cell .mv{ display:flex; gap:6px; margin-top:6px; }
   .acct-cell .mv button{ border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; width:34px; height:28px; font-size:14px; cursor:pointer; }
   .acct-cell .mv button:disabled{ opacity:.3; }
@@ -2294,6 +2324,30 @@
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; });
   }
+  function recDateCell(dateStr, sub){
+    var s = String(dateStr || "");
+    var wd = "";
+    var dt = new Date(s + "T00:00:00");
+    if (!isNaN(dt)) wd = "日一二三四五六".charAt(dt.getDay());
+    return escapeHtml(s.replace(/-/g, "/")) + "<small>" + (wd ? "週" + wd : "") + (sub ? "　" + sub : "") + "</small>";
+  }
+  function buildRecTable(headers, rows){
+    var wrap = document.createElement("div");
+    wrap.className = "rec-wrap";
+    wrap.innerHTML = '<table class="rec-table"><thead><tr>' + headers.map(function(h){
+      var t = typeof h === "string" ? h : h.t, c = typeof h === "string" ? "" : (h.c || "");
+      return '<th' + (c ? ' class="' + c + '"' : "") + '>' + escapeHtml(t) + '</th>';
+    }).join("") + '</tr></thead><tbody></tbody></table>';
+    var tb = wrap.querySelector("tbody");
+    rows.forEach(function(r){
+      var tr = document.createElement("tr");
+      tr.className = "row" + (r.plan ? " plan" : "");
+      tr.innerHTML = r.cells.map(function(c){ return '<td' + (c.c ? ' class="' + c.c + '"' : "") + '>' + c.h + '</td>'; }).join("");
+      if (r.click) tr.addEventListener("click", r.click);
+      tb.appendChild(tr);
+    });
+    return wrap;
+  }
   function showToast(msg){
     var t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
@@ -2442,12 +2496,26 @@
           ' · 支出 ' + fmt(expenseTotal) + ' · 淨額 ' + fmtSigned(net) + '</span>';
       sec.appendChild(head);
       var listDiv = document.createElement("div");
-      rows.forEach(function(d){ listDiv.appendChild(itemEl(d, d.category)); });
+      listDiv.appendChild(itemsTable(rows));
       sec.appendChild(listDiv);
       container.appendChild(sec);
     });
   }
 
+  var ITEM_KIND_COLOR = { income:"var(--income)", fixed:"var(--fixed)", savings:"var(--savings)", variable:"var(--variable)" };
+  function itemsTable(rows){
+    return buildRecTable(["項目", { t:"金額", c:"nc" }, "轉帳日", "銀行 / 帳戶", "方式", "備註"], rows.map(function(d){
+      var who = currentPerson === "combined" ? "<small>" + escapeHtml(PERSON_LABEL[d.person || "hua"]) + "</small>" : "";
+      return { click: function(){ openEdit(d); }, cells: [
+        { c:"d", h: escapeHtml(d.name || "未命名") + who },
+        { c:"nc big", h: '<span style="color:' + (ITEM_KIND_COLOR[d.category] || "inherit") + ';">' + fmt(d.amount) + '</span>' },
+        { c:"nw", h: d.transferDay ? "每月 " + escapeHtml(String(d.transferDay)) + " 日" : "" },
+        { c:"nw", h: escapeHtml(d.account || "") },
+        { c:"nw", h: escapeHtml(d.method || "") },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    }));
+  }
   function itemEl(d, kind){
     var el = document.createElement("div");
     el.className = "item";
@@ -2493,7 +2561,7 @@
         e.textContent = "還沒有" + CAT_LABEL[cat] + "項目，點右下角 ＋ 新增";
         list.appendChild(e);
       } else {
-        rows.forEach(function(d){ list.appendChild(itemEl(d, cat)); });
+        list.appendChild(itemsTable(rows));
       }
     });
 
@@ -3070,62 +3138,49 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
+    function mny2(v){ return Number(v) ? fmt(v) : ""; }
+    var salTbl = buildRecTable(["薪資月份", "發薪日", "狀態", { t:"應發", c:"nc" }, { t:"扣款", c:"nc" }, { t:"暫支", c:"nc" }, { t:"入帳", c:"nc" }, { t:"薪資總額", c:"nc" }, "明細", "備註"], all.map(function(d){
       var isBonus = d.recordType === "bonus";
-      var el = document.createElement("div");
       var isPaid = salaryPaid(d);
-      el.className = "salary-card" + (isBonus ? " bonus-card" : "") + (isPaid ? "" : " unpaid");
-      var titleLabel = isBonus ? escapeHtml(d.bonusName || "獎金") : escapeHtml(salaryMonthLabel(d));
-      var dateLabel = titleLabel +
-        (isBonus ? '<span class="bonus-badge">🎁 獎金</span>' : '') +
-        (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '') +
-        (d.historical ? '<span class="hist-badge">歷史</span>' : '') +
-        '<button type="button" class="pay-toggle ' + (isPaid ? "paid" : "unpaid") + '">' + (isPaid ? "✓ 已發" : "○ 未發") + '</button>';
-      var html =
-        '<div class="row1"><span class="date">' + dateLabel + '</span>' +
-          '<span class="net num">' + fmt(d.amount) + '</span></div>';
-      if (isBonus && d.payDate){
-        html += '<div class="meta" style="margin-top:4px;">' + escapeHtml(d.payDate) + '</div>';
-      }
-
+      var title = isBonus ? escapeHtml(d.bonusName || "獎金") + " 🎁" : escapeHtml(salaryMonthLabel(d));
+      var who = currentPerson === "combined" ? "<small>" + escapeHtml(PERSON_LABEL[d.person || "hua"]) + (d.historical ? "　歷史" : "") + "</small>" : (d.historical ? "<small>歷史</small>" : "");
+      var deductionTotal = (Number(d.laborIns)||0) + (Number(d.healthIns)||0) + (Number(d.welfare)||0) + (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0);
+      var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
+      var advAmt = Number(d.advance) || 0;
+      var detail = [];
       if (!isBonus){
-        var deductionTotal = (Number(d.laborIns)||0) + (Number(d.healthIns)||0) + (Number(d.welfare)||0) +
-          (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0);
-        var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
-        var metaParts = [];
-        var po = paidOnDate(d);
-        if (po) metaParts.push("發薪日 " + po.slice(5).replace("-", "/"));
-        var advAmt = Number(d.advance) || 0;
-        if (advAmt){ metaParts.push("入帳 " + fmt((Number(d.amount) || 0) - advAmt)); metaParts.push("暫支 " + fmt(advAmt)); }
-        if (d.grossAmount) metaParts.push("應發 " + fmt(d.grossAmount));
-        if (d.bonus) metaParts.push("效率獎金 " + fmt(d.bonus));
-        (d.extraItems || []).forEach(function(x){ metaParts.push(escapeHtml(x.name || "其他") + " " + fmt(x.amount)); });
-        if (deductionTotal) metaParts.push("扣款 " + fmt(deductionTotal));
-        if (leaveHours) metaParts.push("請假 " + leaveHours + "hr");
-        if (d.rating) metaParts.push("考績 " + escapeHtml(d.rating));
-        if (d.gradeRank || d.gradeLevel) metaParts.push("職等 " + escapeHtml(d.gradeRank || "-") + "等" + escapeHtml(d.gradeLevel || "-") + "級");
-        if (metaParts.length){
-          html += '<div class="meta" style="margin-top:6px;">' + metaParts.join(" · ") + '</div>';
-        }
+        if (d.bonus) detail.push("效率獎金 " + fmt(d.bonus));
+        (d.extraItems || []).forEach(function(x){ detail.push((x.name || "其他") + " " + fmt(x.amount)); });
+        if (leaveHours) detail.push("請假 " + leaveHours + "hr");
+        if (d.rating) detail.push("考績 " + d.rating);
+        if (d.gradeRank || d.gradeLevel) detail.push("職等 " + (d.gradeRank || "-") + "等" + (d.gradeLevel || "-") + "級");
       }
-
-      if (d.historical && d.historyNote){
-        html += '<div class="note">' + escapeHtml(d.historyNote) + '</div>';
-      }
-      if (d.generalNote){
-        html += '<div class="note">' + escapeHtml(d.generalNote) + '</div>';
-      }
-      el.innerHTML = html;
-      el.querySelector(".pay-toggle").addEventListener("click", async function(e){
+      var po = isBonus ? (d.payDate || "") : paidOnDate(d);
+      var note = [d.historical && d.historyNote ? d.historyNote : "", d.generalNote || ""].filter(Boolean).join("\n");
+      return { plan: !isPaid, click: function(){ openEditSalary(d); }, cells: [
+        { c:"d", h: title + who },
+        { c:"nw", h: po ? escapeHtml(String(po).replace(/-/g, "/")) : "" },
+        { c:"nw", h: '<button type="button" class="pay-toggle ' + (isPaid ? "paid" : "unpaid") + '" data-act="paid">' + (isPaid ? "✓ 已發" : "○ 未發") + '</button>' },
+        { c:"nc", h: isBonus ? "" : mny2(d.grossAmount) },
+        { c:"nc", h: isBonus ? "" : mny2(deductionTotal) },
+        { c:"nc", h: isBonus ? "" : mny2(advAmt) },
+        { c:"nc", h: isBonus ? "" : (advAmt ? fmt((Number(d.amount) || 0) - advAmt) : "") },
+        { c:"nc big", h: fmt(d.amount) },
+        { c:"nt", h: escapeHtml(detail.join("　")) },
+        { c:"nt", h: escapeHtml(note) }
+      ] };
+    }));
+    salTbl.querySelectorAll("tbody tr").forEach(function(tr, i){
+      var d = all[i], isPaid = salaryPaid(d);
+      tr.querySelector('[data-act="paid"]').addEventListener("click", async function(e){
         e.stopPropagation();
         if (!dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return; }
         try{
           await salaryCol.doc(d._id).set(Object.assign({}, salariesById[d._id], { paid: !isPaid, updatedAt: Date.now() }));
         }catch(err){ showToast("更新失敗，請再試一次"); }
       });
-      el.addEventListener("click", function(){ openEditSalary(d); });
-      list.appendChild(el);
     });
+    list.appendChild(salTbl);
   }
 
   var SALARY_NUM_FIELDS = ["sBaseSalary","sTransport","sRegion","sSupply","sMeal","sHousing","sBonus","sGrossAmount","sAbsenceHours","sAbsenceDeduction",
@@ -3674,28 +3729,17 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
+    function mny(v){ return Number(v) ? fmt(v) : ""; }
+    list.appendChild(buildRecTable(["年月", { t:"房租", c:"nc" }, { t:"水費", c:"nc" }, { t:"電費", c:"nc" }, { t:"天然氣", c:"nc" }, { t:"合計", c:"nc" }, "備註"], all.map(function(d){
       var total = (Number(d.rent)||0) + (Number(d.water)||0) + (Number(d.electric)||0) + (Number(d.gas)||0);
-      var parts = [];
-      if (d.rent) parts.push("房租 " + fmt(d.rent));
-      if (d.water) parts.push("水費 " + fmt(d.water));
-      if (d.electric) parts.push("電費 " + fmt(d.electric));
-      if (d.gas) parts.push("天然氣 " + fmt(d.gas));
-      var el = document.createElement("div");
-      el.className = "utility-card";
-      var monthLabel = (d.year||"") + "-" + String(d.month||"").padStart(2,"0");
       var bigAmount = utilityCategoryFilterValue !== "all" ? (Number(d[utilityCategoryFilterValue])||0) : total;
-      var dateLabel = monthLabel + (utilityCategoryFilterValue !== "all" ?
-        '<span class="hist-badge">' + UTILITY_CAT_LABEL[utilityCategoryFilterValue] + '</span>' : '');
-      var html =
-        '<div class="row1"><span class="date">' + dateLabel + '</span>' +
-          '<span class="net num">' + fmt(bigAmount) + '</span></div>' +
-        '<div class="breakdown">' + escapeHtml(parts.join(" · ")) + '</div>';
-      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
-      el.innerHTML = html;
-      el.addEventListener("click", function(){ openEditUtility(d); });
-      list.appendChild(el);
-    });
+      return { click: function(){ openEditUtility(d); }, cells: [
+        { c:"d", h: escapeHtml((d.year||"") + "/" + String(d.month||"").padStart(2,"0")) },
+        { c:"nc", h: mny(d.rent) }, { c:"nc", h: mny(d.water) }, { c:"nc", h: mny(d.electric) }, { c:"nc", h: mny(d.gas) },
+        { c:"nc big", h: fmt(bigAmount) },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 每年固定支出 ----
@@ -3793,23 +3837,15 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "item";
-      var metaParts = [];
-      if (d.monthlyAmount) metaParts.push("約當月繳 " + fmt(d.monthlyAmount));
-      var afNameLabel = escapeHtml(d.name || "未命名") +
-        (currentPerson === "combined" ? '<span class="hist-badge">' + PERSON_LABEL[d.person || "hua"] + '</span>' : '');
-      el.innerHTML =
-        '<div class="stripe annual"></div>' +
-        '<div class="body">' +
-          '<div class="name">' + afNameLabel + '</div>' +
-          '<div class="meta">' + escapeHtml(metaParts.join(" · ") || (d.note || "")) + '</div>' +
-        '</div>' +
-        '<div class="amt annual num">' + fmt(d.annualAmount) + '</div>';
-      el.addEventListener("click", function(){ openEditAnnualFixed(d); });
-      list.appendChild(el);
-    });
+    list.appendChild(buildRecTable(["項目", { t:"年費用", c:"nc" }, { t:"約當月繳", c:"nc" }, "備註"], all.map(function(d){
+      var who = currentPerson === "combined" ? "<small>" + escapeHtml(PERSON_LABEL[d.person || "hua"]) + "</small>" : "";
+      return { click: function(){ openEditAnnualFixed(d); }, cells: [
+        { c:"d", h: escapeHtml(d.name || "未命名") + who },
+        { c:"nc big", h: fmt(d.annualAmount) },
+        { c:"nc", h: d.monthlyAmount ? fmt(d.monthlyAmount) : "" },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 年終獎金分配 ----
@@ -3955,24 +3991,16 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var subtotal = bonusAmountFor(d);
-      var metaParts = [];
-      if (d.year) metaParts.push(d.year + " 年");
-      if (d.huaAmount) metaParts.push("HUA " + fmt(d.huaAmount));
-      if (d.yupasAmount) metaParts.push("YUPAS " + fmt(d.yupasAmount));
-      var el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML =
-        '<div class="stripe bonus"></div>' +
-        '<div class="body">' +
-          '<div class="name">' + escapeHtml(d.name || "未命名") + '</div>' +
-          '<div class="meta">' + escapeHtml(metaParts.join(" · ")) + '</div>' +
-        '</div>' +
-        '<div class="amt bonus num">' + fmt(subtotal) + '</div>';
-      el.addEventListener("click", function(){ openEditAnnualBonus(d); });
-      list.appendChild(el);
-    });
+    list.appendChild(buildRecTable(["年份", "項目", { t:"HUA", c:"nc" }, { t:"YUPAS", c:"nc" }, { t:"小計", c:"nc" }, "備註"], all.map(function(d){
+      return { click: function(){ openEditAnnualBonus(d); }, cells: [
+        { c:"d", h: d.year ? escapeHtml(String(d.year)) + " 年" : "" },
+        { h: escapeHtml(d.name || "未命名") },
+        { c:"nc", h: d.huaAmount ? fmt(d.huaAmount) : "" },
+        { c:"nc", h: d.yupasAmount ? fmt(d.yupasAmount) : "" },
+        { c:"nc big", h: fmt(bonusAmountFor(d)) },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 保險理賠 ----
@@ -4089,22 +4117,17 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "claim-card";
-      var parts = [];
-      if (d.applyDate) parts.push("申請 " + d.applyDate);
-      if (d.payDate) parts.push("理賠 " + d.payDate);
-      var html =
-        '<div class="row1"><span class="date">' + escapeHtml(d.company || "") + '</span>' +
-          '<span class="net num">' + fmt(d.amount) + '</span></div>' +
-        '<div class="breakdown">' + escapeHtml((d.incidentDate||"") + (parts.length ? " · " + parts.join(" · ") : "")) + '</div>';
-      if (d.diagnosis){ html += '<div class="breakdown">' + escapeHtml(d.diagnosis) + '</div>'; }
-      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
-      el.innerHTML = html;
-      el.addEventListener("click", function(){ openEditClaim(d); });
-      list.appendChild(el);
-    });
+    function sd(s){ return s ? escapeHtml(String(s).replace(/-/g, "/")) : ""; }
+    list.appendChild(buildRecTable(["事故日", "保險公司", "診斷 / 事由", "申請日", "理賠日", { t:"理賠金額", c:"nc" }, "備註"], all.map(function(d){
+      return { click: function(){ openEditClaim(d); }, cells: [
+        { c:"d", h: recDateCell(d.incidentDate, "") },
+        { h: escapeHtml(d.company || "") },
+        { h: escapeHtml(d.diagnosis || "") },
+        { c:"nw", h: sd(d.applyDate) }, { c:"nw", h: sd(d.payDate) },
+        { c:"nc big", h: fmt(d.amount) },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 年資規劃 ----
@@ -4207,21 +4230,17 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "timeline-card" + (d.year === nowYear ? " is-current" : "");
-      var metaParts = ["年資 " + (d.year - TENURE_BASE_YEAR) + " 年", "年齡 " + (d.year - AGE_BASE_YEAR) + " 歲"];
-      if (d.songGrade) metaParts.push("宸 " + d.songGrade);
-      if (d.shanGrade) metaParts.push("杉 " + d.shanGrade);
-      el.innerHTML =
-        '<div class="yr num">' + d.year + '</div>' +
-        '<div class="body">' +
-          '<div class="meta">' + escapeHtml(metaParts.join(" · ")) + '</div>' +
-          (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '') +
-        '</div>';
-      el.addEventListener("click", function(){ openEditTimeline(d); });
-      list.appendChild(el);
-    });
+    var tlTbl = buildRecTable(["年度", { t:"年資", c:"nc" }, { t:"年齡", c:"nc" }, "宸", "杉", "備註 / 人生規劃"], all.map(function(d){
+      return { click: function(){ openEditTimeline(d); }, cells: [
+        { c:"d", h: escapeHtml(String(d.year)) + (d.year === nowYear ? "<small>今年</small>" : "") },
+        { c:"nc", h: (d.year - TENURE_BASE_YEAR) + " 年" },
+        { c:"nc", h: (d.year - AGE_BASE_YEAR) + " 歲" },
+        { c:"nw", h: escapeHtml(d.songGrade || "") },
+        { c:"nw", h: escapeHtml(d.shanGrade || "") },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    }));
+    list.appendChild(tlTbl);
   }
 
   // ---- 紅包紀錄（包出去） ----
@@ -4336,18 +4355,15 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "hb-card";
-      el.innerHTML =
-        '<div class="amt num">' + fmt(d.amount) + '</div>' +
-        '<div class="body">' +
-          '<div class="name">' + escapeHtml(d.recipient || "") + '</div>' +
-          '<div class="meta">' + (d.year||"") + ' 年 · ' + escapeHtml(d.occasion||"") + (d.note ? " · " + escapeHtml(d.note) : "") + '</div>' +
-        '</div>';
-      el.addEventListener("click", function(){ openEditRedOut(d); });
-      list.appendChild(el);
-    });
+    list.appendChild(buildRecTable(["年份", "場合", "包給誰", { t:"金額", c:"nc" }, "備註"], all.map(function(d){
+      return { click: function(){ openEditRedOut(d); }, cells: [
+        { c:"d", h: escapeHtml(String(d.year || "")) + " 年" },
+        { h: escapeHtml(d.occasion || "") },
+        { h: escapeHtml(d.recipient || "") },
+        { c:"nc big", h: fmt(d.amount) },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 收到紅包 ----
@@ -4479,18 +4495,16 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "hb-card";
-      el.innerHTML =
-        '<div class="amt num">' + fmt(d.amount) + '</div>' +
-        '<div class="body">' +
-          '<div class="name">' + escapeHtml(d.giver || "") + '<span class="child-badge">' + escapeHtml(d.child||"") + '</span></div>' +
-          '<div class="meta">' + (d.year||"") + ' 年 · ' + escapeHtml(d.occasion||"") + (d.note ? " · " + escapeHtml(d.note) : "") + '</div>' +
-        '</div>';
-      el.addEventListener("click", function(){ openEditRedIn(d); });
-      list.appendChild(el);
-    });
+    list.appendChild(buildRecTable(["年份", "場合", "給的人", "收的孩子", { t:"金額", c:"nc" }, "備註"], all.map(function(d){
+      return { click: function(){ openEditRedIn(d); }, cells: [
+        { c:"d", h: escapeHtml(String(d.year || "")) + " 年" },
+        { h: escapeHtml(d.occasion || "") },
+        { h: escapeHtml(d.giver || "") },
+        { c:"nw", h: escapeHtml(d.child || "") },
+        { c:"nc big", h: fmt(d.amount) },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   // ---- 發燒歷程 ----
@@ -4636,31 +4650,32 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
+    var epTbl = buildRecTable(["開始日", "結束日", "誰", { t:"天數", c:"nc" }, { t:"最高溫", c:"nc" }, { t:"量測", c:"nc" }, "備註", ""], all.map(function(d){
       var entries = Object.keys(feverById).map(function(id){ return feverById[id]; })
         .filter(function(f){ return f.episodeId === d._id; });
       var withTemp = entries.filter(function(f){ return f.temp !== null && f.temp !== undefined && f.temp !== ""; });
       var maxTemp = withTemp.length ? withTemp.reduce(function(m,f){ return Number(f.temp) > m ? Number(f.temp) : m; }, 0) : null;
-      var dur = d.endDate ? daysBetween(d.startDate, d.endDate) : null;
-      var el = document.createElement("div");
-      el.className = "episode-card" + (d._id === currentFeverEpisode ? " selected" : "");
-      var rangeLabel = d.startDate.replace(/-/g,"/") + (d.endDate ? " – " + d.endDate.replace(/-/g,"/") : " – 病程進行中");
-      var metaParts = [];
-      if (dur) metaParts.push(dur + " 天");
-      if (maxTemp !== null) metaParts.push("最高 " + maxTemp.toFixed(1) + "°C");
-      metaParts.push(entries.length + " 筆量測");
-      el.innerHTML =
-        '<div class="row1"><span class="name">' + escapeHtml(d.person || "") + '</span>' +
-          '<span class="range">' + rangeLabel + '</span></div>' +
-        '<div class="meta"><span>' + metaParts.join(" · ") + (d.note ? " · " + escapeHtml(d.note) : "") + '</span>' +
-          '<span class="edit-icon">✎</span></div>';
-      el.addEventListener("click", function(e){
-        currentFeverEpisode = (currentFeverEpisode === d._id) ? null : d._id;
-        renderEpisodes(); renderFever();
-      });
-      el.querySelector(".edit-icon").addEventListener("click", function(e){ e.stopPropagation(); openEditEpisode(d); });
-      list.appendChild(el);
+      var dur = daysBetween(d.startDate, d.endDate || todayStr());
+      return { click: function(){
+          currentFeverEpisode = (currentFeverEpisode === d._id) ? null : d._id;
+          renderEpisodes(); renderFever();
+        }, cells: [
+        { c:"d", h: recDateCell(d.startDate, "") },
+        { c:"nw", h: d.endDate ? escapeHtml(d.endDate.replace(/-/g, "/")) : "病程進行中" },
+        { c:"nw", h: escapeHtml(d.person || "") },
+        { c:"nc", h: dur + " 天" },
+        { c:"nc", h: maxTemp !== null ? '<b style="color:' + (maxTemp >= 38 ? "var(--fever)" : "var(--income)") + ';">' + maxTemp.toFixed(1) + '</b>' : "" },
+        { c:"nc", h: entries.length + " 筆" },
+        { c:"nt", h: escapeHtml(d.note || "") },
+        { c:"nw", h: '<button type="button" class="pay-toggle" data-act="edit">✎ 編輯</button>' }
+      ] };
+    }));
+    epTbl.querySelectorAll("tbody tr").forEach(function(tr, i){
+      var d = all[i];
+      if (d._id === currentFeverEpisode) tr.classList.add("sel");
+      tr.querySelector('[data-act="edit"]').addEventListener("click", function(e){ e.stopPropagation(); openEditEpisode(d); });
     });
+    list.appendChild(epTbl);
   }
 
   var MED_RULES = [
@@ -5201,34 +5216,20 @@
       list.appendChild(e);
       return;
     }
-    var lastDateSep = "";
-    all.forEach(function(d){
-      if (d.date !== lastDateSep){
-        lastDateSep = d.date;
-        var sep = document.createElement("div");
-        sep.className = "fever-date-sep";
-        sep.textContent = d.date;
-        list.appendChild(sep);
-      }
-      var el = document.createElement("div");
-      el.className = "fever-card";
+    list.appendChild(buildRecTable(["日期", "時間", { t:"體溫 °C", c:"nc" }, "用藥", "備註 / 症狀", "照片", "誰"], all.map(function(d){
       var hasTemp = d.temp !== null && d.temp !== undefined && d.temp !== "";
-      var tempHtml = hasTemp ? '<div class="temp num">' + Number(d.temp).toFixed(1) + '</div>' : '<div class="temp na">-</div>';
-      var metaParts = [];
-      if (d.time) metaParts.push(d.time);
-      metaParts.push(escapeHtml(d.person || ""));
-      var noteHtml = escapeHtml(d.note || "") + (d.medication ? '<span class="med-badge">' + escapeHtml(d.medication) + '</span>' : '');
-      var photoHtml = (d.photos && d.photos.length) ? '<div class="photo-strip">' + d.photos.map(function(p){ return '<img src="' + p + '">'; }).join("") + '</div>' : '';
-      el.innerHTML =
-        tempHtml +
-        '<div class="body">' +
-          '<div class="meta">' + metaParts.join(" · ") + '</div>' +
-          (noteHtml ? '<div class="note">' + noteHtml + '</div>' : '') +
-          photoHtml +
-        '</div>';
-      el.addEventListener("click", function(){ openEditFever(d); });
-      list.appendChild(el);
-    });
+      var photoHtml = (d.photos && d.photos.length) ? '<div class="photo-strip" style="margin:0;">' + d.photos.map(function(p){ return '<img src="' + p + '">'; }).join("") + '</div>' : "";
+      var t = hasTemp ? Number(d.temp) : null;
+      return { click: function(){ openEditFever(d); }, cells: [
+        { c:"d", h: recDateCell(d.date, "") },
+        { c:"nw", h: escapeHtml(d.time || "") },
+        { c:"nc", h: t === null ? "" : '<b style="color:' + (t >= 38 ? "var(--fever)" : "var(--income)") + ';font-size:15px;">' + t.toFixed(1) + '</b>' },
+        { h: d.medication ? '💊 ' + escapeHtml(d.medication) : "" },
+        { c:"nt", h: escapeHtml(d.note || "") },
+        { h: photoHtml },
+        { c:"nw", h: escapeHtml(d.person || "") }
+      ] };
+    })));
   }
 
   // ---- 假別（可自訂）----
@@ -5680,21 +5681,15 @@
       list.appendChild(e);
       return;
     }
-    all.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "leave-card";
+    list.appendChild(buildRecTable(["日期", "假別", { t:"時數", c:"nc" }, "備註"], all.map(function(d){
       var lc = leaveColor(d.leaveType);
-      el.style.setProperty("--lc", lc);
-      el.style.setProperty("--lc-bg", lc + "26");
-      var html =
-        '<div class="row1"><span class="date">' + escapeHtml(d.date || "") +
-          '<span class="type-badge">' + escapeHtml(d.leaveType || "") + '</span></span>' +
-          '<span class="hours num">' + (Number(d.hours)||0) + ' hr</span></div>';
-      if (d.note){ html += '<div class="note">' + escapeHtml(d.note) + '</div>'; }
-      el.innerHTML = html;
-      el.addEventListener("click", function(){ openEditLeave(d); });
-      list.appendChild(el);
-    });
+      return { click: function(){ openEditLeave(d); }, cells: [
+        { c:"d", h: recDateCell(d.date, "") },
+        { h: '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + lc + ';margin-right:6px;"></span>' + escapeHtml(d.leaveType || "") },
+        { c:"nc", h: (Number(d.hours) || 0) + " hr" },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
 
   async function boot(){
@@ -5907,6 +5902,22 @@
       }));
     }catch(e){ showToast("排序儲存失敗，請再試一次"); }
   }
+  var acctOpenId = null, acctQuickVal = "", acctFocusQuick = false;
+  async function quickAdjust(id, valStr, sign){
+    var amt = parseFloat(valStr);
+    if (!valStr || isNaN(amt) || amt === 0){ showToast("請輸入金額"); return; }
+    var delta = sign === 0 ? amt : sign * Math.abs(amt);
+    var a = accountsById[id];
+    if (!a || !dbReady || !acctCol){ showToast("尚未連線，稍後再試"); return; }
+    var prev = Number(a.balance) || 0, next = Math.round((prev + delta) * 100) / 100, total = currentTotal();
+    try{
+      await acctCol.doc(id).set(Object.assign({}, a, { balance: next, updatedAt: Date.now() }));
+      await logAcctHistory({ type:"update", accountId:id, name:a.name || "", prev:prev, balance:next, delta:next - prev, total:total - prev + next });
+      acctOpenId = null; acctQuickVal = "";
+      showToast((a.name || "") + "：" + Math.round(prev).toLocaleString("en-US") + " → " + Math.round(next).toLocaleString("en-US"));
+      renderAccounts();
+    }catch(e){ showToast("儲存失敗，請再試一次"); }
+  }
   function renderAccounts(){
     var list = sortedAccounts();
     var total = list.reduce(function(s, a){ return s + (Number(a.balance) || 0); }, 0);
@@ -5931,7 +5942,7 @@
         var chg = "";
         if (lc && lc.type === "update"){
           var dl = Number(lc.delta) || 0;
-          chg = '<span class="chg ' + (dl >= 0 ? "up" : "down") + '">' + (dl >= 0 ? "+" : "-") + Math.abs(Math.round(dl)).toLocaleString("en-US") + '</span> · ';
+          chg = '<span class="chg ' + (dl >= 0 ? "up" : "down") + '">較上次 ' + (dl >= 0 ? "+" : "-") + Math.abs(Math.round(dl)).toLocaleString("en-US") + '</span> · ';
         }
         var when = a.updatedAt ? fmtTs(a.updatedAt) + " 更新" : "";
         var pct = posTotal > 0 && bal > 0 ? Math.round(bal / posTotal * 100) : 0;
@@ -5939,8 +5950,12 @@
           '<div class="sub"><span>' + chg + escapeHtml(when) + '</span><span>' + (pct ? "占 " + pct + "%" : "") + '</span></div>' +
           (a.note ? '<div class="note">' + escapeHtml(a.note) + '</div>' : "") +
           (pct ? '<div class="bar"><i style="width:' + pct + '%; background:' + ACCT_COLORS[idx % ACCT_COLORS.length] + ';"></i></div>' : "");
+        var open = !acctSortMode && acctOpenId === a._id;
         if (acctSortMode){
           html += '<div class="mv"><button type="button" data-mv="-1"' + (idx === 0 ? " disabled" : "") + '>▲</button><button type="button" data-mv="1"' + (idx === list.length - 1 ? " disabled" : "") + '>▼</button></div>';
+        } else if (open){
+          html += '<div class="qa"><input type="number" inputmode="decimal" placeholder="輸入金額，例如 500 或 -1200" value="' + escapeHtml(acctQuickVal) + '">' +
+            '<div class="qb"><button type="button" class="out" data-q="-1">－ 支出</button><button type="button" class="in" data-q="1">＋ 存入</button><button type="button" class="ed" data-q="edit">✎ 詳細</button></div></div>';
         }
         el.innerHTML = html;
         if (acctSortMode){
@@ -5948,7 +5963,27 @@
             b.addEventListener("click", function(e){ e.stopPropagation(); moveAcct(a._id, Number(b.getAttribute("data-mv"))); });
           });
         } else {
-          el.addEventListener("click", function(){ openEditAcct(a); });
+          el.addEventListener("click", function(){
+            acctOpenId = acctOpenId === a._id ? null : a._id;
+            acctQuickVal = "";
+            acctFocusQuick = !!acctOpenId;
+            renderAccounts();
+          });
+          var qa = el.querySelector(".qa");
+          if (qa){
+            qa.addEventListener("click", function(e){ e.stopPropagation(); });
+            var qi = qa.querySelector("input");
+            qi.addEventListener("input", function(){ acctQuickVal = qi.value; });
+            qi.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); quickAdjust(a._id, qi.value, 0); } });
+            qa.querySelectorAll("[data-q]").forEach(function(b){
+              b.addEventListener("click", function(){
+                var q = b.getAttribute("data-q");
+                if (q === "edit"){ openEditAcct(a); return; }
+                quickAdjust(a._id, qi.value, Number(q));
+              });
+            });
+            if (acctFocusQuick){ acctFocusQuick = false; setTimeout(function(){ qi.focus(); }, 50); }
+          }
         }
         grid.appendChild(el);
       });
@@ -6137,19 +6172,17 @@
     var desc = st.cycles.slice().reverse();
     document.getElementById("cycleCount").textContent = desc.length ? "(" + desc.length + ")" : "";
     if (!desc.length){ cl.innerHTML = '<div class="empty">還沒有經期紀錄</div>'; }
-    desc.forEach(function(c, idx){
+    if (desc.length) cl.appendChild(buildRecTable(["開始日", "結束日", { t:"天數", c:"nc" }, { t:"距上次", c:"nc" }, "備註"], desc.map(function(c, idx){
       var prev = st.cycles[st.cycles.length - 1 - idx - 1];
-      var el = document.createElement("div");
-      el.className = "cycle-card";
       var len = dayDiff(c.startDate, cycleEnd(c)) + 1;
-      var meta = [];
-      if (prev) meta.push("距上次開始 " + dayDiff(prev.startDate, c.startDate) + " 天");
-      if (c.note) meta.push(c.note);
-      el.innerHTML = '<div class="row1"><span class="rg num">' + c.startDate.replace(/-/g, "/") + (c.endDate ? " – " + c.endDate.replace(/-/g, "/") : " –（進行中）") + '</span><span class="ln">' + len + ' 天</span></div>' +
-        (meta.length ? '<div class="meta">' + escapeHtml(meta.join("　·　")) + '</div>' : "");
-      el.addEventListener("click", function(){ openEditCycle(c._id); });
-      cl.appendChild(el);
-    });
+      return { click: function(){ openEditCycle(c._id); }, cells: [
+        { c:"d", h: recDateCell(c.startDate, "") },
+        { c:"nw", h: c.endDate ? escapeHtml(c.endDate.replace(/-/g, "/")) : "進行中" },
+        { c:"nc", h: len + " 天" },
+        { c:"nc", h: prev ? dayDiff(prev.startDate, c.startDate) + " 天" : "" },
+        { c:"nt", h: escapeHtml(c.note || "") }
+      ] };
+    })));
 
     var rangeVal = document.getElementById("plogRange").value;
     var cutoff = rangeVal === "all" ? "" : addDaysStr(todayStrNow(), -Number(rangeVal));
@@ -6177,26 +6210,19 @@
     var pl = document.getElementById("plogList");
     pl.innerHTML = "";
     if (!shown.length){ pl.innerHTML = '<div class="empty">' + (all.length ? "這個範圍沒有紀錄" : "點「＋ 新增」記錄症狀或服藥") + '</div>'; return; }
-    var lastDate = null;
-    shown.forEach(function(d){
-      if (d.date !== lastDate){
-        var sep = document.createElement("div");
-        sep.className = "fever-date-sep";
-        sep.textContent = (d.date || "").replace(/-/g, "/");
-        pl.appendChild(sep);
-        lastDate = d.date;
-      }
+    var rowsHtml = shown.map(function(d, i){
       var rel = periodRel(d.date || "");
-      var el = document.createElement("div");
-      el.className = "plog-card";
-      var tags = (d.symptoms || []).map(function(s){ return '<span>' + escapeHtml(s) + '</span>'; }).join("");
-      if (d.medication) tags += '<span class="med">💊 ' + escapeHtml(d.medication) + '</span>';
-      el.innerHTML = '<div class="row1"><span class="tm num">' + escapeHtml(d.time || "") + '<span class="hist-badge" style="margin-left:6px;">' + escapeHtml(d.person || "HUA") + '</span>' + (rel ? '　<span class="rel">' + rel + '</span>' : "") + '</span>' +
-        (d.pain || d.pain === 0 ? '<span class="pain num">痛 ' + d.pain + '/10</span>' : "") + '</div>' +
-        (tags ? '<div class="tags">' + tags + '</div>' : "") +
-        (d.note ? '<div class="nt">' + escapeHtml(d.note) + '</div>' : "");
-      el.addEventListener("click", function(){ openEditPLog(d._id); });
-      pl.appendChild(el);
+      return '<tr class="row" data-i="' + i + '">' +
+        '<td class="d">' + recDateCell(d.date, escapeHtml(d.time || "") + (rel ? '<br><span class="rel">' + escapeHtml(rel) + '</span>' : "")) + '</td>' +
+        '<td>' + ((d.symptoms || []).map(escapeHtml).join("、") || '<span style="color:var(--muted)">-</span>') + '</td>' +
+        '<td class="nc">' + (d.pain || d.pain === 0 ? escapeHtml(String(d.pain)) + '/10' : "") + '</td>' +
+        '<td>' + (d.medication ? '💊 ' + escapeHtml(d.medication) : "") + '</td>' +
+        '<td class="nt">' + escapeHtml(d.note || "") + '</td>' +
+        '<td class="nw">' + escapeHtml(d.person || "HUA") + '</td></tr>';
+    }).join("");
+    pl.innerHTML = '<div class="rec-wrap"><table class="rec-table"><thead><tr><th>日期</th><th>項目（症狀）</th><th>疼痛</th><th>服藥</th><th>備註</th><th>誰</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+    pl.querySelectorAll("tr.row").forEach(function(tr){
+      tr.addEventListener("click", function(){ openEditPLog(shown[Number(tr.getAttribute("data-i"))]._id); });
     });
   }
   function openAddCycle(){
@@ -6445,22 +6471,19 @@
     var list = document.getElementById("visitList");
     list.innerHTML = "";
     if (!shown.length){ list.innerHTML = '<div class="empty">' + (all.length ? "這個條件沒有紀錄" : "點「＋ 新增」記一次就醫") + '</div>'; return; }
-    shown.forEach(function(d){
-      var el = document.createElement("div");
-      el.className = "claim-card";
-      var meta = [d.place, d.reason].filter(Boolean).map(escapeHtml).join(" · ");
-      var html = '<div class="row1"><span class="date">' + escapeHtml((d.date || "").replace(/-/g, "/")) +
-        (d.dept ? '<span class="type-badge" style="background:var(--claim-bg);color:var(--claim)">' + escapeHtml(d.dept) + '</span>' : "") +
-        (d.person ? '<span class="hist-badge">' + escapeHtml(d.person) + '</span>' : "") + '</span>' +
-        (Number(d.cost) ? '<span class="net num">' + fmt(d.cost) + '</span>' : "") + '</div>';
-      if (meta) html += '<div class="breakdown">' + meta + '</div>';
-      if (d.meds) html += '<div class="breakdown">💊 ' + escapeHtml(d.meds) + '</div>';
-      if (d.followUp) html += '<div class="breakdown">🔁 回診：' + escapeHtml(d.followUp.replace(/-/g, "/")) + (d.followUp >= today ? "" : "（已過）") + '</div>';
-      if (d.note) html += '<div class="note">' + escapeHtml(d.note) + '</div>';
-      el.innerHTML = html;
-      el.addEventListener("click", function(){ openEditVisit(d._id); });
-      list.appendChild(el);
-    });
+    list.appendChild(buildRecTable(["日期", "科別", "看診的人", "原因 / 診斷", "醫院", "處方 / 用藥", { t:"費用", c:"nc" }, "回診", "備註"], shown.map(function(d){
+      return { click: function(){ openEditVisit(d._id); }, cells: [
+        { c:"d", h: recDateCell(d.date, "") },
+        { h: escapeHtml(d.dept || "") },
+        { c:"nw", h: escapeHtml(d.person || "") },
+        { h: escapeHtml(d.reason || "") },
+        { h: escapeHtml(d.place || "") },
+        { h: escapeHtml(d.meds || "") },
+        { c:"nc", h: Number(d.cost) ? fmt(d.cost) : "" },
+        { c:"nw", h: d.followUp ? escapeHtml(d.followUp.replace(/-/g, "/")) + (d.followUp >= today ? "" : "（已過）") : "" },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    })));
   }
   document.getElementById("visitDeptFilter").addEventListener("change", function(){ visitDeptFilterValue = this.value; try{ localStorage.setItem("huaVisitDept", this.value); }catch(e){} renderVisits(); });
   document.getElementById("visitPersonFilter").addEventListener("change", function(){ visitPersonFilterValue = this.value; try{ localStorage.setItem("huaVisitPerson", this.value); }catch(e){} renderVisits(); });
@@ -6704,28 +6727,28 @@
       return SORT_DIR.weight === "asc" ? -k : k;
     });
     var today = todayStrNow();
-    shown.forEach(function(d){
+    function nv(d, k, dec){ var v = wNum(d[k]); return v === null ? "" : v.toFixed(dec); }
+    list.appendChild(buildRecTable(["日期", { t:"體重 kg", c:"nc" }, { t:"身高 cm", c:"nc" }, { t:"頭圍 cm", c:"nc" }, { t:"BMI", c:"nc" }, { t:"體脂 %", c:"nc" }, "其他數值", "備註"], shown.map(function(d){
       var hasData = weightHasData(d);
-      var el = document.createElement("div");
-      el.className = "wt-card" + (!hasData && d.date > today ? " plan" : "");
       var w = wNum(d.weight);
-      var hgt = wNum(d.height);
-      var wDec = (myDob && w !== null && w < 30) ? 2 : 1;
-      var big = w !== null ? '<div class="big num">' + w.toFixed(wDec) + ' <small>kg</small></div>' : (hgt !== null ? '<div class="big num">' + hgt.toFixed(1) + ' <small>cm</small></div>' : '<div class="big na">' + (d.date > today ? "預定" : "無量測") + '</div>');
-      var chips = [];
-      if (w !== null && hgt !== null) chips.push('<span>身高 ' + hgt.toFixed(1) + 'cm</span>');
-      [["頭圍","head",1,"cm"],["BMI","bmi",1],["體脂","bodyFat",1,"%"],["肌肉","muscle",1,"kg"],["內臟脂肪","visceral",1],["基代","bmr",0],["水分","water",1,"%"],["體年齡","bodyAge",0]].forEach(function(c){
-        var v = wNum(d[c[1]]);
-        if (v !== null) chips.push('<span>' + c[0] + ' ' + v.toFixed(c[2]) + (c[3] || "") + '</span>');
-      });
-      if (d.device) chips.push('<span>' + escapeHtml(d.device) + '</span>');
       var agePart = myDob ? ageText(ageParts(myDob, d.date)) : "";
-      el.innerHTML = big + '<div class="body"><div class="dt num">' + escapeHtml(d.date.replace(/-/g, "/")) + "　" + wWeekday(d.date) + (agePart ? "　" + agePart : "") + '</div>' +
-        (chips.length ? '<div class="chips">' + chips.join("") + '</div>' : "") +
-        (d.note ? '<div class="nt">' + escapeHtml(d.note) + '</div>' : "") + '</div>';
-      el.addEventListener("click", function(){ openEditWeight(d._id); });
-      list.appendChild(el);
-    });
+      var others = [["肌肉","muscle",1,"kg"],["內臟脂肪","visceral",1,""],["基代","bmr",0,""],["水分","water",1,"%"],["體年齡","bodyAge",0,""]].map(function(c){
+        var v = wNum(d[c[1]]);
+        return v === null ? "" : c[0] + " " + v.toFixed(c[2]) + c[3];
+      }).filter(Boolean);
+      if (d.device) others.push(d.device);
+      var noteTxt = (!hasData && d.date > today ? "（預定）" : "") + (d.note || "");
+      return { plan: !hasData && d.date > today, click: function(){ openEditWeight(d._id); }, cells: [
+        { c:"d", h: recDateCell(d.date, escapeHtml(agePart)) },
+        { c:"nc big", h: w === null ? "" : w.toFixed((myDob && w < 30) ? 2 : 1) },
+        { c:"nc", h: nv(d, "height", 1) },
+        { c:"nc", h: nv(d, "head", 1) },
+        { c:"nc", h: nv(d, "bmi", 1) },
+        { c:"nc", h: nv(d, "bodyFat", 1) },
+        { c:"nt", h: escapeHtml(others.join("　")) },
+        { c:"nt", h: escapeHtml(noteTxt) }
+      ] };
+    })));
   }
   (function(){
     var metricSel = document.getElementById("weightMetric");
@@ -7328,34 +7351,37 @@ V-FAT",基礎代謝,體年齡,WATER,皮下脂肪率,骨骼肌率,年齡,備註,�
       list.appendChild(e);
       return;
     }
-    shown.forEach(function(d){
-      var el = document.createElement("div");
+    var tbl = buildRecTable([{ t:"已付", c:"nc" }, "日期", "項目", { t:"金額", c:"nc" }, "狀態", "備註"], shown.map(function(d){
       var isDef = !d.paid && !!d.deferred;
-      el.className = "plan-card" + (d.paid ? " paid" : "") + (isDef ? " deferred" : "");
-      var html = '<button type="button" class="chk" aria-label="切換已支付">' + (d.paid ? "✓" : "") + '</button><div class="pbody">' +
-        '<div class="row1"><span class="nm">' + escapeHtml(d.item || "") + '</span><span class="amt num">' + fmt(d.amount) + '</span></div>' +
-        '<div class="dt num">' + escapeHtml(d.date || "") + (d.paid ? " · 已支付" : isDef ? " · 暫緩中" : " · 未支付") +
-        (d.paid ? "" : '<button type="button" class="pay-toggle defer-toggle' + (isDef ? " on" : "") + '">' + (isDef ? "▶ 恢復" : "⏸ 暫緩") + '</button>') + '</div>';
-      if (d.note) html += '<div class="note">' + escapeHtml(d.note) + '</div>';
-      if (d.extra) html += '<div class="extra">' + escapeHtml(d.extra) + '</div>';
-      html += '</div>';
-      el.innerHTML = html;
-      el.querySelector(".chk").addEventListener("click", async function(e){
+      return { plan: !!d.paid, click: function(){ openEditPlanned(d); }, cells: [
+        { c:"nc", h: '<button type="button" class="chk' + (d.paid ? " on" : "") + '" data-act="paid" aria-label="切換已支付" style="position:static;">' + (d.paid ? "✓" : "") + '</button>' },
+        { c:"d", h: recDateCell(d.date, "") },
+        { h: '<b>' + escapeHtml(d.item || "") + '</b>' + (d.extra ? '<br><span style="color:var(--muted);font-size:12px;">' + escapeHtml(d.extra) + '</span>' : "") },
+        { c:"nc big", h: fmt(d.amount) },
+        { c:"nw", h: (d.paid ? "已支付" : isDef ? "暫緩中" : "未支付") + (d.paid ? "" : '<br><button type="button" class="pay-toggle defer-toggle' + (isDef ? " on" : "") + '" data-act="defer">' + (isDef ? "▶ 恢復" : "⏸ 暫緩") + '</button>') },
+        { c:"nt", h: escapeHtml(d.note || "") }
+      ] };
+    }));
+    var trs = tbl.querySelectorAll("tbody tr");
+    shown.forEach(function(d, i){
+      var isDef = !d.paid && !!d.deferred;
+      var tr = trs[i];
+      var chk = tr.querySelector('[data-act="paid"]');
+      if (chk) chk.addEventListener("click", async function(e){
         e.stopPropagation();
         if (!dbReady || !plannedCol) return;
         try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { paid: !d.paid, deferred: false, updatedAt: Date.now() })); }
         catch(err){ showToast("更新失敗，請再試一次"); }
       });
-      var defBtn = el.querySelector(".defer-toggle");
+      var defBtn = tr.querySelector('[data-act="defer"]');
       if (defBtn) defBtn.addEventListener("click", async function(e){
         e.stopPropagation();
         if (!dbReady || !plannedCol) return;
         try{ await plannedCol.doc(d._id).set(Object.assign({}, plannedById[d._id], { deferred: !isDef, updatedAt: Date.now() })); }
         catch(err){ showToast("更新失敗，請再試一次"); }
       });
-      el.addEventListener("click", function(){ openEditPlanned(d); });
-      list.appendChild(el);
     });
+    list.appendChild(tbl);
   }
   function fillPlannedForm(d){
     document.getElementById("plDate").value = d.date || "";
