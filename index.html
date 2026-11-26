@@ -887,14 +887,32 @@
           <div class="field" style="margin:0;"><label>月本薪</label><input id="bnBase" type="number" inputmode="decimal"></div>
           <div class="field" style="margin:0;"><label>獎勵標準月數</label><input id="bnStdMonths" type="number" inputmode="decimal" step="0.1" value="3"></div>
         </div>
-        <div class="field" style="margin-bottom:10px;"><label>考績等第</label>
-          <select id="bnRating">
-            <option value="130">優（130%）</option>
-            <option value="115">良（115%）</option>
-            <option value="100" selected>甲（100%）</option>
-            <option value="80">乙（80%）</option>
-            <option value="40">丙（40%）</option>
+        <div class="field" style="margin-bottom:10px;"><label>計算版本</label>
+          <select id="bnVersion">
+            <option value="new" selected>新制（修訂條文）</option>
+            <option value="old">舊制（現行條文）</option>
           </select>
+        </div>
+        <div class="row2" style="margin-bottom:10px;">
+          <div class="field" style="margin:0;"><label>考績等第</label>
+            <select id="bnRating">
+              <option value="130">優（130%）</option>
+              <option value="115">良（115%）</option>
+              <option value="105">甲上（105%・新制）</option>
+              <option value="100" selected>甲（100%）</option>
+              <option value="95">甲下（95%・新制）</option>
+              <option value="80">乙（80%）</option>
+              <option value="40">丙（40%）</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0;"><label>國定假日未配合出勤</label>
+            <select id="bnHoliday">
+              <option value="0">0 次</option>
+              <option value="1">1 次</option>
+              <option value="2">2 次</option>
+              <option value="3">3 次（含）以上</option>
+            </select>
+          </div>
         </div>
         <div class="calc-box">
           <div class="line"><span>換算請假日數</span><span class="v num" id="bnLeaveDays">0</span></div>
@@ -916,13 +934,15 @@
         <div id="bnExtraList" style="margin-bottom:6px;"></div>
         <button type="button" class="btn ghost" id="bnExtraAddBtn" style="width:100%; margin-bottom:10px;">＋ 新增一項</button>
         <div class="calc-box">
-          <div class="line"><span>保底（月本薪 × 1）</span><span class="v num" id="bnBaseLine">$0</span></div>
-          <div class="line"><span>考績獎勵</span><span class="v num" id="bnRatingLine">$0</span></div>
-          <div class="line"><span>平日出勤獎勵</span><span class="v num" id="bnAttendLine">$0</span></div>
+          <div class="line" id="bnBaseRow"><span>保底（月本薪 × 1）</span><span class="v num" id="bnBaseLine">$0</span></div>
+          <div class="line"><span id="bnRatingLbl">考績部分</span><span class="v num" id="bnRatingLine">$0</span></div>
+          <div class="line"><span id="bnAttendLbl">平日出勤部分</span><span class="v num" id="bnAttendLine">$0</span></div>
+          <div class="line" id="bnHolRow"><span id="bnHolLbl">國定假日出勤獎勵</span><span class="v num" id="bnHolLine">$0</span></div>
           <div class="line"><span>獎懲加減發</span><span class="v num" id="bnMeritLine">$0</span></div>
           <div class="line"><span>其他加項</span><span class="v num" id="bnExtraLine">$0</span></div>
           <div class="line total"><span>預估年終總額</span><span class="v num" id="bnTotalLine">$0</span></div>
         </div>
+        <div class="section-hint" id="bnFormulaHint" style="margin:6px 2px 0;"></div>
       </div>
     </section>
 
@@ -2930,6 +2950,18 @@
       .sort(function(a,b){ return b.payDate.localeCompare(a.payDate); });
     if (recs.length) document.getElementById("bnBase").value = recs[0].baseSalary;
   }
+  var BN_HOLIDAY_RATIO = { new:[100, 90, 80, 70], old:[100, 60, 30, 0] };
+  function bnMainAmount(version, base, months, ratingPct, attendPct, holidayCount){
+    var hp = BN_HOLIDAY_RATIO[version][Math.min(3, holidayCount)];
+    if (version === "new"){
+      var k = base * months * (hp / 100);
+      var rating = k * (ratingPct / 100) * 2 / 3, attend = k * (attendPct / 100) / 3;
+      return { rating:rating, attend:attend, holiday:0, holidayRatio:hp, total:rating + attend };
+    }
+    var unit = base * (months - 1) / 3;
+    var r = unit * ratingPct / 100, a = unit * attendPct / 100, h = unit * hp / 100;
+    return { rating:r, attend:a, holiday:h, holidayRatio:hp, total:base + r + a + h };
+  }
   function renderBnEstimate(){
     bnAutoFillBase();
     var year = document.getElementById("bnYear").value;
@@ -2944,16 +2976,34 @@
     document.getElementById("bnAttendRatio").textContent = attendRatio + "%";
     document.getElementById("bnLeaveHint").textContent = bn.hint;
 
-    var multiplier = (stdMonths - 1) / 3;
-    var ratingLine = base * multiplier * (ratingRatio / 100);
-    var attendLine = base * multiplier * (attendRatio / 100);
+    var version = document.getElementById("bnVersion").value;
+    var holidayCount = Number(document.getElementById("bnHoliday").value) || 0;
+    var calcNew = bnMainAmount("new", base, stdMonths, ratingRatio, attendRatio, holidayCount);
+    var calcOld = bnMainAmount("old", base, stdMonths, ratingRatio, attendRatio, holidayCount);
+    var main = version === "old" ? calcOld : calcNew;
+    var ratingLine = main.rating, attendLine = main.attend;
     var dailyWage = base / 30;
     var meritCount = Number(document.getElementById("bnMerit1").value||0) * 3 + Number(document.getElementById("bnMerit2").value||0) * 10 + Number(document.getElementById("bnMerit3").value||0) * 30;
     var demeritCount = Number(document.getElementById("bnDemerit1").value||0) * 3 + Number(document.getElementById("bnDemerit2").value||0) * 10 + Number(document.getElementById("bnDemerit3").value||0) * 30;
     var meritLine = dailyWage * (meritCount - demeritCount);
     var extraLine = bnExtras.reduce(function(s, x){ return s + (Number(x.amount) || 0); }, 0);
-    var total = base + ratingLine + attendLine + meritLine + extraLine;
+    var total = main.total + meritLine + extraLine;
+    var otherTotal = (version === "old" ? calcNew : calcOld).total + meritLine + extraLine;
 
+    var isNew = version !== "old";
+    document.getElementById("bnBaseRow").hidden = isNew;
+    document.getElementById("bnHolRow").hidden = isNew;
+    document.getElementById("bnRatingLbl").textContent = isNew ? "考績部分（占 2/3）" : "考績獎勵";
+    document.getElementById("bnAttendLbl").textContent = isNew ? "平日出勤部分（占 1/3）" : "平日出勤獎勵";
+    document.getElementById("bnHolLbl").textContent = "國定假日出勤獎勵（" + main.holidayRatio + "%）";
+    document.getElementById("bnHolLine").textContent = fmt(main.holiday);
+    var hintParts = [isNew
+      ? "新制：月本薪 × 獎勵標準月數 × (考績比率 × 2/3 ＋ 出勤比率 × 1/3) × 國定假日比率（目前 " + main.holidayRatio + "%），上面兩項已含國定假日比率。"
+      : "舊制：月本薪 ＋ 月本薪 × (獎勵標準月數 − 1) ÷ 3 × (考績比率 ＋ 出勤比率 ＋ 國定假日比率)。"];
+    var diffV = otherTotal - total;
+    hintParts.push((isNew ? "舊制" : "新制") + "試算：" + fmt(otherTotal) + "（" + (diffV >= 0 ? "多 " : "少 ") + fmt(Math.abs(diffV)) + "）");
+    if (!isNew && (ratingRatio === 105 || ratingRatio === 95)) hintParts.push("舊制沒有甲上／甲下，這裡仍照選的比率計算，僅供比較。");
+    document.getElementById("bnFormulaHint").textContent = hintParts.join(" ");
     document.getElementById("bnBaseLine").textContent = fmt(base);
     document.getElementById("bnRatingLine").textContent = fmt(ratingLine);
     document.getElementById("bnAttendLine").textContent = fmt(attendLine);
@@ -2963,7 +3013,7 @@
 
     try{
       localStorage.setItem("huaBnEst", JSON.stringify({
-        year:year, person:person, base:base, stdMonths:stdMonths, rating:ratingRatio,
+        year:year, person:person, base:base, stdMonths:stdMonths, rating:ratingRatio, version:version, holiday:holidayCount,
         merit:[document.getElementById("bnMerit1").value,document.getElementById("bnMerit2").value,document.getElementById("bnMerit3").value],
         demerit:[document.getElementById("bnDemerit1").value,document.getElementById("bnDemerit2").value,document.getElementById("bnDemerit3").value],
         extras:bnExtras
@@ -2980,6 +3030,8 @@
     if (saved.base) document.getElementById("bnBase").value = saved.base;
     if (saved.stdMonths) document.getElementById("bnStdMonths").value = saved.stdMonths;
     if (saved.rating) document.getElementById("bnRating").value = saved.rating;
+    if (saved.version) document.getElementById("bnVersion").value = saved.version;
+    if (saved.holiday) document.getElementById("bnHoliday").value = saved.holiday;
     if (saved.merit){ document.getElementById("bnMerit1").value = saved.merit[0]||0; document.getElementById("bnMerit2").value = saved.merit[1]||0; document.getElementById("bnMerit3").value = saved.merit[2]||0; }
     if (saved.demerit){ document.getElementById("bnDemerit1").value = saved.demerit[0]||0; document.getElementById("bnDemerit2").value = saved.demerit[1]||0; document.getElementById("bnDemerit3").value = saved.demerit[2]||0; }
     bnExtras = Array.isArray(saved.extras) ? saved.extras : [];
@@ -2995,7 +3047,7 @@
       try{ localStorage.setItem("huaBnEstOpen", open ? "1" : "0"); }catch(e){}
       apply();
     });
-    ["bnYear","bnPerson","bnBase","bnStdMonths","bnRating","bnMerit1","bnMerit2","bnMerit3","bnDemerit1","bnDemerit2","bnDemerit3"].forEach(function(id){
+    ["bnYear","bnPerson","bnBase","bnStdMonths","bnRating","bnVersion","bnHoliday","bnMerit1","bnMerit2","bnMerit3","bnDemerit1","bnDemerit2","bnDemerit3"].forEach(function(id){
       document.getElementById(id).addEventListener("input", renderBnEstimate);
       document.getElementById(id).addEventListener("change", renderBnEstimate);
     });
