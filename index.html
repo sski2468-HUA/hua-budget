@@ -486,6 +486,12 @@
   .ie-table tr.addrow td{ background:var(--surface-2); }
   .ie-table tr.addrow input.ie{ border-style:dashed; }
   .ie-table tr.sum td{ font-weight:800; padding:10px 8px; }
+  .ie-table .sal-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .ie-table .sal-head small{ padding-left:0; }
+  .ie-table.sal-table td:nth-child(1){ min-width:128px; }
+  .ie-table.sal-table tr.addrow td:nth-child(2){ min-width:82px; white-space:normal; line-height:1.3; }
+  .ie-table.sal-table tr.addrow input.ie{ font-size:13px; padding-left:5px; padding-right:5px; }
+  .ie-table.sal-table .pay-toggle.ie-btn{ white-space:nowrap; }
   .ie-table .ie-btn{ margin:0; min-width:34px; padding:6px 8px; }
   .rec-table .photo-strip{ display:flex; gap:4px; flex-wrap:nowrap; }
   .rec-table .photo-strip img{ width:44px; height:44px; max-width:44px; border-radius:8px; object-fit:cover; border:1px solid var(--line); display:block; flex:0 0 auto; }
@@ -500,7 +506,21 @@
   .rec-table td.nw{ white-space:nowrap; color:var(--muted); }
   .rec-table td.nt{ min-width:150px; white-space:pre-wrap; color:var(--muted); }
   .rec-table td.big{ font-weight:900; font-size:15px; color:var(--savings); }
-  .acct-list{ display:flex; flex-direction:column; gap:8px; }
+  .acct-list{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; align-items:start; }
+  .acct-list > .empty{ grid-column:1 / -1; }
+  .acct-row .top{ flex-wrap:wrap; row-gap:0; }
+  .acct-row .sub{ flex-wrap:wrap; row-gap:0; }
+  .acct-row .qb{ flex-wrap:wrap; }
+  @media (max-width:560px){
+    .acct-row{ padding:9px 10px 8px; }
+    .acct-row .nm{ font-size:15px; }
+    .acct-row .bal{ font-size:18px; margin-left:auto; }
+    .acct-row .sub{ font-size:11px; }
+    .acct-row .qs{ gap:5px; }
+    .acct-row .qs input{ padding:7px 8px; font-size:14px; }
+    .acct-row .qs button{ padding:0 9px; font-size:13px; }
+    .acct-row .qb button{ flex:1 1 60px; padding:9px 4px; font-size:13px; }
+  }
   .acct-row{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:11px 14px 10px; cursor:pointer; box-shadow:var(--shadow); }
   .acct-row:active{ opacity:.65; }
   .acct-row .top{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
@@ -3179,7 +3199,147 @@
     document.getElementById("cashRange").addEventListener("change", renderSalaryCash);
   })();
 
+  // ---- 薪水快速填寫 ----
+  var sdDraft = {};
+  var sdAdding = false;
+  var SD_LABEL = { paidOn:"發薪日", baseSalary:"底薪", bonus:"效率獎金", grossAmount:"應發", absenceDeduction:"請假扣款", laborIns:"勞保", healthIns:"健保",
+    welfare:"福利金", advance:"暫支", other:"其他扣款", parking:"停車費", amount:"薪資總額", generalNote:"備註" };
+  var SD_COLS = ["baseSalary","bonus","grossAmount","absenceDeduction","laborIns","healthIns","welfare","advance","other","parking"];
+  var SD_CARRY = ["baseSalary","laborIns","healthIns","welfare","advance","other","parking"];
+  // 暫支先扣再加回，所以不影響薪資總額
+  function salaryCalcTotal(d){
+    return ["laborIns","healthIns","welfare","other","parking","absenceDeduction"].reduce(function(s, k){ return s - (Number(d[k]) || 0); }, Number(d.grossAmount) || 0);
+  }
+  function salaryNewWho(){ return currentPerson === "yupas" ? "yupas" : "hua"; }
+  function salaryTemplate(){
+    var who = salaryNewWho();
+    var rec = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+      .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === who && d.payDate; })
+      .sort(function(a, b){ return b.payDate.localeCompare(a.payDate); })[0];
+    var next;
+    if (rec){
+      var p = rec.payDate.slice(0, 7).split("-");
+      next = new Date(Number(p[0]), Number(p[1]), 1);
+    } else {
+      var n = new Date();
+      next = new Date(n.getFullYear(), n.getMonth() - 1, 1);
+    }
+    return { rec: rec || {}, month: next.getFullYear() + "-" + String(next.getMonth() + 1).padStart(2, "0") };
+  }
+  async function saveSalaryField(id, field, raw){
+    var cur = salariesById[id];
+    if (!cur || !dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return false; }
+    var isNum = field !== "generalNote" && field !== "paidOn";
+    var v = isNum ? ieNum(raw) : String(raw).trim();
+    if (field === "paidOn" && !/^(19|20)\d\d-\d\d-\d\d$/.test(v)){ showToast("請選擇完整的發薪日期"); return false; }
+    var isBonus = cur.recordType === "bonus";
+    var old = isNum ? (Number(cur[field]) || 0) : (field === "paidOn" ? paidOnDate(cur) : (cur[field] || ""));
+    var patch = { updatedAt: Date.now() };
+    var extra = "";
+    var wasAuto = !isBonus && (!Number(cur.amount) || Math.round(Number(cur.amount)) === Math.round(salaryCalcTotal(cur)));
+    // 薪資總額清空 = 改回自動計算
+    if (field === "amount" && !isBonus && String(raw).trim() === "" && Number(cur.grossAmount) > 0) v = salaryCalcTotal(cur);
+    if (old === v){
+      if (field === "amount" && String(raw).trim() === "") renderSalaries();
+      return true;
+    }
+    patch[field] = v;
+    if (field === "paidOn" && isBonus) patch.payDate = v;
+    if (field === "baseSalary" || field === "bonus"){
+      // 沒有拆明細的舊紀錄，應發已經是總數，不再重複加
+      if (Number(cur.baseSalary) > 0 || !(Number(cur.grossAmount) > 0)) patch.grossAmount = (Number(cur.grossAmount) || 0) + (v - old);
+      else extra = "（這筆沒有底薪明細，應發沒有跟著改）";
+    }
+    if (field !== "amount" && field !== "paidOn" && field !== "generalNote"){
+      var next = Object.assign({}, cur, patch);
+      var total = salaryCalcTotal(next);
+      if (Math.round(total) !== Math.round(salaryCalcTotal(cur))){
+        if (wasAuto && Number(next.grossAmount) > 0){ patch.amount = total; extra += "，薪資總額 " + fmt(total); }
+        else if (Number(cur.amount)) extra += "（薪資總額是手動填的，沒有跟著改）";
+      }
+    }
+    var title = isBonus ? (cur.bonusName || "獎金") : salaryMonthLabel(cur);
+    var show = field === "paidOn" ? function(x){ return String(x).replace(/-/g, "/"); } : function(x){ return ieShow(x, isNum); };
+    try{
+      await salaryCol.doc(id).set(Object.assign({}, cur, patch));
+      showToast(title + " " + SD_LABEL[field] + "：" + show(old) + " → " + show(v) + extra);
+      return true;
+    }catch(e){ showToast("儲存失敗，請再試一次"); return false; }
+  }
+  async function addSalaryInline(){
+    if (sdAdding) return;
+    var tpl = salaryTemplate(), rec = tpl.rec, who = salaryNewWho();
+    var m = /^(\d{4})-(\d{1,2})$/.exec(String(sdDraft.month || tpl.month).trim());
+    if (!m || Number(m[2]) < 1 || Number(m[2]) > 12){ showToast("薪資月份請填成 2026-12 這樣的格式"); return; }
+    var month = m[1] + "-" + String(Number(m[2])).padStart(2, "0");
+    var label = salaryMonthLabel({ payDate: month + "-01" });
+    var dup = Object.keys(salariesById).some(function(id){
+      var d = salariesById[id];
+      return d.recordType !== "bonus" && (d.person || "hua") === who && String(d.payDate || "").slice(0, 7) === month;
+    });
+    if (dup){ showToast(label + "已經有紀錄，請直接在那一列填寫"); return; }
+    if (!dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return; }
+    function typed(k){ return sdDraft[k] !== undefined && sdDraft[k] !== ""; }
+    function num(k){ return typed(k) ? ieNum(sdDraft[k]) : (SD_CARRY.indexOf(k) >= 0 ? (Number(rec[k]) || 0) : 0); }
+    var hasBreakdown = Number(rec.baseSalary) > 0;
+    var data = {
+      payDate: month + "-01", paidOn: sdDraft.paidOn || fiveOfNextMonth(month), recordType: "salary", person: who, bonusName: "", rating: "",
+      gradeRank: rec.gradeRank || "", gradeLevel: rec.gradeLevel || "",
+      baseSalary: num("baseSalary"),
+      transportAllowance: Number(rec.transportAllowance) || 0, regionAllowance: Number(rec.regionAllowance) || 0,
+      supplyAllowance: Number(rec.supplyAllowance) || 0, mealAllowance: Number(rec.mealAllowance) || 0, housingAllowance: Number(rec.housingAllowance) || 0,
+      extraItems: [], bonus: num("bonus"), absenceDeduction: num("absenceDeduction"),
+      laborIns: num("laborIns"), healthIns: num("healthIns"), welfare: num("welfare"), advance: num("advance"), other: num("other"), parking: num("parking"),
+      generalNote: String(sdDraft.generalNote || "").trim(), historical: false
+    };
+    data.grossAmount = typed("grossAmount") ? ieNum(sdDraft.grossAmount)
+      : (hasBreakdown ? ["baseSalary","transportAllowance","regionAllowance","supplyAllowance","mealAllowance","housingAllowance","bonus"].reduce(function(s, k){ return s + data[k]; }, 0) : 0);
+    data.amount = typed("amount") ? ieNum(sdDraft.amount) : (data.grossAmount > 0 ? salaryCalcTotal(data) : 0);
+    if (!data.amount){ showToast("請填「應發」或「薪資總額」"); return; }
+    var sums = { physio:0, sick:0, personal:0 };
+    leavesInPeriod(attendancePeriod(month)).forEach(function(d){
+      var k = leaveDeductKind(d.leaveType);
+      if (k) sums[k] += Number(d.hours) || 0;
+    });
+    data.leavePhysio = sums.physio; data.leaveSick = sums.sick; data.leavePersonal = sums.personal;
+    data.absenceHours = sums.physio + sums.sick + sums.personal;
+    data.paid = data.paidOn <= todayStr();
+    data.createdAt = data.updatedAt = Date.now();
+    var kept = Object.assign({}, sdDraft);
+    sdAdding = true;
+    Object.keys(sdDraft).forEach(function(k){ delete sdDraft[k]; });
+    try{
+      await salaryCol.add(data);
+      showToast("已新增 " + label + "，薪資總額 " + fmt(data.amount) + (data.absenceHours && !data.absenceDeduction ? "。這個月有請假 " + data.absenceHours + "hr，記得填請假扣款" : ""));
+    }catch(e){ Object.assign(sdDraft, kept); showToast("儲存失敗，請再試一次"); }
+    sdAdding = false;
+    renderSalaries();
+  }
+  function salaryAddRow(body){
+    var tpl = salaryTemplate(), rec = tpl.rec;
+    var month = ieDraft(sdDraft, "month", "text", tpl.month, addSalaryInline);
+    month.setAttribute("aria-label", "新增列：薪資月份");
+    var paid = ieDraft(sdDraft, "paidOn", "date", "發薪日", addSalaryInline);
+    var cells = [
+      { c:"d", node: month, after: '<small style="color:var(--muted);">＋ 新增' + (currentPerson === "combined" ? "到 HUA" : "月份") + '</small>' },
+      { html: '<small style="color:var(--muted);">發薪日空白＝次月5日</small>' },
+      { node: paid },
+      { node: ieDraft(sdDraft, "amount", "number", "自動", addSalaryInline) },
+      { node: ieButton("＋ 新增", "新增這個月的薪水", addSalaryInline) }
+    ];
+    SD_COLS.forEach(function(k){
+      var hint = SD_CARRY.indexOf(k) >= 0 && Number(rec[k]) ? "沿用 " + Number(rec[k]).toLocaleString("en-US") : (k === "grossAmount" && Number(rec.baseSalary) > 0 ? "自動" : SD_LABEL[k]);
+      cells.push({ node: ieDraft(sdDraft, k, "number", hint, addSalaryInline) });
+    });
+    cells.push({ node: ieDraft(sdDraft, "generalNote", "text", "按 Enter 新增", addSalaryInline) });
+    cells.push({ html: "" });
+    ieRow(body, cells, "addrow");
+  }
+
   function renderSalaries(){
+    ieKeepFocus(document.getElementById("salaryList"), drawSalaries);
+  }
+  function drawSalaries(){
     renderSalaryCash();
     renderSalaryCompare();
     if (!document.getElementById("baseHistBody").hidden) renderBaseHistory();
@@ -3226,22 +3386,15 @@
     var totalLabel = (salaryYearFilterValue === "all" && salaryTypeFilterValue === "all" && salaryPaidFilterValue === "all") ? "總額" : "篩選總額";
     document.getElementById("salaryFilteredTotal").textContent = totalLabel + " " + fmt(filteredTotal);
 
-    if (!all.length){
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = allUnfiltered.length
-        ? (salaryYearFilterValue + " 年沒有薪水紀錄")
-        : "每月薪資單出來後，點右下角 ＋ 記一筆";
-      list.appendChild(e);
-      return;
-    }
-    function mny2(v){ return Number(v) ? fmt(v) : ""; }
-    var salTbl = buildRecTable(["薪資月份", "發薪日", "狀態", { t:"應發", c:"nc" }, { t:"扣款", c:"nc" }, { t:"暫支", c:"nc" }, { t:"入帳", c:"nc" }, { t:"薪資總額", c:"nc" }, "明細", "備註"], all.map(function(d){
+    var tbl = ieTable([["薪資月份", 128], ["狀態", 82], ["發薪日", 142], ["薪資總額", 100, "nc"], ["入帳", 90, "nc"], ["底薪", 92, "nc"], ["效率獎金", 86, "nc"], ["應發", 92, "nc"], ["請假扣款", 82, "nc"],
+      ["勞保", 78, "nc"], ["健保", 78, "nc"], ["福利金", 78, "nc"], ["暫支", 84, "nc"], ["其他扣款", 82, "nc"], ["停車費", 76, "nc"], ["備註", 200], ["明細", 160]]);
+    tbl.wrap.querySelector("table").classList.add("flat", "sal-table");
+    if (salaryTypeFilterValue !== "bonus") salaryAddRow(tbl.body);
+    all.forEach(function(d){
       var isBonus = d.recordType === "bonus";
       var isPaid = salaryPaid(d);
       var title = isBonus ? escapeHtml(d.bonusName || "獎金") + " 🎁" : escapeHtml(salaryMonthLabel(d));
       var who = currentPerson === "combined" ? "<small>" + escapeHtml(PERSON_LABEL[d.person || "hua"]) + (d.historical ? "　歷史" : "") + "</small>" : (d.historical ? "<small>歷史</small>" : "");
-      var deductionTotal = (Number(d.laborIns)||0) + (Number(d.healthIns)||0) + (Number(d.welfare)||0) + (Number(d.advance)||0) + (Number(d.other)||0) + (Number(d.parking)||0);
       var leaveHours = (Number(d.leavePhysio)||0) + (Number(d.leaveSick)||0) + (Number(d.leavePersonal)||0);
       var advAmt = Number(d.advance) || 0;
       var detail = [];
@@ -3252,32 +3405,39 @@
         if (d.rating) detail.push("考績 " + d.rating);
         if (d.gradeRank || d.gradeLevel) detail.push("職等 " + (d.gradeRank || "-") + "等" + (d.gradeLevel || "-") + "級");
       }
-      var po = isBonus ? (d.payDate || "") : paidOnDate(d);
-      var note = [d.historical && d.historyNote ? d.historyNote : "", d.generalNote || ""].filter(Boolean).join("\n");
-      return { plan: !isPaid, click: function(){ openEditSalary(d); }, cells: [
-        { c:"d", h: title + who },
-        { c:"nw", h: po ? escapeHtml(String(po).replace(/-/g, "/")) : "" },
-        { c:"nw", h: '<button type="button" class="pay-toggle ' + (isPaid ? "paid" : "unpaid") + '" data-act="paid">' + (isPaid ? "✓ 已發" : "○ 未發") + '</button>' },
-        { c:"nc", h: isBonus ? "" : mny2(d.grossAmount) },
-        { c:"nc", h: isBonus ? "" : mny2(deductionTotal) },
-        { c:"nc", h: isBonus ? "" : mny2(advAmt) },
-        { c:"nc", h: isBonus ? "" : (advAmt ? fmt((Number(d.amount) || 0) - advAmt) : "") },
-        { c:"nc big", h: fmt(d.amount) },
-        { c:"nt", h: escapeHtml(detail.join("　")) },
-        { c:"nt", h: escapeHtml(note) }
-      ] };
-    }));
-    salTbl.querySelectorAll("tbody tr").forEach(function(tr, i){
-      var d = all[i], isPaid = salaryPaid(d);
-      tr.querySelector('[data-act="paid"]').addEventListener("click", async function(e){
-        e.stopPropagation();
+      var name = isBonus ? (d.bonusName || "獎金") : salaryMonthLabel(d);
+      function cell(field, type){
+        var val = field === "paidOn" ? paidOnDate(d) : field === "generalNote" ? (d.generalNote || "") : (d[field] || "");
+        return { node: ieInput({ key:d._id + "|" + field, type:type || "number", value:val, placeholder:"－", label:name + " " + SD_LABEL[field], onSave:function(v){ return saveSalaryField(d._id, field, v); } }) };
+      }
+      var payBtn = ieButton(isPaid ? "✓ 已發" : "○ 未發", name + " 切換已發／未發", async function(){
         if (!dbReady || !salaryCol){ showToast("尚未連線，稍後再試"); return; }
         try{
           await salaryCol.doc(d._id).set(Object.assign({}, salariesById[d._id], { paid: !isPaid, updatedAt: Date.now() }));
         }catch(err){ showToast("更新失敗，請再試一次"); }
       });
+      payBtn.classList.add(isPaid ? "paid" : "unpaid");
+      var head = document.createElement("div");
+      head.className = "sal-head";
+      head.innerHTML = '<span>' + title + who + '</span>';
+      head.appendChild(ieButton("✎", name + " 完整編輯（津貼、其他核發、考績、職等、刪除）", function(){ openEditSalary(salariesById[d._id] ? Object.assign({}, salariesById[d._id], { _id: d._id }) : d); }));
+      var noteCell = cell("generalNote", "textarea");
+      if (d.historical && d.historyNote) noteCell.after = '<small style="color:var(--muted); white-space:pre-wrap;">' + escapeHtml(d.historyNote) + '</small>';
+      var cells = [ { c:"d", node: head }, { node: payBtn }, cell("paidOn", "date") ];
+      cells.push(cell("amount"));
+      cells.push({ c:"nc", html: !isBonus && advAmt ? fmt((Number(d.amount) || 0) - advAmt) : "" });
+      SD_COLS.forEach(function(field){ cells.push(isBonus ? { html:"" } : cell(field)); });
+      cells.push(noteCell);
+      cells.push({ c:"nt", html: escapeHtml(detail.join("　")) });
+      ieRow(tbl.body, cells);
     });
-    list.appendChild(salTbl);
+    if (!all.length){
+      var emptyText = allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "在上面那一列記第一個月";
+      var emptyRow = document.createElement("tr");
+      emptyRow.innerHTML = '<td class="d">' + escapeHtml(emptyText) + '</td><td colspan="16"></td>';
+      tbl.body.appendChild(emptyRow);
+    }
+    list.appendChild(tbl.wrap);
   }
 
   var SALARY_NUM_FIELDS = ["sBaseSalary","sTransport","sRegion","sSupply","sMeal","sHousing","sBonus","sGrossAmount","sAbsenceHours","sAbsenceDeduction",
@@ -3661,6 +3821,7 @@
 
   document.getElementById("salaryDeleteBtn").addEventListener("click", async function(){
     if (!editingSalaryId || !salaryCol) return;
+    if (!window.confirm("確定要刪除這筆薪水紀錄嗎？刪除後無法復原。")) return;
     try{ await salaryCol.doc(editingSalaryId).delete(); closeSalarySheet(); showToast("已刪除"); }
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
@@ -4069,7 +4230,8 @@
       if (e.key === "Enter" && !e.isComposing && !(multi && e.shiftKey)){ e.preventDefault(); el.blur(); }
       if (e.key === "Escape"){ el.value = el.dataset.orig; el.blur(); }
     });
-    el.addEventListener("change", commit);
+    // 日期欄打年份的途中就會觸發 change，只在離開欄位時存
+    if (o.type !== "date") el.addEventListener("change", commit);
     el.addEventListener("blur", commit);
     function commit(){
       if (ieRendering || el.value === el.dataset.orig) return;
@@ -4095,7 +4257,7 @@
     el.value = store[field] === undefined ? "" : store[field];
     el.placeholder = placeholder;
     el.setAttribute("aria-label", "新增列：" + placeholder);
-    el.setAttribute("data-k", (store === afDraft ? "afnew|" : store === abDraft ? "abnew|" : "utnew|") + field);
+    el.setAttribute("data-k", (store === afDraft ? "afnew|" : store === abDraft ? "abnew|" : store === sdDraft ? "sdnew|" : "utnew|") + field);
     el.addEventListener("input", function(){ store[field] = el.value; });
     el.addEventListener("keydown", function(e){ if (e.key === "Enter" && !e.isComposing){ e.preventDefault(); onEnter(); } });
     return el;
@@ -6363,13 +6525,13 @@
         var html = '<div class="top"><div class="nm">' + escapeHtml(a.name || "") + '</div><div class="bal num' + (bal < 0 ? " neg" : "") + '">' + Math.round(bal).toLocaleString("en-US") + '</div></div>' +
           '<div class="sub"><span>' + chg + escapeHtml(when) + '</span><span>' + (pct ? "占 " + pct + "%" : "") + '</span></div>' +
           (a.note ? '<div class="note">' + escapeHtml(a.note) + '</div>' : "") +
-          (acctSortMode ? "" : '<div class="qs"><input type="number" inputmode="decimal" placeholder="輸入新餘額，按 Enter 更新"><button type="button">更新</button></div>') +
+          (acctSortMode ? "" : '<div class="qs"><input type="number" inputmode="decimal" placeholder="新餘額" aria-label="輸入新餘額，按 Enter 更新"><button type="button">更新</button></div>') +
           (pct ? '<div class="bar"><i style="width:' + pct + '%; background:' + ACCT_COLORS[idx % ACCT_COLORS.length] + ';"></i></div>' : "");
         var open = !acctSortMode && acctOpenId === a._id;
         if (acctSortMode){
           html += '<div class="mv"><button type="button" data-mv="-1"' + (idx === 0 ? " disabled" : "") + '>▲</button><button type="button" data-mv="1"' + (idx === list.length - 1 ? " disabled" : "") + '>▼</button></div>';
         } else if (open){
-          html += '<div class="qa"><input type="number" inputmode="decimal" placeholder="輸入金額，例如 500 或 -1200" value="' + escapeHtml(acctQuickVal) + '">' +
+          html += '<div class="qa"><input type="number" inputmode="decimal" placeholder="增減金額" aria-label="輸入要增加或減少的金額" value="' + escapeHtml(acctQuickVal) + '">' +
             '<div class="qb"><button type="button" class="out" data-q="-1">－ 支出</button><button type="button" class="in" data-q="1">＋ 存入</button><button type="button" class="ed" data-q="edit">✎ 詳細</button></div></div>';
         }
         el.innerHTML = html;
