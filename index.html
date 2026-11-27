@@ -459,7 +459,21 @@
   .acct-cell .n{ font-size:17px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .acct-cell .v{ font-size:17px; color:var(--muted); margin-top:2px; }
   .acct-cell:active{ opacity:.6; }
-  .rec-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
+  /* 表格限制高度，左右捲軸才會一直在畫面上 */
+  .rec-wrap{ overflow:auto; max-height:72vh; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:var(--shadow); }
+  .rec-wrap::-webkit-scrollbar{ width:12px; height:14px; }
+  .rec-wrap::-webkit-scrollbar-track{ background:var(--surface-2); }
+  .rec-wrap::-webkit-scrollbar-thumb{ background:var(--muted); border-radius:8px; border:3px solid var(--surface-2); }
+  .rec-wrap .rec-table thead th{ position:sticky; top:0; z-index:3; height:34px; box-sizing:border-box; }
+  .rec-wrap .rec-table thead th:first-child{ z-index:5; }
+  .rec-wrap .rec-table td.d{ z-index:2; }
+  .rec-wrap .ie-table.flat tbody tr.addrow td{ position:sticky; top:34px; z-index:3; box-shadow:0 1px 0 var(--line); }
+  .rec-wrap .ie-table.flat tbody tr.addrow td.d{ left:0; z-index:4; background:var(--surface-2); }
+  .ie-table .ie{ scroll-margin:110px 20px 20px 150px; }
+  .ie-table.flat textarea.ie{ resize:none; overflow:hidden; }
+  .ie-table.flat textarea.ie:focus{ overflow:auto; }
+  .ie-table .clamp{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; max-width:260px; font-size:12px; line-height:1.4; }
+  html[data-view="web"][data-curtab="salary"] .wrap, html[data-view="web"][data-curtab="utility"] .wrap{ max-width:1700px; }
   .rec-table{ border-collapse:collapse; width:100%; font-size:13px; }
   .rec-table th{ background:var(--surface-2); text-align:left; padding:8px 10px; font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap; }
   .rec-table td{ padding:9px 10px; border-top:1px solid var(--line); vertical-align:top; }
@@ -2433,6 +2447,7 @@
   var PERSON_FILTERED_TABS = { budget:1, salary:1, annual:1 };
   function switchTab(tab){
     currentTab = tab;
+    document.documentElement.setAttribute("data-curtab", tab);
     try{ localStorage.setItem("huaLastTab", tab); }catch(e){}
     document.querySelectorAll(".tabs button").forEach(function(b){
       b.classList.toggle("active", b.getAttribute("data-tab") === tab);
@@ -3422,13 +3437,13 @@
       head.innerHTML = '<span>' + title + who + '</span>';
       head.appendChild(ieButton("✎", name + " 完整編輯（津貼、其他核發、考績、職等、刪除）", function(){ openEditSalary(salariesById[d._id] ? Object.assign({}, salariesById[d._id], { _id: d._id }) : d); }));
       var noteCell = cell("generalNote", "textarea");
-      if (d.historical && d.historyNote) noteCell.after = '<small style="color:var(--muted); white-space:pre-wrap;">' + escapeHtml(d.historyNote) + '</small>';
+      if (d.historical && d.historyNote) detail.push(d.historyNote);
       var cells = [ { c:"d", node: head }, { node: payBtn }, cell("paidOn", "date") ];
       cells.push(cell("amount"));
       cells.push({ c:"nc", html: !isBonus && advAmt ? fmt((Number(d.amount) || 0) - advAmt) : "" });
       SD_COLS.forEach(function(field){ cells.push(isBonus ? { html:"" } : cell(field)); });
       cells.push(noteCell);
-      cells.push({ c:"nt", html: escapeHtml(detail.join("　")) });
+      cells.push({ c:"nt", html: '<div class="clamp" title="' + escapeHtml(detail.join("　")) + '">' + escapeHtml(detail.join("　")) + '</div>' });
       ieRow(tbl.body, cells);
     });
     if (!all.length){
@@ -4226,7 +4241,30 @@
     el.setAttribute("data-k", o.key);
     // 用欄位實際呈現的值比對，沒改過就不會存檔
     el.dataset.orig = el.value;
+    if (o.type === "number"){
+      // 捲動表格時，滾輪不能改到金額
+      el.addEventListener("wheel", function(){ if (document.activeElement === el) el.blur(); }, { passive:true });
+      el.addEventListener("focus", function(){ setTimeout(function(){ if (document.activeElement === el && el.value === el.dataset.orig) el.select(); }, 0); });
+    }
+    if (multi){
+      var shortRows = el.rows;
+      el.rows = 1;
+      el.addEventListener("focus", function(){ el.rows = Math.max(2, shortRows); });
+      el.addEventListener("blur", function(){ el.rows = 1; el.scrollTop = 0; });
+      el.title = el.value;
+    }
     el.addEventListener("keydown", function(e){
+      if (!multi && (e.key === "ArrowUp" || e.key === "ArrowDown")){
+        // 像試算表一樣，上下鍵移到同一欄的上一列／下一列
+        e.preventDefault();
+        var td = el.closest("td"), tr = td.parentNode, col = Array.prototype.indexOf.call(tr.children, td);
+        var row = tr, target = null;
+        while (!target && (row = e.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling)){
+          if (!row.classList.contains("addrow") && row.children[col]) target = row.children[col].querySelector(".ie");
+        }
+        if (target) target.focus(); else el.blur();
+        return;
+      }
       if (e.key === "Enter" && !e.isComposing && !(multi && e.shiftKey)){ e.preventDefault(); el.blur(); }
       if (e.key === "Escape"){ el.value = el.dataset.orig; el.blur(); }
     });
@@ -4276,8 +4314,12 @@
       key = ae.getAttribute("data-k"); val = ae.value;
       dirty = ae.dataset.orig !== undefined && ae.value !== ae.dataset.orig;
     }
+    var oldWrap = container.querySelector(".rec-wrap");
+    var sl = oldWrap ? oldWrap.scrollLeft : 0, st = oldWrap ? oldWrap.scrollTop : 0;
     ieRendering = true;
     try{ draw(); } finally { ieRendering = false; }
+    var newWrap = container.querySelector(".rec-wrap");
+    if (newWrap){ newWrap.scrollLeft = sl; newWrap.scrollTop = st; }
     if (!key) return;
     var next = container.querySelector('[data-k="' + key + '"]');
     if (!next) return;
