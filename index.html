@@ -466,6 +466,27 @@
   .rec-table tr.row{ cursor:pointer; }
   .rec-table tr.row:active td{ opacity:.6; }
   .rec-table tr.plan td{ opacity:.55; }
+  .ie-table td{ padding:6px 4px; vertical-align:middle; }
+  .ie-table td small{ display:block; padding-left:8px; }
+  .ie-table textarea.ie{ width:100%; box-sizing:border-box; min-height:0; resize:vertical; border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:8px; padding:7px 8px; font-family:inherit; font-size:14px; line-height:1.35; display:block; }
+  .ie-table textarea.ie:focus{ border-color:var(--brand); outline:2px solid var(--brand); outline-offset:-1px; }
+  .ie-table.flat tbody tr:not(.addrow) .ie{ border-color:transparent; background:transparent; }
+  .ie-table.flat tbody tr:not(.addrow) .ie:hover{ border-color:var(--line); }
+  .ie-table.flat tbody tr:not(.addrow) .ie:focus{ border-color:var(--brand); background:var(--bg); }
+  .ie-table.flat td{ padding:3px 2px; }
+  .ie-table.flat tr.addrow td:nth-child(2){ min-width:112px; }
+  .ie-table.flat td.d{ padding-left:10px; white-space:nowrap; }
+  .ie-table.flat td:nth-child(1){ min-width:96px; }
+  .ie-table input.ie{ width:100%; box-sizing:border-box; border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:8px; padding:7px 8px; font-family:inherit; font-size:14px; }
+  .ie-table input.ie.r{ text-align:right; -moz-appearance:textfield; }
+  .ie-table input.ie.r::-webkit-inner-spin-button, .ie-table input.ie.r::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .ie-table input.ie:focus{ border-color:var(--brand); outline:2px solid var(--brand); outline-offset:-1px; }
+  .ie-table td:nth-child(1){ min-width:128px; }
+  .ie-table td.d input.ie{ font-weight:700; }
+  .ie-table tr.addrow td{ background:var(--surface-2); }
+  .ie-table tr.addrow input.ie{ border-style:dashed; }
+  .ie-table tr.sum td{ font-weight:800; padding:10px 8px; }
+  .ie-table .ie-btn{ margin:0; min-width:34px; padding:6px 8px; }
   .rec-table .photo-strip{ display:flex; gap:4px; flex-wrap:nowrap; }
   .rec-table .photo-strip img{ width:44px; height:44px; max-width:44px; border-radius:8px; object-fit:cover; border:1px solid var(--line); display:block; flex:0 0 auto; }
   .rec-table tr.sel td{ background:var(--fever-bg); }
@@ -1018,8 +1039,16 @@
         <label>依年份篩選</label>
         <select id="annualBonusYearFilter"><option value="all">全部年份</option></select>
       </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>可分配金額來源</label>
+        <select id="abSource">
+          <option value="actual">實際入帳（薪水紀錄的年終獎金）</option>
+          <option value="est6">年終預估・發 6 個月</option>
+          <option value="est7">年終預估・發 7 個月</option>
+        </select>
+      </div>
       <div class="calc-box" id="annualBonusIncomeBox">
-        <div class="line"><span>薪水紀錄中的年終獎金收入</span><span class="v num" id="abIncomeVal">$0</span></div>
+        <div class="line"><span id="abIncomeLbl">薪水紀錄中的年終獎金收入</span><span class="v num" id="abIncomeVal">$0</span></div>
         <div class="line"><span id="abAllocatedLbl">已分配總額</span><span class="v neg num" id="abAllocatedVal">-$0</span></div>
         <div class="line total"><span>剩餘未分配</span><span class="v num" id="abRemainVal">$0</span></div>
       </div>
@@ -1601,7 +1630,8 @@
       <div class="field"><label>年繳金額 (NT$)</label><input id="afAnnualAmount" type="number" inputmode="decimal" placeholder="0"></div>
       <div class="field"><label>約當月繳 (選填)</label><input id="afMonthlyAmount" type="number" inputmode="decimal" placeholder="0"></div>
     </div>
-    <div class="field"><label>備註</label><textarea id="afNote" placeholder="例如：繳費月份、扣款方式…"></textarea></div>
+    <div class="field"><label>扣款月份</label><input id="afPayMonth" type="text" placeholder="例如：3，或 3、9"></div>
+    <div class="field"><label>備註</label><textarea id="afNote" placeholder="例如：扣款方式…"></textarea></div>
     <div class="sheet-actions">
       <button class="btn ghost" id="annualFixedCancelBtn" type="button">取消</button>
       <button class="btn danger" id="annualFixedDeleteBtn" type="button" hidden>刪除</button>
@@ -2396,6 +2426,7 @@
     document.getElementById("personFilterTabs").hidden = !PERSON_FILTERED_TABS[tab];
     document.getElementById("pageTitle").textContent = TAB_TITLE[tab] || "";
     if (tab === "calendar") renderCalendar();
+    if (tab === "annual" && document.getElementById("abSource").value !== "actual") renderAnnualBonus();
     window.scrollTo(0, 0);
   }
   var TAB_TITLE = { home:"MY MONEY", budget:"收支安排", salary:"薪水紀錄", utility:"水電瓦斯", annual:"年度計畫", planned:"預計大筆支出", leave:"請假", claim:"保險理賠", timeline:"年資規劃", gift:"禮尚往來", calendar:"行事曆", period:"健康" };
@@ -3712,6 +3743,8 @@
   });
   document.getElementById("utilityDeleteBtn").addEventListener("click", async function(){
     if (!editingUtilityId || !utilityCol) return;
+    var gone = utilitiesById[editingUtilityId] || {};
+    if (!window.confirm("確定要刪除 " + gone.year + "/" + gone.month + " 的水電瓦斯紀錄嗎？刪除後無法復原。")) return;
     try{ await utilityCol.doc(editingUtilityId).delete(); closeUtilitySheet(); showToast("已刪除"); }
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
@@ -3754,7 +3787,51 @@
     });
   });
 
+  var utDraft = {};
+  var utAdding = false;
+  var UT_MONEY = ["rent","water","electric","gas"];
+  function utilityDefaults(){
+    var latest = Object.keys(utilitiesById).map(function(id){ return utilitiesById[id]; })
+      .sort(function(a, b){ return ((b.year||0)*100 + (b.month||0)) - ((a.year||0)*100 + (a.month||0)); })[0];
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+    if (latest && latest.year && latest.month){
+      y = Number(latest.year); m = Number(latest.month) + 1;
+      if (m > 12){ m = 1; y++; }
+    }
+    return { ym: y + "-" + String(m).padStart(2, "0"), rent: latest ? (Number(latest.rent) || 0) : 0 };
+  }
+  function saveUtilityField(id, field, raw){
+    var cur = utilitiesById[id] || {};
+    var isNum = field !== "note";
+    var v = isNum ? ieNum(raw) : String(raw).trim();
+    var title = cur.year + "/" + String(cur.month || "").padStart(2, "0");
+    return ieSaveField(utilityCol, utilitiesById, id, field, v, isNum, title, field === "note" ? "備註" : UTILITY_CAT_LABEL[field]);
+  }
+  async function addUtilityInline(){
+    if (utAdding) return;
+    var def = utilityDefaults();
+    var ym = /^(\d{4})-(\d{1,2})$/.exec(String(utDraft.ym || def.ym).trim());
+    var year = ym ? Number(ym[1]) : 0, month = ym ? Number(ym[2]) : 0;
+    if (!year || month < 1 || month > 12){ showToast("年月請填成 2027-01 這樣的格式"); return; }
+    var dup = Object.keys(utilitiesById).some(function(id){ return Number(utilitiesById[id].year) === year && Number(utilitiesById[id].month) === month; });
+    var label = year + "/" + String(month).padStart(2, "0");
+    if (dup){ showToast(label + " 已經有紀錄，請直接在那一列填寫"); return; }
+    if (!dbReady || !utilityCol){ showToast("尚未連線，稍後再試"); return; }
+    var rentTyped = utDraft.rent !== undefined && utDraft.rent !== "";
+    var data = { year:year, month:month, rent: rentTyped ? ieNum(utDraft.rent) : def.rent, water: ieNum(utDraft.water), electric: ieNum(utDraft.electric), gas: ieNum(utDraft.gas),
+      note: String(utDraft.note || "").trim(), createdAt: Date.now(), updatedAt: Date.now() };
+    var kept = Object.assign({}, utDraft);
+    utAdding = true;
+    Object.keys(utDraft).forEach(function(k){ delete utDraft[k]; });
+    try{ await utilityCol.add(data); showToast("已新增 " + label + "，房租 " + fmt(data.rent)); }
+    catch(e){ Object.assign(utDraft, kept); showToast("儲存失敗，請再試一次"); }
+    utAdding = false;
+    renderUtilities();
+  }
   function renderUtilities(){
+    ieKeepFocus(document.getElementById("utilityList"), drawUtilities);
+  }
+  function drawUtilities(){
     var list = document.getElementById("utilityList");
     list.innerHTML = "";
     var allUnfiltered = Object.keys(utilitiesById).map(function(id){
@@ -3783,24 +3860,40 @@
     document.getElementById("utilityFilteredTotal").textContent =
       (isFiltered ? "篩選總額 " : "總額 ") + fmt(filteredTotal);
 
-    if (!all.length){
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "點右下角 ＋ 記一筆水電瓦斯支出";
-      list.appendChild(e);
-      return;
-    }
-    function mny(v){ return Number(v) ? fmt(v) : ""; }
-    list.appendChild(buildRecTable(["年月", { t:"房租", c:"nc" }, { t:"水費", c:"nc" }, { t:"電費", c:"nc" }, { t:"天然氣", c:"nc" }, { t:"合計", c:"nc" }, "備註"], all.map(function(d){
+    var tbl = ieTable([["年月", 100], ["房租", 112, "nc"], ["水費", 80, "nc"], ["電費", 80, "nc"], ["天然氣", 80, "nc"], ["合計", 90, "nc"], ["備註", 220], ["", 44]]);
+    tbl.wrap.querySelector("table").classList.add("flat");
+    var def = utilityDefaults();
+    var ymInput = ieDraft(utDraft, "ym", "text", def.ym, addUtilityInline);
+    ymInput.setAttribute("aria-label", "新增列：年月");
+    ieRow(tbl.body, [
+      { c:"d", node: ymInput, after: '<small style="color:var(--muted);">＋ 新增月份</small>' },
+      { node: ieDraft(utDraft, "rent", "number", def.rent ? "沿用 " + def.rent.toLocaleString("en-US") : "房租", addUtilityInline) },
+      { node: ieDraft(utDraft, "water", "number", "水費", addUtilityInline) },
+      { node: ieDraft(utDraft, "electric", "number", "電費", addUtilityInline) },
+      { node: ieDraft(utDraft, "gas", "number", "天然氣", addUtilityInline) },
+      { html:"" },
+      { node: ieDraft(utDraft, "note", "text", "按 Enter 新增", addUtilityInline) },
+      { node: ieButton("＋", "新增這個月份", addUtilityInline) }
+    ], "addrow");
+    all.forEach(function(d){
       var total = (Number(d.rent)||0) + (Number(d.water)||0) + (Number(d.electric)||0) + (Number(d.gas)||0);
       var bigAmount = utilityCategoryFilterValue !== "all" ? (Number(d[utilityCategoryFilterValue])||0) : total;
-      return { click: function(){ openEditUtility(d); }, cells: [
-        { c:"d", h: escapeHtml((d.year||"") + "/" + String(d.month||"").padStart(2,"0")) },
-        { c:"nc", h: mny(d.rent) }, { c:"nc", h: mny(d.water) }, { c:"nc", h: mny(d.electric) }, { c:"nc", h: mny(d.gas) },
-        { c:"nc big", h: fmt(bigAmount) },
-        { c:"nt", h: escapeHtml(d.note || "") }
-      ] };
-    })));
+      var label = (d.year||"") + "/" + String(d.month||"").padStart(2,"0");
+      function cell(field){
+        return { node: ieInput({ key:d._id + "|" + field, type:"number", value:d[field] || "", placeholder:"－", label:label + " " + UTILITY_CAT_LABEL[field], onSave:function(v){ return saveUtilityField(d._id, field, v); } }) };
+      }
+      ieRow(tbl.body, [
+        { c:"d", html: escapeHtml(label) }
+      ].concat(UT_MONEY.map(cell), [
+        { c:"nc big", html: fmt(bigAmount) },
+        { node: ieInput({ key:d._id + "|note", type:"textarea", value:d.note || "", placeholder:"－", label:label + " 備註", onSave:function(v){ return saveUtilityField(d._id, "note", v); } }) },
+        { node: ieButton("✎", label + " 更多（改年月、複製、刪除）", function(){ openEditUtility(d); }) }
+      ]));
+    });
+    if (!all.length){
+      ieRow(tbl.body, [{ c:"d", html: allUnfiltered.length ? "這個篩選條件下沒有紀錄" : "在上面那一列記第一個月" }].concat(["","","","","","",""].map(function(){ return { html:"" }; })));
+    }
+    list.appendChild(tbl.wrap);
   }
 
   // ---- 每年固定支出 ----
@@ -3824,6 +3917,7 @@
     document.getElementById("afName").value = "";
     document.getElementById("afAnnualAmount").value = "";
     document.getElementById("afMonthlyAmount").value = "";
+    document.getElementById("afPayMonth").value = "";
     document.getElementById("afNote").value = "";
     document.getElementById("annualFixedSheetBackdrop").hidden = false;
   }
@@ -3836,6 +3930,7 @@
     document.getElementById("afName").value = d.name || "";
     document.getElementById("afAnnualAmount").value = d.annualAmount || "";
     document.getElementById("afMonthlyAmount").value = d.monthlyAmount || "";
+    document.getElementById("afPayMonth").value = d.payMonth || "";
     document.getElementById("afNote").value = d.note || "";
     document.getElementById("annualFixedSheetBackdrop").hidden = false;
   }
@@ -3851,6 +3946,7 @@
       name: name, person: currentAfPerson,
       annualAmount: numVal("afAnnualAmount"),
       monthlyAmount: numVal("afMonthlyAmount"),
+      payMonth: document.getElementById("afPayMonth").value.trim(),
       note: document.getElementById("afNote").value.trim(),
       updatedAt: Date.now()
     };
@@ -3867,6 +3963,7 @@
   });
   document.getElementById("annualFixedDeleteBtn").addEventListener("click", async function(){
     if (!editingAnnualFixedId || !annualFixedCol) return;
+    if (!window.confirm("確定要刪除「" + ((annualFixedById[editingAnnualFixedId] || {}).name || "") + "」嗎？刪除後無法復原。")) return;
     try{ await annualFixedCol.doc(editingAnnualFixedId).delete(); closeAnnualFixedSheet(); showToast("已刪除"); }
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
@@ -3879,6 +3976,9 @@
   });
 
   function renderAnnualFixed(){
+    ieKeepFocus(document.getElementById("annualFixedList"), drawAnnualFixed);
+  }
+  function drawAnnualFixed(){
     var list = document.getElementById("annualFixedList");
     list.innerHTML = "";
     var all = Object.keys(annualFixedById).map(function(id){
@@ -3892,22 +3992,233 @@
     document.getElementById("annualFixedCount").textContent = all.length ? "(" + all.length + ")" : "";
     var total = all.reduce(function(s,d){ return s + (Number(d.annualAmount)||0); }, 0);
     document.getElementById("annualFixedTotal").textContent = fmt(total);
-    if (!all.length){
-      var e = document.createElement("div");
-      e.className = "empty"; e.textContent = "點「＋ 新增」記一筆每年固定支出，例如保險費、車險";
-      list.appendChild(e);
-      return;
-    }
-    list.appendChild(buildRecTable(["項目", { t:"年費用", c:"nc" }, { t:"約當月繳", c:"nc" }, "備註"], all.map(function(d){
+    var thisMonth = new Date().getMonth() + 1;
+    function monthOf(d){ return Number(d.monthlyAmount) || (Number(d.annualAmount) || 0) / 12; }
+    var tbl = ieTable([["項目", 130], ["年費用", 100, "nc"], ["每月該存", 100, "nc"], ["扣款月份", 100], ["備註", 160], ["", 44]]);
+    all.forEach(function(d){
+      var save = function(field, raw){ return saveAnnualFixedField(d._id, field, raw); };
+      var due = String(d.payMonth || "").match(/\d+/g) || [];
+      var isDue = due.map(Number).indexOf(thisMonth) >= 0;
       var who = currentPerson === "combined" ? "<small>" + escapeHtml(PERSON_LABEL[d.person || "hua"]) + "</small>" : "";
-      return { click: function(){ openEditAnnualFixed(d); }, cells: [
-        { c:"d", h: escapeHtml(d.name || "未命名") + who },
-        { c:"nc big", h: fmt(d.annualAmount) },
-        { c:"nc", h: d.monthlyAmount ? fmt(d.monthlyAmount) : "" },
-        { c:"nt", h: escapeHtml(d.note || "") }
-      ] };
-    })));
+      ieRow(tbl.body, [
+        { c:"d", node: ieInput({ key:d._id + "|name", value:d.name || "", label:"項目名稱", onSave:function(v){ return save("name", v); } }), after: who },
+        { node: ieInput({ key:d._id + "|annualAmount", type:"number", value:d.annualAmount || "", label:"年費用", onSave:function(v){ return save("annualAmount", v); } }) },
+        { node: ieInput({ key:d._id + "|monthlyAmount", type:"number", value:d.monthlyAmount || "", placeholder:"自動 " + Math.round((Number(d.annualAmount) || 0) / 12).toLocaleString("en-US"), label:"每月該存", onSave:function(v){ return save("monthlyAmount", v); } }) },
+        { node: ieInput({ key:d._id + "|payMonth", value:d.payMonth || "", placeholder:"例 3、9", label:"扣款月份", onSave:function(v){ return save("payMonth", v); } }), after: isDue ? '<small style="color:var(--fixed); font-weight:700;">本月扣款</small>' : "" },
+        { node: ieInput({ key:d._id + "|note", type:"textarea", value:d.note || "", label:"備註", onSave:function(v){ return save("note", v); } }) },
+        { node: ieButton("✎", "更多（複製、刪除、負責人）", function(){ openEditAnnualFixed(d); }) }
+      ]);
+    });
+    var autoHint = function(){ var v = Number(afDraft.annualAmount); return v ? "自動 " + Math.round(v / 12).toLocaleString("en-US") : "自動算"; };
+    var mDraft = ieDraft(afDraft, "monthlyAmount", "number", autoHint(), addAnnualFixedInline);
+    var aDraft = ieDraft(afDraft, "annualAmount", "number", "年費用", addAnnualFixedInline);
+    aDraft.addEventListener("input", function(){ mDraft.placeholder = autoHint(); });
+    var newWho = currentPerson === "combined" ? "<small>新增到 HUA</small>" : "";
+    ieRow(tbl.body, [
+      { c:"d", node: ieDraft(afDraft, "name", "text", "＋ 新增項目", addAnnualFixedInline), after: newWho },
+      { node: aDraft }, { node: mDraft },
+      { node: ieDraft(afDraft, "payMonth", "text", "扣款月份", addAnnualFixedInline) },
+      { node: ieDraft(afDraft, "note", "text", "按 Enter 新增", addAnnualFixedInline) },
+      { node: ieButton("＋", "新增這一項", addAnnualFixedInline) }
+    ], "addrow");
+    var monthTotal = all.reduce(function(s, d){ return s + monthOf(d); }, 0);
+    ieRow(tbl.body, [
+      { c:"d", html:"合計" }, { c:"nc big", html: fmt(total) }, { c:"nc big", html: fmt(monthTotal) }, { html:"" }, { html:"" }, { html:"" }
+    ], "sum");
+    list.appendChild(tbl.wrap);
   }
+  var afDraft = {}, abDraft = {};
+  var ieRendering = false;
+  function ieTable(cols){
+    var wrap = document.createElement("div");
+    wrap.className = "rec-wrap";
+    var table = document.createElement("table");
+    table.className = "rec-table ie-table";
+    table.innerHTML = '<colgroup>' + cols.map(function(c){ return '<col style="min-width:' + c[1] + 'px; width:' + c[1] + 'px;">'; }).join("") + '</colgroup><thead><tr>' +
+      cols.map(function(c){ return '<th' + (c[2] ? ' class="' + c[2] + '"' : "") + '>' + escapeHtml(c[0]) + '</th>'; }).join("") + '</tr></thead><tbody></tbody>';
+    wrap.appendChild(table);
+    return { wrap: wrap, body: table.querySelector("tbody") };
+  }
+  function ieRow(body, cells, cls){
+    var tr = document.createElement("tr");
+    if (cls) tr.className = cls;
+    cells.forEach(function(c){
+      var td = document.createElement("td");
+      if (c.c) td.className = c.c;
+      if (c.node) td.appendChild(c.node); else td.innerHTML = c.html || "";
+      if (c.after) td.insertAdjacentHTML("beforeend", c.after);
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+    return tr;
+  }
+  function ieInput(o){
+    var multi = o.type === "textarea";
+    var el = document.createElement(multi ? "textarea" : "input");
+    if (!multi) el.type = o.type || "text";
+    if (o.type === "number") el.inputMode = "decimal";
+    el.className = "ie" + (o.type === "number" ? " r" : "");
+    el.value = o.value;
+    if (multi) el.rows = Math.min(5, Math.max(1, String(o.value).split("\n").reduce(function(n, line){ return n + Math.max(1, Math.ceil(line.length / 20)); }, 0)));
+    el.placeholder = o.placeholder || "";
+    el.setAttribute("aria-label", o.label || "");
+    el.setAttribute("data-k", o.key);
+    // 用欄位實際呈現的值比對，沒改過就不會存檔
+    el.dataset.orig = el.value;
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && !e.isComposing && !(multi && e.shiftKey)){ e.preventDefault(); el.blur(); }
+      if (e.key === "Escape"){ el.value = el.dataset.orig; el.blur(); }
+    });
+    el.addEventListener("change", commit);
+    el.addEventListener("blur", commit);
+    function commit(){
+      if (ieRendering || el.value === el.dataset.orig) return;
+      var before = el.dataset.orig, typed = el.value;
+      el.dataset.orig = typed;
+      // 等游標移到下一格再存，避免重畫時把正要點的格子換掉
+      setTimeout(function(){
+        o.onSave(typed).then(function(ok){
+          if (ok) return;
+          el.value = before; el.dataset.orig = before;
+          var now = document.querySelector('[data-k="' + o.key + '"]');
+          if (now && now !== el){ now.value = before; now.dataset.orig = before; }
+        });
+      }, 180);
+    }
+    return el;
+  }
+  function ieDraft(store, field, type, placeholder, onEnter){
+    var el = document.createElement("input");
+    el.type = type;
+    if (type === "number") el.inputMode = "decimal";
+    el.className = "ie draft" + (type === "number" ? " r" : "");
+    el.value = store[field] === undefined ? "" : store[field];
+    el.placeholder = placeholder;
+    el.setAttribute("aria-label", "新增列：" + placeholder);
+    el.setAttribute("data-k", (store === afDraft ? "afnew|" : store === abDraft ? "abnew|" : "utnew|") + field);
+    el.addEventListener("input", function(){ store[field] = el.value; });
+    el.addEventListener("keydown", function(e){ if (e.key === "Enter" && !e.isComposing){ e.preventDefault(); onEnter(); } });
+    return el;
+  }
+  function ieButton(text, label, fn){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "pay-toggle ie-btn"; b.textContent = text;
+    b.setAttribute("aria-label", label); b.title = label;
+    b.addEventListener("click", fn);
+    return b;
+  }
+  // 資料同步會重畫表格，這裡保住正在打字的那一格
+  function ieKeepFocus(container, draw){
+    var ae = document.activeElement, key = null, val = null, dirty = false;
+    if (ae && container.contains(ae) && ae.getAttribute("data-k")){
+      key = ae.getAttribute("data-k"); val = ae.value;
+      dirty = ae.dataset.orig !== undefined && ae.value !== ae.dataset.orig;
+    }
+    ieRendering = true;
+    try{ draw(); } finally { ieRendering = false; }
+    if (!key) return;
+    var next = container.querySelector('[data-k="' + key + '"]');
+    if (!next) return;
+    if (dirty) next.value = val;
+    next.focus({ preventScroll: true });
+    try{ next.setSelectionRange(next.value.length, next.value.length); }catch(e){}
+  }
+  function ieNum(raw){ var n = parseFloat(raw); return isNaN(n) ? 0 : n; }
+  function ieShow(v, isNum){ return isNum ? fmt(v) : (v || "（空白）"); }
+  async function ieSaveField(col, byId, id, field, value, isNum, title, label){
+    var cur = byId[id];
+    if (!cur || !dbReady || !col){ showToast("尚未連線，稍後再試"); return false; }
+    var old = isNum ? (Number(cur[field]) || 0) : (cur[field] || "");
+    if (old === value) return true;
+    var patch = { updatedAt: Date.now() };
+    patch[field] = value;
+    try{
+      await col.doc(id).set(Object.assign({}, cur, patch));
+      showToast(title + " " + label + "：" + ieShow(old, isNum) + " → " + ieShow(value, isNum));
+      return true;
+    }catch(e){ showToast("儲存失敗，請再試一次"); return false; }
+  }
+  var AF_LABEL = { name:"名稱", annualAmount:"年費用", monthlyAmount:"每月該存", payMonth:"扣款月份", note:"備註" };
+  var AB_LABEL = { year:"年份", name:"用途", huaAmount:"HUA", yupasAmount:"YUPAS", note:"備註" };
+  function saveAnnualFixedField(id, field, raw){
+    var isNum = field === "annualAmount" || field === "monthlyAmount";
+    var v = isNum ? ieNum(raw) : String(raw).trim();
+    if (field === "name" && !v){ showToast("項目名稱不能空白"); return Promise.resolve(false); }
+    return ieSaveField(annualFixedCol, annualFixedById, id, field, v, isNum, (annualFixedById[id] || {}).name || "", AF_LABEL[field]);
+  }
+  function saveAnnualBonusField(id, field, raw){
+    var isNum = field === "huaAmount" || field === "yupasAmount" || field === "year";
+    var v = isNum ? ieNum(raw) : String(raw).trim();
+    if (field === "name" && !v){ showToast("用途名稱不能空白"); return Promise.resolve(false); }
+    if (field === "year" && !v){ showToast("請輸入年份"); return Promise.resolve(false); }
+    var title = (annualBonusById[id] || {}).name || "";
+    if (field === "year"){
+      return ieSaveField(annualBonusCol, annualBonusById, id, field, v, true, title, AB_LABEL[field]).then(function(ok){ if (ok) showToast(title + " 年份改為 " + v); return ok; });
+    }
+    return ieSaveField(annualBonusCol, annualBonusById, id, field, v, isNum, title, AB_LABEL[field]);
+  }
+  var ieAdding = false;
+  async function addAnnualFixedInline(){
+    if (ieAdding) return;
+    var name = String(afDraft.name || "").trim();
+    if (!name){ showToast("先填項目名稱"); return; }
+    if (!dbReady || !annualFixedCol){ showToast("尚未連線，稍後再試"); return; }
+    var data = { name:name, person: currentPerson === "yupas" ? "yupas" : "hua", annualAmount: ieNum(afDraft.annualAmount), monthlyAmount: ieNum(afDraft.monthlyAmount),
+      payMonth: String(afDraft.payMonth || "").trim(), note: String(afDraft.note || "").trim(), createdAt: Date.now(), updatedAt: Date.now() };
+    var kept = Object.assign({}, afDraft);
+    ieAdding = true;
+    Object.keys(afDraft).forEach(function(k){ delete afDraft[k]; });
+    try{ await annualFixedCol.add(data); showToast("已新增 " + name); }
+    catch(e){ Object.assign(afDraft, kept); showToast("儲存失敗，請再試一次"); }
+    ieAdding = false;
+    renderAnnualFixed();
+  }
+  async function addAnnualBonusInline(){
+    if (ieAdding) return;
+    var name = String(abDraft.name || "").trim();
+    if (!name){ showToast("先填用途名稱"); return; }
+    var year = ieNum(abDraft.year || (annualBonusYearFilterValue !== "all" ? annualBonusYearFilterValue : new Date().getFullYear()));
+    if (!year){ showToast("請輸入年份"); return; }
+    if (!dbReady || !annualBonusCol){ showToast("尚未連線，稍後再試"); return; }
+    var data = { year:year, name:name, huaAmount: ieNum(abDraft.huaAmount), yupasAmount: ieNum(abDraft.yupasAmount), note: String(abDraft.note || "").trim(), createdAt: Date.now(), updatedAt: Date.now() };
+    var kept = Object.assign({}, abDraft);
+    ieAdding = true;
+    Object.keys(abDraft).forEach(function(k){ delete abDraft[k]; });
+    try{ await annualBonusCol.add(data); showToast("已新增 " + name); }
+    catch(e){ Object.assign(abDraft, kept); showToast("儲存失敗，請再試一次"); }
+    ieAdding = false;
+    renderAnnualBonus();
+  }
+  function annualBonusEstimate(months){
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem("huaBnEst") || "{}") || {}; }catch(e){}
+    var year = annualBonusYearFilterValue !== "all" ? annualBonusYearFilterValue : String(saved.year || new Date().getFullYear());
+    var mine = saved.person !== "yupas";
+    var base = mine ? (Number(saved.base) || 0) : 0;
+    if (!base){
+      var recs = Object.keys(salariesById).map(function(id){ return salariesById[id]; })
+        .filter(function(d){ return d.recordType !== "bonus" && (d.person || "hua") === "hua" && d.payDate && d.baseSalary; })
+        .sort(function(a, b){ return b.payDate.localeCompare(a.payDate); });
+      if (recs.length) base = Number(recs[0].baseSalary) || 0;
+    }
+    var rating = (mine && Number(saved.rating)) || 100;
+    var version = mine && saved.version === "old" ? "old" : "new";
+    var holiday = (mine && Number(saved.holiday)) || 0;
+    var attend = computeBonusAttend(year, "hua", version).finalRatio;
+    var main = bnMainAmount(version, base, months, rating, attend, holiday).total;
+    var days = function(a){ return (Number(a && a[0]) || 0) * 3 + (Number(a && a[1]) || 0) * 10 + (Number(a && a[2]) || 0) * 30; };
+    var merit = mine ? base / 30 * (days(saved.merit) - days(saved.demerit)) : 0;
+    var extra = mine && Array.isArray(saved.extras) ? saved.extras.reduce(function(s, x){ return s + (Number(x.amount) || 0); }, 0) : 0;
+    var rName = { 130:"優", 115:"良", 105:"甲上", 100:"甲", 95:"甲下", 80:"乙", 40:"丙" }[rating] || "";
+    return { total: base ? main + merit + extra : 0, base: base,
+      desc: base ? "HUA " + year + " 年預估（稅前）：月本薪 " + fmt(base) + "、考績" + rName + "、" + (version === "old" ? "舊制" : "新制") + "、出勤 " + attend + "%" + (extra ? "、含其他加項 " + fmt(extra) : "") + "。考績等設定到「薪水紀錄 → 年終預估」修改。"
+        : "還沒有月本薪，請先到「薪水紀錄 → 年終預估」填寫。" };
+  }
+  (function(){
+    var sel = document.getElementById("abSource");
+    try{ var v = localStorage.getItem("huaAbSource"); if (v && sel.querySelector('option[value="' + v + '"]')) sel.value = v; }catch(e){}
+    sel.addEventListener("change", function(){ try{ localStorage.setItem("huaAbSource", sel.value); }catch(e){} renderAnnualBonus(); });
+  })();
 
   // ---- 年終獎金分配 ----
   var annualBonusYearFilterValue = "all";
@@ -3974,6 +4285,7 @@
   });
   document.getElementById("annualBonusDeleteBtn").addEventListener("click", async function(){
     if (!editingAnnualBonusId || !annualBonusCol) return;
+    if (!window.confirm("確定要刪除「" + ((annualBonusById[editingAnnualBonusId] || {}).name || "") + "」嗎？刪除後無法復原。")) return;
     try{ await annualBonusCol.doc(editingAnnualBonusId).delete(); closeAnnualBonusSheet(); showToast("已刪除"); }
     catch(err){ showToast("刪除失敗，請再試一次"); }
   });
@@ -4004,6 +4316,9 @@
   });
 
   function renderAnnualBonus(){
+    ieKeepFocus(document.getElementById("annualBonusList"), drawAnnualBonus);
+  }
+  function drawAnnualBonus(){
     var list = document.getElementById("annualBonusList");
     list.innerHTML = "";
     var allUnfiltered = Object.keys(annualBonusById).map(function(id){
@@ -4038,6 +4353,16 @@
         return (s.payDate || "").slice(0,4) === annualBonusYearFilterValue;
       })
       .reduce(function(s,d){ return s + (Number(d.amount)||0); }, 0);
+    var source = document.getElementById("abSource").value;
+    var incomeLbl = "薪水紀錄中的年終獎金收入";
+    if (source !== "actual"){
+      var months = source === "est7" ? 7 : 6;
+      var est = annualBonusEstimate(months);
+      bonusIncome = est.total;
+      incomeLbl = "可分配（預估發 " + months + " 個月）";
+      document.getElementById("abScopeHint").textContent = est.desc + (currentPerson !== "hua" ? " 預估只算 HUA 的年終；下方「已分配」是目前分頁「" + personLbl + "」的金額。" : "") + (annualBonusYearFilterValue === "all" ? " 目前年份是「全部」，已分配會加總所有年份，建議選單一年份。" : "");
+    }
+    document.getElementById("abIncomeLbl").textContent = incomeLbl;
     var remain = bonusIncome - total;
     document.getElementById("abIncomeVal").textContent = fmt(bonusIncome);
     document.getElementById("abAllocatedVal").textContent = "-" + fmt(total);
@@ -4045,23 +4370,35 @@
     remainEl.textContent = fmtSigned(remain);
     remainEl.className = "v num " + (remain >= 0 ? "pos" : "neg");
 
-    if (!all.length){
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = allUnfiltered.length ? "這個年份沒有分配紀錄" : "點「＋ 新增」規劃年終獎金怎麼分配運用";
-      list.appendChild(e);
-      return;
-    }
-    list.appendChild(buildRecTable(["年份", "項目", { t:"HUA", c:"nc" }, { t:"YUPAS", c:"nc" }, { t:"小計", c:"nc" }, "備註"], all.map(function(d){
-      return { click: function(){ openEditAnnualBonus(d); }, cells: [
-        { c:"d", h: d.year ? escapeHtml(String(d.year)) + " 年" : "" },
-        { h: escapeHtml(d.name || "未命名") },
-        { c:"nc", h: d.huaAmount ? fmt(d.huaAmount) : "" },
-        { c:"nc", h: d.yupasAmount ? fmt(d.yupasAmount) : "" },
-        { c:"nc big", h: fmt(bonusAmountFor(d)) },
-        { c:"nt", h: escapeHtml(d.note || "") }
-      ] };
-    })));
+    var tbl = ieTable([["用途", 130], ["年份", 76], ["HUA", 100, "nc"], ["YUPAS", 100, "nc"], ["兩人合計", 96, "nc"], ["備註", 150], ["", 44]]);
+    all.forEach(function(d){
+      var save = function(field, raw){ return saveAnnualBonusField(d._id, field, raw); };
+      ieRow(tbl.body, [
+        { c:"d", node: ieInput({ key:d._id + "|name", value:d.name || "", label:"用途", onSave:function(v){ return save("name", v); } }) },
+        { node: ieInput({ key:d._id + "|year", type:"number", value:d.year || "", label:"年份", onSave:function(v){ return save("year", v); } }) },
+        { node: ieInput({ key:d._id + "|huaAmount", type:"number", value:d.huaAmount || "", placeholder:"0", label:"HUA 金額", onSave:function(v){ return save("huaAmount", v); } }) },
+        { node: ieInput({ key:d._id + "|yupasAmount", type:"number", value:d.yupasAmount || "", placeholder:"0", label:"YUPAS 金額", onSave:function(v){ return save("yupasAmount", v); } }) },
+        { c:"nc big", html: fmt((Number(d.huaAmount) || 0) + (Number(d.yupasAmount) || 0)) },
+        { node: ieInput({ key:d._id + "|note", type:"textarea", value:d.note || "", label:"備註", onSave:function(v){ return save("note", v); } }) },
+        { node: ieButton("✎", "更多（複製、刪除）", function(){ openEditAnnualBonus(d); }) }
+      ]);
+    });
+    var defYear = annualBonusYearFilterValue !== "all" ? annualBonusYearFilterValue : String(new Date().getFullYear());
+    ieRow(tbl.body, [
+      { c:"d", node: ieDraft(abDraft, "name", "text", "＋ 新增用途", addAnnualBonusInline) },
+      { node: ieDraft(abDraft, "year", "number", defYear, addAnnualBonusInline) },
+      { node: ieDraft(abDraft, "huaAmount", "number", "HUA", addAnnualBonusInline) },
+      { node: ieDraft(abDraft, "yupasAmount", "number", "YUPAS", addAnnualBonusInline) },
+      { html:"" },
+      { node: ieDraft(abDraft, "note", "text", "按 Enter 新增", addAnnualBonusInline) },
+      { node: ieButton("＋", "新增這個用途", addAnnualBonusInline) }
+    ], "addrow");
+    var sumH = all.reduce(function(s, d){ return s + (Number(d.huaAmount) || 0); }, 0);
+    var sumY = all.reduce(function(s, d){ return s + (Number(d.yupasAmount) || 0); }, 0);
+    ieRow(tbl.body, [
+      { c:"d", html:"合計" }, { html:"" }, { c:"nc big", html: fmt(sumH) }, { c:"nc big", html: fmt(sumY) }, { c:"nc big", html: fmt(sumH + sumY) }, { html:"" }, { html:"" }
+    ], "sum");
+    list.appendChild(tbl.wrap);
   }
 
   // ---- 保險理賠 ----
@@ -5864,7 +6201,7 @@
     leaveCol.onSnapshot(function(snap){
       var next = {};
       snap.docs.forEach(function(doc){ next[doc.id] = doc.data(); });
-      leavesById = next; renderLeaves();
+      leavesById = next; renderLeaves(); renderAnnualBonus();
     }, function(err){ status.textContent = "同步發生問題：" + (err && err.code ? err.code : "未知錯誤"); });
     periodsCol.onSnapshot(function(snap){
       var next = {};
